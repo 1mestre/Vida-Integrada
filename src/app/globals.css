@@ -68,7 +68,7 @@
     @apply border-border;
   }
   body {
-    @apply bg-[#DC143C] text-foreground;
+    @apply bg-background text-foreground;
     font-family: 'Rubik', sans-serif;
   }
 }
@@ -106,9 +106,9 @@
   }
   .text-shadow-neon {
     text-shadow:
-      0 0 5px hsl(var(--primary)),
-      0 0 10px hsl(var(--primary)),
-      0 0 20px hsl(var(--primary));
+      0 0 5px currentColor,
+      0 0 10px currentColor,
+      0 0 20px currentColor;
   }
 }
 
@@ -171,4 +171,3 @@
 .fc .fc-day-other .fc-daygrid-day-number {
   color: hsl(var(--muted-foreground));
 }
-

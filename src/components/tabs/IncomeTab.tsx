@@ -182,7 +182,7 @@ const IncomeTab = () => {
         </Card>
         <Card className="glassmorphism-card text-center p-6">
             <p className="text-sm text-muted-foreground">Ingreso Neto Total (USD)</p>
-            <p className="text-3xl font-semibold text-blue-400">{formatUSD(financialSummary.totalNetUSD)}</p>
+            <p className="text-3xl font-semibold text-blue-400 text-shadow-neon">{formatUSD(financialSummary.totalNetUSD)}</p>
         </Card>
         <Card className="glassmorphism-card text-center p-6">
             <p className="text-sm text-muted-foreground">Ingresos Este Mes</p>
