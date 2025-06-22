@@ -21,7 +21,6 @@ const FullCalendar: React.FC<FullCalendarProps> = ({ events, onEventClick, onDat
     useEffect(() => {
         if (window.FullCalendar && calendarRef.current && !calendarInstance) {
             const calendar = new window.FullCalendar.Calendar(calendarRef.current, {
-                plugins: ['dayGrid', 'interaction'],
                 initialView: 'dayGridMonth',
                 locale: 'es',
                 headerToolbar: {
