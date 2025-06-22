@@ -61,9 +61,14 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const docRef = doc(db, 'organizador-publico', 'datos-compartidos');
-
   useEffect(() => {
+    if (!db) {
+      setError("Configuración de Firebase incompleta. La sincronización de datos está desactivada.");
+      setLoading(false);
+      return;
+    }
+
+    const docRef = doc(db, 'organizador-publico', 'datos-compartidos');
     const unsubscribe = onSnapshot(docRef, 
       (docSnap) => {
         if (docSnap.exists()) {
@@ -93,7 +98,14 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
   const handleSetAppState = async (newState: Partial<AppState>) => {
     const updatedState = { ...appState, ...newState };
     setAppState(updatedState); // Optimistic update
+    
+    if (!db) {
+      console.warn("Firebase no está configurado, los cambios no se guardarán.");
+      return;
+    }
+
     try {
+      const docRef = doc(db, 'organizador-publico', 'datos-compartidos');
       await setDoc(docRef, { ...updatedState, lastUpdated: serverTimestamp() });
     } catch (err) {
       console.error("Firebase setDoc error:", err);

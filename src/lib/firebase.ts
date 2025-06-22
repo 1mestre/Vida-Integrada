@@ -1,7 +1,7 @@
 // Import the functions you need from the SDKs you need
-import { initializeApp, getApps, getApp } from "firebase/app";
-import { getFirestore, doc, onSnapshot, setDoc, serverTimestamp } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
+import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
+import { getFirestore, doc, onSnapshot, setDoc, serverTimestamp, type Firestore } from "firebase/firestore";
+import { getAuth, type Auth } from "firebase/auth";
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
@@ -14,9 +14,20 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Initialize Firebase
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-const db = getFirestore(app);
-const auth = getAuth(app);
+let app: FirebaseApp | undefined;
+let db: Firestore | undefined;
+let auth: Auth | undefined;
+
+if (firebaseConfig.apiKey && firebaseConfig.projectId) {
+  try {
+    app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+    db = getFirestore(app);
+    auth = getAuth(app);
+  } catch (e) {
+    console.error("Error initializing Firebase", e);
+  }
+} else {
+  console.warn("Firebase configuration is incomplete. Firebase features will be disabled.");
+}
 
 export { app, db, auth, doc, onSnapshot, setDoc, serverTimestamp };
