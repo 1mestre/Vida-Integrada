@@ -43,7 +43,7 @@ const UniversityTab = () => {
   };
 
   const gridStyle = { 
-    gridTemplateColumns: 'auto repeat(5, minmax(120px, 1fr))', 
+    gridTemplateColumns: '4rem repeat(5, minmax(120px, 1fr))', 
     gridTemplateRows: 'auto repeat(18, 4rem)' 
   };
 
@@ -87,7 +87,7 @@ const UniversityTab = () => {
                 {appState.timetableData.map(event => (
                   <motion.div
                       key={event.id}
-                      className="m-1 p-2 rounded-lg text-white text-xs flex flex-col items-center justify-center text-center cursor-pointer overflow-hidden"
+                      className="p-2 rounded-lg text-white text-xs flex flex-col items-center justify-center text-center cursor-pointer overflow-hidden"
                       style={{ ...getGridPosition(event), backgroundColor: event.color || '#0091FF' }}
                       onClick={() => handleEventClick(event)}
                       initial={{ opacity: 0, scale: 0.8 }}
