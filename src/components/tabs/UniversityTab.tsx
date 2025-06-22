@@ -42,6 +42,11 @@ const UniversityTab = () => {
       };
   };
 
+  const gridStyle = { 
+    gridTemplateColumns: 'auto repeat(5, minmax(120px, 1fr))', 
+    gridTemplateRows: 'auto repeat(18, 4rem)' 
+  };
+
   return (
     <>
       <Card className="glassmorphism-card overflow-hidden">
@@ -57,38 +62,44 @@ const UniversityTab = () => {
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
-            <div className="grid gap-px bg-border/20" style={{ gridTemplateColumns: 'auto repeat(5, minmax(120px, 1fr))', gridTemplateRows: 'auto repeat(18, 4rem)' }}>
-              {/* Empty corner */}
-              <div className="sticky left-0 bg-secondary z-10"></div>
-              {/* Day headers */}
-              {DAYS.map(day => (
-                <div key={day} className="text-center p-2 font-semibold text-sm text-muted-foreground bg-secondary/30">{day}</div>
-              ))}
-              {/* Time slots and grid cells */}
-              {HOURS.map(hour => (
-                <React.Fragment key={hour}>
-                  <div className="p-2 text-xs text-right font-mono text-muted-foreground sticky left-0 bg-secondary z-10">{hour}</div>
-                  {DAYS.map(day => (
-                    <div key={`${day}-${hour}`} className="border-t border-l border-border/20"></div>
-                  ))}
-                </React.Fragment>
-              ))}
-              {/* Events */}
-              {appState.timetableData.map(event => (
-                <motion.div
-                    key={event.id}
-                    className="m-1 p-2 rounded-lg text-white text-xs flex flex-col justify-start cursor-pointer overflow-hidden"
-                    style={{ ...getGridPosition(event), backgroundColor: event.color || '#0091FF' }}
-                    onClick={() => handleEventClick(event)}
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.3 }}
-                    whileHover={{ scale: 1.05, zIndex: 20 }}
-                >
-                    <p className="font-bold truncate">{event.title}</p>
-                    <p className="truncate">{event.teacher}</p>
-                </motion.div>
-              ))}
+            <div className="relative">
+              {/* Base Grid for structure */}
+              <div className="grid gap-px bg-border/20" style={gridStyle}>
+                {/* Empty corner */}
+                <div className="sticky left-0 bg-secondary z-10"></div>
+                {/* Day headers */}
+                {DAYS.map(day => (
+                  <div key={day} className="text-center p-2 font-semibold text-sm text-muted-foreground bg-secondary/30">{day}</div>
+                ))}
+                {/* Time slots and grid cells */}
+                {HOURS.map(hour => (
+                  <React.Fragment key={hour}>
+                    <div className="p-2 text-xs text-right font-mono text-muted-foreground sticky left-0 bg-secondary z-10">{hour}</div>
+                    {DAYS.map(day => (
+                      <div key={`${day}-${hour}`} className="border-t border-l border-border/20"></div>
+                    ))}
+                  </React.Fragment>
+                ))}
+              </div>
+              
+              {/* Overlay Grid for events */}
+              <div className="absolute top-0 left-0 w-full h-full grid gap-px" style={gridStyle}>
+                {appState.timetableData.map(event => (
+                  <motion.div
+                      key={event.id}
+                      className="m-1 p-2 rounded-lg text-white text-xs flex flex-col justify-start cursor-pointer overflow-hidden"
+                      style={{ ...getGridPosition(event), backgroundColor: event.color || '#0091FF' }}
+                      onClick={() => handleEventClick(event)}
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.3 }}
+                      whileHover={{ scale: 1.05, zIndex: 20 }}
+                  >
+                      <p className="font-bold truncate">{event.title}</p>
+                      <p className="truncate">{event.teacher}</p>
+                  </motion.div>
+                ))}
+              </div>
             </div>
           </div>
         </CardContent>

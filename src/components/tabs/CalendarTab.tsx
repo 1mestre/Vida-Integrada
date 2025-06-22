@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import FullCalendar from '@/components/FullCalendar';
@@ -21,7 +21,7 @@ const ProgressBar = ({ label, value, colorClass, alwaysGreen }: { label: string,
 );
 
 const CalendarTab = () => {
-  const [time, setTime] = useState<Date | undefined>(undefined);
+  const [time, setTime] = useState<Date | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -58,20 +58,20 @@ const CalendarTab = () => {
     return 'text-green-400';
   };
   
-  const handleEventClick = (clickInfo: any) => {
+  const handleEventClick = useCallback((clickInfo: any) => {
     const event = appState.calendarEventsData.find(e => e.id === clickInfo.event.id);
     if(event) {
         setSelectedEvent(event);
         setSelectedDate(null);
         setModalOpen(true);
     }
-  };
+  }, [appState.calendarEventsData]);
 
-  const handleDateSelect = (selectInfo: any) => {
+  const handleDateSelect = useCallback((selectInfo: any) => {
     setSelectedEvent(null);
     setSelectedDate(selectInfo.startStr);
     setModalOpen(true);
-  };
+  }, []);
   
   const todayStr = new Date().toISOString().split('T')[0];
   const todaysEvents = appState.calendarEventsData.filter(event => event.start === todayStr);
