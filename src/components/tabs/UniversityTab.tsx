@@ -69,7 +69,7 @@ const UniversityTab = () => {
                 <div className="sticky left-0 bg-secondary z-10"></div>
                 {/* Day headers */}
                 {DAYS.map(day => (
-                  <div key={day} className="text-center p-2 font-semibold text-sm text-muted-foreground bg-secondary/30">{day}</div>
+                  <div key={day} className="text-center p-2 font-semibold text-sm text-muted-foreground bg-secondary/30 sticky top-0">{day}</div>
                 ))}
                 {/* Time slots and grid cells */}
                 {HOURS.map(hour => (
@@ -87,7 +87,7 @@ const UniversityTab = () => {
                 {appState.timetableData.map(event => (
                   <motion.div
                       key={event.id}
-                      className="m-1 p-2 rounded-lg text-white text-xs flex flex-col justify-start cursor-pointer overflow-hidden"
+                      className="m-1 p-2 rounded-lg text-white text-xs flex flex-col items-center justify-center text-center cursor-pointer overflow-hidden"
                       style={{ ...getGridPosition(event), backgroundColor: event.color || '#0091FF' }}
                       onClick={() => handleEventClick(event)}
                       initial={{ opacity: 0, scale: 0.8 }}
@@ -95,8 +95,8 @@ const UniversityTab = () => {
                       transition={{ duration: 0.3 }}
                       whileHover={{ scale: 1.05, zIndex: 20 }}
                   >
-                      <p className="font-bold truncate">{event.title}</p>
-                      <p className="truncate">{event.teacher}</p>
+                      <p className="font-bold">{event.title}</p>
+                      <p>{event.teacher}</p>
                   </motion.div>
                 ))}
               </div>

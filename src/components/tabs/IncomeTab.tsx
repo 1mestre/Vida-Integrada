@@ -60,8 +60,15 @@ const IncomeTab = () => {
     setAmount('');
   };
 
-  const handleClearHistory = () => {
-    setAppState({ contributions: [], monthlyTargets: {} });
+  const handleClearCurrentMonth = () => {
+    const contributionsKept = appState.contributions.filter(c => !c.date.startsWith(currentMonthKey));
+    
+    const { [currentMonthKey]: _, ...targetsKept } = appState.monthlyTargets;
+    
+    setAppState({
+      contributions: contributionsKept,
+      monthlyTargets: targetsKept,
+    });
   };
   
   const financialSummary = useMemo(() => {
@@ -159,7 +166,7 @@ const IncomeTab = () => {
                                 const achieved = monthIncome >= target;
                                 return (
                                     <li key={key} className="text-sm border-b border-border/50 pb-2">
-                                        <p className="font-medium">{format(new Date(key), 'MMMM yyyy', { locale: es })}</p>
+                                        <p className="font-medium">{format(new Date(`${key}-02`), 'MMMM yyyy', { locale: es })}</p>
                                         <div className="flex justify-between items-center">
                                             <span className="text-muted-foreground">{formatCOP(monthIncome)} / {formatCOP(target)}</span>
                                             <span className={`font-bold ${achieved ? 'text-green-400' : 'text-orange-400'}`}>
@@ -196,19 +203,19 @@ const IncomeTab = () => {
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button variant="destructive" className="w-full">
-              <Trash2 className="mr-2 h-4 w-4" /> Limpiar Todo el Historial
+              <Trash2 className="mr-2 h-4 w-4" /> Limpiar Mes Actual
             </Button>
           </AlertDialogTrigger>
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
               <AlertDialogDescription>
-                Esta acción eliminará permanentemente todos los ingresos y metas guardados. No se puede deshacer.
+                Esta acción eliminará permanentemente los ingresos y la meta para el mes actual. No se puede deshacer.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancelar</AlertDialogCancel>
-              <AlertDialogAction onClick={handleClearHistory} className="bg-destructive hover:bg-destructive/90">Confirmar</AlertDialogAction>
+              <AlertDialogAction onClick={handleClearCurrentMonth} className="bg-destructive hover:bg-destructive/90">Confirmar</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
