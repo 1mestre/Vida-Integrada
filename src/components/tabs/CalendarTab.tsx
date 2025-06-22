@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import FullCalendar from '@/components/FullCalendar';
@@ -21,7 +21,7 @@ const ProgressBar = ({ label, value, colorClass, alwaysGreen }: { label: string,
 );
 
 const CalendarTab = () => {
-  const [time, setTime] = useState(new Date());
+  const [time, setTime] = useState<Date | undefined>(undefined);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -29,19 +29,27 @@ const CalendarTab = () => {
   const { appState } = useAppState();
 
   useEffect(() => {
+    setTime(new Date());
     const timerId = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(timerId);
   }, []);
 
-  const startOfYear = new Date(time.getFullYear(), 0, 1);
-  const endOfYear = new Date(time.getFullYear(), 11, 31);
-  const yearProgress = ((time.getTime() - startOfYear.getTime()) / (endOfYear.getTime() - startOfYear.getTime())) * 100;
+  const { yearProgress, monthProgress, dayProgress } = useMemo(() => {
+    if (!time) {
+      return { yearProgress: 0, monthProgress: 0, dayProgress: 0 };
+    }
+    const startOfYear = new Date(time.getFullYear(), 0, 1);
+    const endOfYear = new Date(time.getFullYear(), 11, 31);
+    const yearProgress = ((time.getTime() - startOfYear.getTime()) / (endOfYear.getTime() - startOfYear.getTime())) * 100;
 
-  const startOfMonth = new Date(time.getFullYear(), time.getMonth(), 1);
-  const endOfMonth = new Date(time.getFullYear(), time.getMonth() + 1, 0);
-  const monthProgress = ((time.getDate() - 1) / (endOfMonth.getDate() - 1)) * 100;
+    const endOfMonth = new Date(time.getFullYear(), time.getMonth() + 1, 0);
+    const monthProgress = time.getDate() > 1 ? ((time.getDate() - 1) / (endOfMonth.getDate() - 1)) * 100 : 0;
 
-  const dayProgress = (time.getHours() * 3600 + time.getMinutes() * 60 + time.getSeconds()) / 864 * 0.1;
+    const dayProgress = (time.getHours() * 3600 + time.getMinutes() * 60 + time.getSeconds()) / 86400 * 100;
+    
+    return { yearProgress, monthProgress, dayProgress };
+  }, [time]);
+
 
   const getProgressColor = (progress: number) => {
     if (progress < 25) return 'text-red-400';

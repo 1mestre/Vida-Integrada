@@ -6,8 +6,8 @@ import { BrainCircuit, Lightbulb, Target } from "lucide-react";
 const ProductivityHeader = () => {
     return (
         <header className="text-center space-y-4">
-            <h1 className="text-4xl md:text-5xl font-bold flex items-center justify-center gap-4 text-shadow-neon text-primary">
-                <BrainCircuit className="h-10 w-10"/> Focus Flow
+            <h1 className="text-4xl md:text-5xl font-bold text-center">
+                Productividad
             </h1>
             <div className="grid md:grid-cols-2 gap-4 max-w-4xl mx-auto">
                 <Card className="glassmorphism-card text-left">

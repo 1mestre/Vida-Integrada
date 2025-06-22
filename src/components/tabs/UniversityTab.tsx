@@ -59,7 +59,7 @@ const UniversityTab = () => {
           <div className="overflow-x-auto">
             <div className="grid gap-px bg-border/20" style={{ gridTemplateColumns: 'auto repeat(5, minmax(120px, 1fr))', gridTemplateRows: 'auto repeat(18, 4rem)' }}>
               {/* Empty corner */}
-              <div className="sticky left-0 bg-background/80 z-10"></div>
+              <div className="sticky left-0 bg-secondary z-10"></div>
               {/* Day headers */}
               {DAYS.map(day => (
                 <div key={day} className="text-center p-2 font-semibold text-sm text-muted-foreground bg-secondary/30">{day}</div>
@@ -67,7 +67,7 @@ const UniversityTab = () => {
               {/* Time slots and grid cells */}
               {HOURS.map(hour => (
                 <React.Fragment key={hour}>
-                  <div className="p-2 text-xs text-right font-mono text-muted-foreground sticky left-0 bg-background/80 z-10">{hour}</div>
+                  <div className="p-2 text-xs text-right font-mono text-muted-foreground sticky left-0 bg-secondary z-10">{hour}</div>
                   {DAYS.map(day => (
                     <div key={`${day}-${hour}`} className="border-t border-l border-border/20"></div>
                   ))}

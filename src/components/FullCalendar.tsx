@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect } from 'react';
 
 declare global {
     interface Window {
@@ -16,10 +16,16 @@ interface FullCalendarProps {
 
 const FullCalendar: React.FC<FullCalendarProps> = ({ events, onEventClick, onDateSelect }) => {
     const calendarRef = useRef<HTMLDivElement>(null);
-    const [calendarInstance, setCalendarInstance] = useState<any>(null);
+    const calendarInstanceRef = useRef<any>(null);
+
+    const onEventClickRef = useRef(onEventClick);
+    onEventClickRef.current = onEventClick;
+
+    const onDateSelectRef = useRef(onDateSelect);
+    onDateSelectRef.current = onDateSelect;
 
     useEffect(() => {
-        if (window.FullCalendar && calendarRef.current && !calendarInstance) {
+        if (window.FullCalendar && calendarRef.current && !calendarInstanceRef.current) {
             const calendar = new window.FullCalendar.Calendar(calendarRef.current, {
                 initialView: 'dayGridMonth',
                 locale: 'es',
@@ -34,30 +40,31 @@ const FullCalendar: React.FC<FullCalendarProps> = ({ events, onEventClick, onDat
                 dayMaxEvents: true,
                 weekends: true,
                 events: events,
-                select: onDateSelect,
-                eventClick: onEventClick,
+                select: (info: any) => onDateSelectRef.current(info),
+                eventClick: (info: any) => onEventClickRef.current(info),
                 height: 'auto',
                 contentHeight: 'auto',
                 aspectRatio: 1.5,
             });
             calendar.render();
-            setCalendarInstance(calendar);
+            calendarInstanceRef.current = calendar;
         }
 
         return () => {
-            if (calendarInstance) {
-                calendarInstance.destroy();
+            if (calendarInstanceRef.current) {
+                calendarInstanceRef.current.destroy();
+                calendarInstanceRef.current = null;
             }
         };
-    }, [calendarRef, calendarInstance, onDateSelect, onEventClick]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []); // Intentionally empty to run only on mount/unmount
     
     useEffect(() => {
-        if(calendarInstance) {
-            calendarInstance.removeAllEvents();
-            calendarInstance.addEventSource(events);
+        if(calendarInstanceRef.current) {
+            calendarInstanceRef.current.removeAllEvents();
+            calendarInstanceRef.current.addEventSource(events);
         }
-    }, [events, calendarInstance]);
-
+    }, [events]);
 
     return <div ref={calendarRef} />;
 };

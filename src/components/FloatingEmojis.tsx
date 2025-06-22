@@ -1,9 +1,19 @@
 "use client";
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 const EMOJIS = ['💰', '🎓', '📅', '✨', '🚀', '🏆', '📈', '🎯', '💡', '📚'];
 
 const FloatingEmojis = () => {
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  if (!isClient) {
+    return null;
+  }
+
   return (
     <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
       {EMOJIS.concat(EMOJIS).map((emoji, i) => (
