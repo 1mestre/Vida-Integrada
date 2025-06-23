@@ -16,7 +16,8 @@ import { Calendar as CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-
+import { v4 as uuidv4 } from 'uuid';
+import { Switch } from './ui/switch';
 
 interface WorkItemModalProps {
   isOpen: boolean;
@@ -24,9 +25,16 @@ interface WorkItemModalProps {
   item?: WorkItem | null;
 }
 
-const PACKAGE_TYPES: WorkItem['packageType'][] = ['Masterpiece', 'Exclusive', 'Amateurs'];
-const REMAKE_TYPES: WorkItem['remakeType'][] = ['Original', 'Single Remake', 'Multiple Remakes', 'Original Multiple Beats'];
 const DELIVERY_STATUSES: WorkItem['deliveryStatus'][] = ['Pending', 'In Transit', 'In Revision', 'Delivered', 'Returned'];
+
+const keyOptions = [
+    { value: 'C / Am', label: 'C / Am' }, { value: 'Db / Bbm', label: 'C# / A#m' },
+    { value: 'D / Bm', label: 'D / Bm' }, { value: 'Eb / Cm', label: 'D# / Cm' },
+    { value: 'E / C#m', label: 'E / C#m' }, { value: 'F / Dm', label: 'F / Dm' },
+    { value: 'F# / D#m', label: 'F# / D#m' }, { value: 'G / Em', label: 'G / Em' },
+    { value: 'Ab / Fm', label: 'G# / Fm' }, { value: 'A / F#m', label: 'A / F#m' },
+    { value: 'Bb / Gm', label: 'A# / Gm' }, { value: 'B / G#m', label: 'B / G#m' },
+];
 
 const statusToColumnMap: { [key in WorkItem['deliveryStatus']]?: 'todo' | 'inprogress' | 'done' } = {
   'Pending': 'todo',
@@ -38,39 +46,69 @@ const statusToColumnMap: { [key in WorkItem['deliveryStatus']]?: 'todo' | 'inpro
 
 const WorkItemModal: React.FC<WorkItemModalProps> = ({ isOpen, onClose, item }) => {
   const { appState, setAppState } = useAppState();
-  const { control, handleSubmit, reset } = useForm<WorkItem>({
+  const form = useForm<WorkItem & { packageTemplateId?: string }>({
     defaultValues: item || {
-      id: '',
-      clientName: '',
-      orderNumber: '',
-      deliveryDate: '',
-      genre: '',
-      packageType: 'Exclusive',
-      remakeType: 'Original',
-      key: '',
-      bpm: '',
+      id: '', clientName: '', orderNumber: '',
+      deliveryDate: format(new Date(), 'yyyy-MM-dd'),
+      genre: '', bpm: '', key: '',
       deliveryStatus: 'Pending',
-      revisionsRemaining: 1,
+      packageName: '', price: 0, revisionsRemaining: 0,
+      songLength: 0, numberOfInstruments: 0,
+      separateFiles: false, masterAudio: false, projectFileDelivery: false,
+      exclusiveLicense: false, vocalProduction: false,
     }
   });
 
+  const { control, handleSubmit, reset, watch, setValue } = form;
+  const selectedTemplateId = watch('packageTemplateId');
+
   useEffect(() => {
     if (isOpen) {
-      reset(item || {
-        id: new Date().toISOString(),
-        clientName: '',
-        orderNumber: '',
-        deliveryDate: new Date().toISOString().split('T')[0],
-        genre: '',
-        packageType: 'Exclusive',
-        remakeType: 'Original',
-        key: '',
-        bpm: '',
-        deliveryStatus: 'Pending',
-        revisionsRemaining: 1,
-      });
+      if (item) {
+        reset({ ...item, packageTemplateId: '' });
+      } else {
+        const defaultTemplate = appState.workPackageTemplates[0];
+        if (defaultTemplate) {
+          reset({
+            id: uuidv4(),
+            clientName: '', orderNumber: '',
+            deliveryDate: format(new Date(), 'yyyy-MM-dd'),
+            genre: '', bpm: '', key: keyOptions[0].value,
+            deliveryStatus: 'Pending',
+            packageName: defaultTemplate.name,
+            price: defaultTemplate.price,
+            revisionsRemaining: defaultTemplate.revisions,
+            songLength: defaultTemplate.songLength,
+            numberOfInstruments: defaultTemplate.numberOfInstruments,
+            separateFiles: defaultTemplate.separateFiles,
+            masterAudio: defaultTemplate.masterAudio,
+            projectFileDelivery: defaultTemplate.projectFileDelivery,
+            exclusiveLicense: defaultTemplate.exclusiveLicense,
+            vocalProduction: defaultTemplate.vocalProduction,
+            packageTemplateId: defaultTemplate.id,
+          });
+        }
+      }
     }
-  }, [isOpen, item, reset]);
+  }, [isOpen, item, reset, appState.workPackageTemplates]);
+  
+  useEffect(() => {
+    if (!selectedTemplateId) return;
+    const template = appState.workPackageTemplates.find(t => t.id === selectedTemplateId);
+    if (template) {
+      setValue('packageName', template.name);
+      setValue('price', template.price);
+      setValue('revisionsRemaining', template.revisions);
+      setValue('songLength', template.songLength);
+      setValue('numberOfInstruments', template.numberOfInstruments);
+      setValue('separateFiles', template.separateFiles);
+      setValue('masterAudio', template.masterAudio);
+      setValue('projectFileDelivery', template.projectFileDelivery);
+      setValue('exclusiveLicense', template.exclusiveLicense);
+      setValue('vocalProduction', template.vocalProduction);
+    }
+  }, [selectedTemplateId, appState.workPackageTemplates, setValue]);
+
 
   const onSubmit = (data: WorkItem) => {
     setAppState(prevState => {
@@ -101,7 +139,7 @@ const WorkItemModal: React.FC<WorkItemModalProps> = ({ isOpen, onClose, item }) 
         }
 
       } else { // Creating new item
-        const newWorkItem = { ...data, id: new Date().toISOString() };
+        const newWorkItem = { ...data, id: uuidv4() };
         updatedWorkItems = [...prevState.workItems, newWorkItem];
         
         const newKanbanTask: KanbanTask = {
@@ -147,18 +185,37 @@ const WorkItemModal: React.FC<WorkItemModalProps> = ({ isOpen, onClose, item }) 
     onClose();
   };
 
+  const DeliverableSwitch = ({ name, label }: { name: keyof WorkItem, label: string }) => (
+    <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm">
+      <Label htmlFor={name}>{label}</Label>
+      <Controller
+        name={name}
+        control={control}
+        render={({ field }) => (
+          <Switch
+            id={name}
+            checked={!!field.value}
+            onCheckedChange={field.onChange}
+          />
+        )}
+      />
+    </div>
+  );
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="glassmorphism-card max-w-2xl">
+      <DialogContent className="glassmorphism-card max-w-4xl">
         <DialogHeader>
           <DialogTitle>{item ? 'Editar' : 'Nueva'} Orden</DialogTitle>
           <DialogDescription>Completa los detalles de la orden de producción musical.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)}>
-          <ScrollArea className="h-[60vh] p-1">
-            <div className="space-y-4 p-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
+          <ScrollArea className="h-[70vh] p-1">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 p-4">
+              {/* Columna Izquierda: Datos Principales */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold border-b pb-2">Detalles del Cliente y Orden</h3>
+                 <div>
                   <Label htmlFor="clientName">Nombre Cliente</Label>
                   <Controller name="clientName" control={control} rules={{ required: true }} render={({ field }) => <Input id="clientName" {...field} />} />
                 </div>
@@ -166,97 +223,100 @@ const WorkItemModal: React.FC<WorkItemModalProps> = ({ isOpen, onClose, item }) 
                   <Label htmlFor="orderNumber">Número de Orden</Label>
                   <Controller name="orderNumber" control={control} rules={{ required: true }} render={({ field }) => <Input id="orderNumber" {...field} />} />
                 </div>
-              </div>
-
-              <div>
-                <Label htmlFor="deliveryDate">Fecha de Entrega</Label>
-                 <Controller
-                  name="deliveryDate"
-                  control={control}
-                  rules={{ required: true }}
-                  render={({ field }) => (
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant={"outline"}
-                          className={cn(
-                            "w-full justify-start text-left font-normal",
-                            !field.value && "text-muted-foreground"
-                          )}
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {field.value ? format(new Date(field.value + 'T00:00:00'), "PPP", { locale: es }) : <span>Elige una fecha</span>}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
-                        <Calendar
-                          mode="single"
-                          selected={field.value ? new Date(field.value + 'T00:00:00') : undefined}
-                          onSelect={(date) => {
-                            if (date) {
-                              field.onChange(format(date, 'yyyy-MM-dd'));
-                            }
-                          }}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  )}
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                 <div>
-                    <Label htmlFor="genre">Género</Label>
-                    <Controller name="genre" control={control} render={({ field }) => <Input id="genre" {...field} />} />
-                </div>
                 <div>
-                  <Label htmlFor="packageType">Tipo de Paquete</Label>
-                  <Controller name="packageType" control={control} render={({ field }) => (
+                  <Label htmlFor="deliveryDate">Fecha de Entrega</Label>
+                   <Controller
+                    name="deliveryDate" control={control} rules={{ required: true }}
+                    render={({ field }) => (
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button variant={"outline"} className={cn("w-full justify-start text-left font-normal", !field.value && "text-muted-foreground")}>
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {field.value ? format(new Date(field.value + 'T00:00:00'), "PPP", { locale: es }) : <span>Elige una fecha</span>}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={field.value ? new Date(field.value + 'T00:00:00') : undefined} onSelect={(date) => date && field.onChange(format(date, 'yyyy-MM-dd'))} initialFocus /></PopoverContent>
+                      </Popover>
+                    )} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                   <div>
+                      <Label htmlFor="genre">Género</Label>
+                      <Controller name="genre" control={control} render={({ field }) => <Input id="genre" {...field} />} />
+                  </div>
+                  <div>
+                    <Label htmlFor="bpm">BPM</Label>
+                    <Controller name="bpm" control={control} render={({ field }) => <Input id="bpm" {...field} />} />
+                  </div>
+                </div>
+                 <div>
+                  <Label htmlFor="key">Tonalidad (Key)</Label>
+                  <Controller name="key" control={control} render={({ field }) => (
                     <Select onValueChange={field.onChange} value={field.value}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>{PACKAGE_TYPES.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent>
+                      <SelectContent>{keyOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}</SelectContent>
                     </Select>
                   )} />
                 </div>
-              </div>
-              
-              <div>
-                <Label htmlFor="remakeType">Tipo de Remake</Label>
-                <Controller name="remakeType" control={control} render={({ field }) => (
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>{REMAKE_TYPES.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
-                  </Select>
-                )} />
+                 <div>
+                    <Label htmlFor="deliveryStatus">Estado de Entrega</Label>
+                    <Controller name="deliveryStatus" control={control} render={({ field }) => (
+                    <Select onValueChange={field.onChange} value={field.value}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>{DELIVERY_STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                    </Select>
+                    )} />
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Columna Derecha: Paquete y Entregables */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold border-b pb-2">Detalles del Paquete</h3>
                 <div>
-                  <Label htmlFor="key">Tonalidad (Key)</Label>
-                  <Controller name="key" control={control} render={({ field }) => <Input id="key" {...field} />} />
+                    <Label htmlFor="packageTemplateId">Plantilla de Paquete</Label>
+                    <Controller name="packageTemplateId" control={control}
+                        render={({ field }) => (
+                            <Select onValueChange={field.onChange} value={field.value}>
+                                <SelectTrigger><SelectValue placeholder="Seleccionar plantilla..." /></SelectTrigger>
+                                <SelectContent>
+                                    {appState.workPackageTemplates.map(template => (
+                                        <SelectItem key={template.id} value={template.id}>{template.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        )}
+                    />
                 </div>
-                <div>
-                  <Label htmlFor="bpm">BPM</Label>
-                  <Controller name="bpm" control={control} render={({ field }) => <Input id="bpm" {...field} />} />
-                </div>
-              </div>
-              
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                 <div className="grid grid-cols-2 gap-4">
                     <div>
-                        <Label htmlFor="deliveryStatus">Estado de Entrega</Label>
-                        <Controller name="deliveryStatus" control={control} render={({ field }) => (
-                        <Select onValueChange={field.onChange} value={field.value}>
-                            <SelectTrigger><SelectValue /></SelectTrigger>
-                            <SelectContent>{DELIVERY_STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-                        </Select>
-                        )} />
+                        <Label htmlFor="price">Precio (USD)</Label>
+                        <Controller name="price" control={control} render={({ field }) => <Input id="price" type="number" {...field} onChange={e => field.onChange(parseFloat(e.target.value))}/>} />
                     </div>
-                     <div>
-                        <Label htmlFor="revisionsRemaining">Revisiones Restantes</Label>
+                    <div>
+                        <Label htmlFor="revisionsRemaining">Revisiones</Label>
                         <Controller name="revisionsRemaining" control={control} render={({ field }) => <Input id="revisionsRemaining" type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10))}/>} />
                     </div>
                 </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <Label htmlFor="songLength">Duración (seg)</Label>
+                        <Controller name="songLength" control={control} render={({ field }) => <Input id="songLength" type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10))}/>} />
+                    </div>
+                    <div>
+                        <Label htmlFor="numberOfInstruments"># Instrumentos</Label>
+                        <Controller name="numberOfInstruments" control={control} render={({ field }) => <Input id="numberOfInstruments" type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10))}/>} />
+                    </div>
+                </div>
+
+                <h3 className="text-lg font-semibold border-b pb-2 pt-4">Entregables</h3>
+                <div className="space-y-2">
+                    <DeliverableSwitch name="masterAudio" label="Audio Masterizado" />
+                    <DeliverableSwitch name="separateFiles" label="Archivos Separados (STEMS)" />
+                    <DeliverableSwitch name="projectFileDelivery" label="Archivo de Proyecto (FLP)" />
+                    <DeliverableSwitch name="exclusiveLicense" label="Licencia Exclusiva" />
+                    <DeliverableSwitch name="vocalProduction" label="Producción Vocal" />
+                </div>
+              </div>
             </div>
           </ScrollArea>
           <DialogFooter className="pt-4 pr-4">

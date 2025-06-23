@@ -4,6 +4,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { db, doc, onSnapshot, setDoc, serverTimestamp } from '@/lib/firebase';
 import { useToast } from "@/hooks/use-toast";
+import { v4 as uuidv4 } from 'uuid';
 
 interface Contribution {
   id: string;
@@ -44,18 +45,41 @@ export interface KanbanTask {
   color?: string;
 }
 
+export interface WorkPackageTemplate {
+  id: string;
+  name: string;
+  price: number;
+  revisions: number;
+  songLength: number; // in seconds
+  numberOfInstruments: number;
+  separateFiles: boolean;
+  masterAudio: boolean;
+  projectFileDelivery: boolean;
+  exclusiveLicense: boolean;
+  vocalProduction: boolean;
+}
+
 export interface WorkItem {
   id: string;
   clientName: string;
   orderNumber: string;
   deliveryDate: string;
   genre: string;
-  packageType: 'Masterpiece' | 'Exclusive' | 'Amateurs';
-  remakeType: 'Original' | 'Single Remake' | 'Multiple Remakes' | 'Original Multiple Beats';
-  key: string;
   bpm: string;
+  key: string;
   deliveryStatus: 'Pending' | 'In Transit' | 'In Revision' | 'Delivered' | 'Returned';
+  
+  // Snapshot fields from template
+  packageName: string;
+  price: number;
   revisionsRemaining: number;
+  songLength: number;
+  numberOfInstruments: number;
+  separateFiles: boolean;
+  masterAudio: boolean;
+  projectFileDelivery: boolean;
+  exclusiveLicense: boolean;
+  vocalProduction: boolean;
 }
 
 export interface UniversityTask {
@@ -76,13 +100,7 @@ interface AppState {
   workItems: WorkItem[];
   tasks: KanbanTask[];
   universityTasks: UniversityTask[];
-}
-
-interface AppStateContextType {
-  appState: AppState;
-  setAppState: (newState: Partial<AppState> | ((prevState: AppState) => Partial<AppState>)) => void;
-  loading: boolean;
-  error: string | null;
+  workPackageTemplates: WorkPackageTemplate[];
 }
 
 const initialAppState: AppState = {
@@ -94,7 +112,55 @@ const initialAppState: AppState = {
   workItems: [],
   tasks: [],
   universityTasks: [],
+  workPackageTemplates: [
+    {
+      id: uuidv4(),
+      name: 'Amateurs',
+      price: 15,
+      revisions: 1,
+      songLength: 60,
+      numberOfInstruments: 5,
+      separateFiles: false,
+      masterAudio: false,
+      projectFileDelivery: false,
+      exclusiveLicense: false,
+      vocalProduction: false,
+    },
+    {
+      id: uuidv4(),
+      name: 'Exclusive',
+      price: 30,
+      revisions: 2,
+      songLength: 180,
+      numberOfInstruments: 10,
+      separateFiles: true,
+      masterAudio: true,
+      projectFileDelivery: false,
+      exclusiveLicense: true,
+      vocalProduction: false,
+    },
+    {
+      id: uuidv4(),
+      name: 'Masterpiece',
+      price: 60,
+      revisions: 3,
+      songLength: 240,
+      numberOfInstruments: 20,
+      separateFiles: true,
+      masterAudio: true,
+      projectFileDelivery: true,
+      exclusiveLicense: true,
+      vocalProduction: true,
+    }
+  ],
 };
+
+interface AppStateContextType {
+  appState: AppState;
+  setAppState: (newState: Partial<AppState> | ((prevState: AppState) => Partial<AppState>)) => void;
+  loading: boolean;
+  error: string | null;
+}
 
 const AppStateContext = createContext<AppStateContextType | undefined>(undefined);
 
@@ -115,7 +181,7 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
     const unsubscribe = onSnapshot(docRef, 
       (docSnap) => {
         if (docSnap.exists()) {
-          const data = docSnap.data() as AppState;
+          const data = docSnap.data();
           // Default values for fields that might not exist in old data
           setAppState({
             ...initialAppState,

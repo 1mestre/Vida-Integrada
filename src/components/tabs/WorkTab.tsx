@@ -27,7 +27,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useAppState, WorkItem } from '@/context/AppStateContext';
-import { MessageSquare, PlusCircle, Clipboard, TrendingUp, Trash2 } from 'lucide-react';
+import { MessageSquare, PlusCircle, Clipboard, TrendingUp, Trash2, Settings } from 'lucide-react';
 import WorkItemModal from '@/components/WorkItemModal';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
@@ -38,68 +38,30 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useSound } from '@/context/SoundContext';
+import PackageSettingsModal from '@/components/PackageSettingsModal';
 
 const generateClientMessage = (item: WorkItem): string => {
   let message = `Heyyy ${item.clientName}! 👋👋\n\n`;
+  message += `Here are the details for your "${item.packageName}" order (#${item.orderNumber}):\n\n`;
 
-  // Parte 1: Saludo inicial
-  if (item.packageType === "Masterpiece") {
-    message += item.remakeType === "Multiple Remakes"
-      ? `Yoooo, your ${item.genre} masterpiece remaked beats are officially done and they're straight fire fr!! 🔥🔥✨ Hahaha, we went CRAZY on these!!\n\n`
-      : `Yooo, your ${item.genre} masterpiece is officially done and it's straighttt fire fr!! 🔥✨\n\n`;
-  } else if (item.packageType === "Exclusive") {
-    message += item.remakeType === "Multiple Remakes"
-      ? `Your ${item.genre} remaked beats are readyyy to drop!! 💣💣 No cap, these ones hit DIFFERENT!! 💯🎵\n\n`
-      : `Your ${item.genre} beat is readyyy to drop!! No cap, this one hits different 💯🎵\n\n`;
-  } else { // Amateurs
-    message += item.remakeType === "Multiple Remakes"
-      ? `So hereee are those ${item.genre} demos you wanted!! 🎉 Just some quick vibes, nothing too wild yet hehe 😎🎧\n\n`
-      : `So here's that ${item.genre} demo you wanted!! Just a quick vibe check, nothing too wild yet 😎🎧\n\n`;
+  message += "📎📎 DELIVERABLES:\n";
+  if (item.masterAudio) message += `- Professionally Mixed & Mastered Audio 🔥\n`;
+  if (item.separateFiles) message += `- Separate Tracks/STEMS for full control 🎛️\n`;
+  if (item.projectFileDelivery) message += `- Full Project File (e.g., FLP) 📁\n`;
+  if (item.vocalProduction) message += `- Custom Vocal Production/Chain 🎤\n`;
+
+  message += `\n- Song Length: Up to ${item.songLength} seconds\n`;
+  message += `- Instruments: Up to ${item.numberOfInstruments}\n`;
+
+  if (item.exclusiveLicense) {
+      message += "\n📜 You get FULL EXCLUSIVE RIGHTS to this track. It's 100% yours!\n\n";
+  } else {
+      message += "\n📜 This order includes a non-exclusive license.\n\n";
   }
 
-  // Parte 2: Detalles del Remake
-  if (item.remakeType === "Single Remake") {
-    if (item.packageType === "Masterpiece") {
-      message += "🎛️🎛️ This remake got the FULL treatment - custom-built and clean as hell!! Readyyy for the big leagues!! 🏆🏆\n\n";
-    } else if (item.packageType === "Exclusive") {
-      message += "🎛️ The remake is LOCKED and loaded!! 🔫 Custom-made just for you, readyyy for your vocals!! 🎤✨\n\n";
-    } else { // Amateurs
-      message += "🎛️ This is just the demo version of the remake - think of it as the rough draft with MADDD potential!! 🎨\n\n";
-    }
-  } else if (item.remakeType === "Multiple Remakes") {
-    if (item.packageType === "Masterpiece") {
-      message += "🎛️🎛️ These remakes are CLEANNN as hell and ready to make some NOISEEE!! Each one hits different!! 🚀🚀\n\n";
-    } else if (item.packageType === "Exclusive") {
-      message += "🎛️ All these remakes are LOCKED IN!! 🔒 Multiple vibes, same CRAZY energy!! 💪💪 Hahaha let's gooo!\n\n";
-    } else { // Amateurs
-      message += "🎛️ These are just demo ideas for the remakes - the foundation's there, just needs the FULLLL glow-up!! 🏗️🏗️\n\n";
-    }
-  }
-
-  // Parte 3: Entregables
-  message += "📎📎 WHAT YOU'RE GETTING:\n";
-  if (item.packageType === "Masterpiece") {
-    message += `- Full WAV + STEMS: The WHOLE package, no bs!! 💎\n- FLP Project File: Full creative control in your hands!! 🎚️🎚️\n- Exclusive Rights Contract: It's 100000% yours, period!! 📜\n- EXCLUSIVE GIFT: Custom vocal chain preset made for ${item.remakeType === "Multiple Remakes" ? `these ${item.genre} vibes` : `this ${item.genre} vibe`} 🎙️🎙️\n(Appreciate you being chill to work with, let's keep the collabs going!!) 🤝🤝\n\n`;
-  } else if (item.packageType === "Exclusive") {
-    message += `- Full WAV: Mixed, mastered, and READYYY to upload!! 🎯\n- Exclusive Rights Contract: 100% ownership, no sharing needed!! 📋\n- EXCLUSIVE GIFT: Custom vocal chain preset made for ${item.remakeType === "Multiple Remakes" ? `these ${item.genre} styles` : `this ${item.genre} style`} 🎤✨\n(Appreciate you being chill to work with, let's keep the collabs going!!) 🤝\n\n`;
-  } else { // Amateurs
-    message += `- 60-sec MP3 demo: Just the vibe, raw and UNFILTEREDDD!! 🎵\n- Heads up: No exclusive rights or pro mixing included (this is just a taste!!) 👀👀\n\n🤔 BUT WAIT - If you're feeling this demo and want the full experience, just pay the difference:\n• Amateur ($10) → Pro ($15): +$5\n• Amateur ($10) → Exclusive ($30): +$20\n• Pro ($15) → Exclusive ($30): +$15\n\nAnd get:\n• The polished, final version(s) 🔥🔥\n• Exclusive license (100% yours) 📜\n• Professional mixing/mastering 🎛️🎚️\n• Full remake treatment 💯💯\n\nJust holla at me if you wanna upgrade! 🚀🚀\n\n`;
-  }
-
-  // Parte 4: Key y BPM
-  message += item.remakeType === "Multiple Remakes" 
-    ? `Keys: ${item.key} | BPMs: ${item.bpm}\n\n` 
-    : `Key: ${item.key} | BPM: ${item.bpm}\n\n`;
-
-  // Parte 5: Número de orden y despedida
-  message += `📦📦 Order #${item.orderNumber}\n\n`;
-  if (item.packageType === "Masterpiece") {
-    message += `✅✅ This is built for the BIGGG stages - Spotify, radio, wherever you wanna take it!! 🌟🌟\n${item.revisionsRemaining} revisions remaining 🔧🔧\n\n🎁 PRO TIP: Drop a 5-star review and I'll hook you UPPP with $10 off your next order!! Helps me out FOR REALLL 🙏🙏\n\nNow go make some MAGIC happen!! ✨🎤`;
-  } else if (item.packageType === "Exclusive") {
-    message += `✅ ${item.revisionsRemaining} revisions remaining 🔧\n${item.remakeType === "Multiple Remakes" ? "Time to make these BEATS slap!! 💥💥" : "Time to make some WAVES!! 🌊🌊"}\n\n🎁 PRO TIP: Leave me a 5-star review and I'll give you $10 off your next order!! WIN-WIN SITUATION 😉💰💰\n\nLet's get this music out there!!! 🚀🚀`;
-  } else { // Amateurs
-    message += "✅ Let me know what you think of the direction!! If you're vibing with it, we can ALWAYSSS take it to the next level!! 🎯🎯\n\n(No revisions on demos, but that's what upgrades are for!! 😉💡💡)";
-  }
+  message += `Key: ${item.key} | BPM: ${item.bpm}\n\n`;
+  message += `You have ${item.revisionsRemaining} revisions remaining. 🔧\n\n`;
+  message += `Let me know what you think! Let's make some magic happen! ✨`;
 
   return message;
 };
@@ -112,19 +74,6 @@ const statusColorMap: Record<WorkItem['deliveryStatus'], string> = {
   'Returned': 'bg-red-600 hover:bg-red-700 text-white'
 };
 
-const packageColorMap: Record<WorkItem['packageType'], string> = {
-  'Masterpiece': 'bg-purple-600 hover:bg-purple-700 text-white',
-  'Exclusive': 'bg-sky-600 hover:bg-sky-700 text-white',
-  'Amateurs': 'bg-teal-600 hover:bg-teal-700 text-white'
-};
-
-const remakeColorMap: Record<WorkItem['remakeType'], string> = {
-  'Single Remake': 'bg-blue-800 hover:bg-blue-900 text-white',
-  'Multiple Remakes': 'bg-purple-800 hover:bg-purple-900 text-white',
-  'Original': 'bg-green-800 hover:bg-green-900 text-white',
-  'Original Multiple Beats': 'bg-orange-800 hover:bg-orange-900 text-white'
-};
-
 const formatCOP = (value: number) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(value);
 const formatUSD = (value: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
 
@@ -132,6 +81,7 @@ const formatUSD = (value: number) => new Intl.NumberFormat('en-US', { style: 'cu
 const WorkTab = () => {
     const { appState, setAppState } = useAppState();
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
     const [selectedItem, setSelectedItem] = useState<WorkItem | null>(null);
     const [isAlertOpen, setIsAlertOpen] = useState(false);
     const [messageToShow, setMessageToShow] = useState('');
@@ -247,26 +197,25 @@ const WorkTab = () => {
         },
         { accessorKey: 'clientName', header: 'Cliente' },
         { accessorKey: 'orderNumber', header: 'Orden #' },
-        { accessorKey: 'deliveryDate', header: 'Entrega' },
+        { 
+            accessorKey: 'deliveryDate', 
+            header: 'Entrega',
+            cell: ({row}) => format(new Date(row.original.deliveryDate + 'T00:00:00'), "PPP", { locale: es })
+        },
         { accessorKey: 'genre', header: 'Género' },
         { 
-            accessorKey: 'packageType', 
+            accessorKey: 'packageName', 
             header: 'Paquete',
             cell: ({ row }) => {
-                const packageType = row.getValue('packageType') as WorkItem['packageType'];
-                return <Badge className={packageColorMap[packageType]}>{packageType}</Badge>
+                const packageName = row.getValue('packageName') as string;
+                return <Badge variant="secondary">{packageName}</Badge>
             }
         },
-        { 
-            accessorKey: 'remakeType', 
-            header: 'Tipo Remake',
-            cell: ({ row }) => {
-                const remakeType = row.getValue('remakeType') as WorkItem['remakeType'];
-                return <Badge className={remakeColorMap[remakeType]}>{remakeType}</Badge>
-            }
+        {
+            accessorKey: 'price',
+            header: 'Precio',
+            cell: ({row}) => formatUSD(row.original.price)
         },
-        { accessorKey: 'key', header: 'Key' },
-        { accessorKey: 'bpm', header: 'BPM' },
         { 
             accessorKey: 'deliveryStatus', 
             header: 'Estado',
@@ -275,7 +224,6 @@ const WorkTab = () => {
                 return <Badge className={statusColorMap[status]}>{status}</Badge>
             }
         },
-        { accessorKey: 'revisionsRemaining', header: 'Revisiones' },
         {
             id: 'edit',
             cell: ({ row }) => (
@@ -309,13 +257,18 @@ const WorkTab = () => {
                             <CardTitle>FIVERR📀</CardTitle>
                             <CardDescription>Organiza tus proyectos, clientes y entregas.</CardDescription>
                         </div>
-                        <Button onClick={() => {
-                            setSelectedItem(null);
-                            setIsModalOpen(true);
-                        }}>
-                            <PlusCircle className="mr-2 h-4 w-4" />
-                            Nueva Orden 💵
-                        </Button>
+                        <div className="flex items-center gap-2">
+                            <Button variant="outline" size="icon" onClick={() => setIsSettingsModalOpen(true)}>
+                                <Settings className="h-4 w-4" />
+                            </Button>
+                            <Button onClick={() => {
+                                setSelectedItem(null);
+                                setIsModalOpen(true);
+                            }}>
+                                <PlusCircle className="mr-2 h-4 w-4" />
+                                Nueva Orden 💵
+                            </Button>
+                        </div>
                     </div>
                 </CardHeader>
                 <CardContent>
@@ -492,6 +445,11 @@ const WorkTab = () => {
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 item={selectedItem}
+            />
+
+            <PackageSettingsModal 
+              isOpen={isSettingsModalOpen}
+              onClose={() => setIsSettingsModalOpen(false)}
             />
 
             <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
