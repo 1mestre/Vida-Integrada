@@ -18,25 +18,35 @@ const AmbiancePlayer = () => {
 
     const audioContextRef = useRef<AudioContext | null>(null);
     const gainNodeRef = useRef<GainNode | null>(null);
-    const sourceNodeRef = useRef<AudioNode | null>(null); // Can be Oscillator or BufferSource
+    
+    // Use separate refs for different types of audio sources for robust stop/start
+    const binauralSourcesRef = useRef<{left: OscillatorNode, right: OscillatorNode} | null>(null);
+    const bufferSourceRef = useRef<AudioBufferSourceNode | null>(null);
 
     const stopSound = useCallback(() => {
-        if (sourceNodeRef.current) {
-            if (sourceNodeRef.current instanceof OscillatorNode) {
-                // For binaural, we have multiple oscillators handled in startBinaural
-            } else if (sourceNodeRef.current instanceof AudioBufferSourceNode) {
-                sourceNodeRef.current.stop();
+        // Stop and disconnect any existing binaural oscillators
+        if (binauralSourcesRef.current) {
+            try {
+                binauralSourcesRef.current.left.stop();
+                binauralSourcesRef.current.left.disconnect();
+                binauralSourcesRef.current.right.stop();
+                binauralSourcesRef.current.right.disconnect();
+            } catch (e) {
+                // Ignore if already stopped
             }
-            sourceNodeRef.current.disconnect();
-            sourceNodeRef.current = null;
+            binauralSourcesRef.current = null;
         }
-        // Special handling for binaural with two oscillators
-        if (soundType === 'binaural' && sourceNodeRef.current) {
-             (sourceNodeRef.current as any).left.stop();
-             (sourceNodeRef.current as any).right.stop();
-             sourceNodeRef.current = null;
+        // Stop and disconnect any existing buffer source
+        if (bufferSourceRef.current) {
+            try {
+                bufferSourceRef.current.stop();
+                bufferSourceRef.current.disconnect();
+            } catch (e) {
+                // Ignore if already stopped
+            }
+            bufferSourceRef.current = null;
         }
-    }, [soundType]);
+    }, []);
     
     const startBinaural = useCallback(() => {
         if (!audioContextRef.current || !gainNodeRef.current) return;
@@ -58,7 +68,7 @@ const AmbiancePlayer = () => {
         leftOsc.start();
         rightOsc.start();
 
-        sourceNodeRef.current = { left: leftOsc, right: rightOsc, disconnect: () => {} } as any;
+        binauralSourcesRef.current = { left: leftOsc, right: rightOsc };
 
     }, [binauralSettings, stopSound]);
 
@@ -89,7 +99,7 @@ const AmbiancePlayer = () => {
         source.loop = true;
         source.connect(gainNodeRef.current);
         source.start();
-        sourceNodeRef.current = source;
+        bufferSourceRef.current = source;
     }, [stopSound]);
 
     const playAudioFile = useCallback(async (url: string) => {
@@ -105,7 +115,7 @@ const AmbiancePlayer = () => {
             source.loop = true;
             source.connect(gainNodeRef.current);
             source.start();
-            sourceNodeRef.current = source;
+            bufferSourceRef.current = source;
         } catch(e) {
             console.error("Error playing audio file", e)
         }
@@ -135,16 +145,26 @@ const AmbiancePlayer = () => {
     };
 
     useEffect(() => {
-        if (gainNodeRef.current) {
-            gainNodeRef.current.gain.setValueAtTime(volume / 100, audioContextRef.current?.currentTime ?? 0);
+        if (gainNodeRef.current && audioContextRef.current) {
+            gainNodeRef.current.gain.setValueAtTime(volume / 100, audioContextRef.current.currentTime);
         }
     }, [volume]);
     
     useEffect(() => {
         if(isPlaying) {
             startSound();
+        } else {
+            stopSound();
         }
-    }, [soundType, binauralSettings, isPlaying, startSound]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [soundType, binauralSettings]);
+    
+    useEffect(() => {
+        // Cleanup on unmount
+        return () => {
+            stopSound();
+        }
+    }, [stopSound]);
 
 
   return (
@@ -155,7 +175,10 @@ const AmbiancePlayer = () => {
                 {isPlaying ? <Power className="h-4 w-4" /> : <Power className="h-4 w-4"/>}
                 {isPlaying ? 'Detener' : 'Iniciar'} Sonido
             </Button>
-            <Select value={soundType} onValueChange={(v) => setSoundType(v as SoundType)}>
+            <Select value={soundType} onValueChange={(v) => {
+                setIsPlaying(true); // Auto-play on change
+                setSoundType(v as SoundType)
+            }}>
                 <SelectTrigger><SelectValue/></SelectTrigger>
                 <SelectContent>
                     <SelectItem value="binaural">Ondas Binaurales</SelectItem>
@@ -176,11 +199,17 @@ const AmbiancePlayer = () => {
                     <h4 className="font-semibold text-center">Ajustes Binaurales</h4>
                     <div className="space-y-1">
                         <Label>Frecuencia Base (Hz): {binauralSettings.base}</Label>
-                        <Slider value={[binauralSettings.base]} onValueChange={(v) => setBinauralSettings(s => ({...s, base: v[0]}))} min={100} max={1000} step={1}/>
+                        <Slider value={[binauralSettings.base]} onValueChange={(v) => {
+                            setIsPlaying(true); // Auto-play on change
+                            setBinauralSettings(s => ({...s, base: v[0]}))
+                        }} min={100} max={1000} step={1}/>
                     </div>
                      <div className="space-y-1">
                         <Label>Frecuencia Pulso (Hz): {binauralSettings.beat}</Label>
-                        <Slider value={[binauralSettings.beat]} onValueChange={(v) => setBinauralSettings(s => ({...s, beat: v[0]}))} min={1} max={30} step={0.5}/>
+                        <Slider value={[binauralSettings.beat]} onValueChange={(v) => {
+                             setIsPlaying(true); // Auto-play on change
+                             setBinauralSettings(s => ({...s, beat: v[0]}))
+                        }} min={1} max={30} step={0.5}/>
                     </div>
                 </div>
             )}
