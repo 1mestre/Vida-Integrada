@@ -17,38 +17,42 @@ const AmbiancePlayer = () => {
     const [volume, setVolume] = useState(30);
     const [binauralSettings, setBinauralSettings] = useState({ base: 432, beat: 10 });
 
+    // --- Refs for different audio sources ---
+    // For Web Audio API (generated sounds)
     const audioContextRef = useRef<AudioContext | null>(null);
     const gainNodeRef = useRef<GainNode | null>(null);
-    
-    // Use separate refs for different types of audio sources for robust stop/start
     const binauralSourcesRef = useRef<{left: OscillatorNode, right: OscillatorNode} | null>(null);
     const bufferSourceRef = useRef<AudioBufferSourceNode | null>(null);
+    // For HTMLAudioElement (file playback)
+    const audioFilePlayerRef = useRef<HTMLAudioElement | null>(null);
+
 
     const stopSound = useCallback(() => {
-        // Stop and disconnect any existing binaural oscillators
+        // Stop Web Audio API sources
         if (binauralSourcesRef.current) {
             try {
                 binauralSourcesRef.current.left.stop();
-                binauralSourcesRef.current.left.disconnect();
                 binauralSourcesRef.current.right.stop();
-                binauralSourcesRef.current.right.disconnect();
-            } catch (e) {
-                // Ignore if already stopped
-            }
+            } catch (e) { /* ignore */ }
             binauralSourcesRef.current = null;
         }
-        // Stop and disconnect any existing buffer source
         if (bufferSourceRef.current) {
             try {
                 bufferSourceRef.current.stop();
                 bufferSourceRef.current.disconnect();
-            } catch (e) {
-                // Ignore if already stopped
-            }
+            } catch (e) { /* ignore */ }
             bufferSourceRef.current = null;
+        }
+
+        // Stop HTML Audio Element
+        if (audioFilePlayerRef.current) {
+            audioFilePlayerRef.current.pause();
+            audioFilePlayerRef.current = null;
         }
     }, []);
     
+    // --- Sound Generation Functions ---
+
     const startBinaural = useCallback(() => {
         if (!audioContextRef.current || !gainNodeRef.current) return;
         stopSound();
@@ -82,9 +86,7 @@ const AmbiancePlayer = () => {
         const output = buffer.getChannelData(0);
 
         if (type === 'white') {
-            for (let i = 0; i < bufferSize; i++) {
-                output[i] = Math.random() * 2 - 1;
-            }
+            for (let i = 0; i < bufferSize; i++) { output[i] = Math.random() * 2 - 1; }
         } else { // Brown noise
             let lastOut = 0.0;
             for (let i = 0; i < bufferSize; i++) {
@@ -103,40 +105,36 @@ const AmbiancePlayer = () => {
         bufferSourceRef.current = source;
     }, [stopSound]);
 
-    const playAudioFile = useCallback(async (url: string) => {
-        if (!audioContextRef.current || !gainNodeRef.current) return;
+    const playAudioFile = useCallback((url: string) => {
         stopSound();
-        try {
-            const response = await fetch(url);
-            const arrayBuffer = await response.arrayBuffer();
-            const audioBuffer = await audioContextRef.current.decodeAudioData(arrayBuffer);
-            
-            const source = audioContextRef.current.createBufferSource();
-            source.buffer = audioBuffer;
-            source.loop = true;
-            source.connect(gainNodeRef.current);
-            source.start();
-            bufferSourceRef.current = source;
-        } catch(e) {
-            console.error(`Error playing audio file: ${url}`, e)
-        }
-    }, [stopSound]);
+        const audio = new Audio(url);
+        audio.loop = true;
+        audio.volume = volume / 100;
+        audio.play().catch(e => console.error("Error al reproducir el audio:", e));
+        audioFilePlayerRef.current = audio;
+    }, [stopSound, volume]);
     
     const startSound = useCallback(() => {
-        if(soundType === 'binaural') startBinaural();
-        if(soundType === 'white') startNoise('white');
-        if(soundType === 'brown') startNoise('brown');
-        if(soundType === 'rain') playAudioFile('https://actions.google.com/sounds/v1/weather/rain_heavy_loud.ogg');
-        if(soundType === 'ocean') playAudioFile('https://actions.google.com/sounds/v1/ambiences/ocean_waves.ogg');
-    }, [soundType, startBinaural, startNoise, playAudioFile]);
-
-    const togglePlay = () => {
-        if (!audioContextRef.current) {
-            audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-            gainNodeRef.current = audioContextRef.current.createGain();
-            gainNodeRef.current.connect(audioContextRef.current.destination);
+        stopSound(); // Always stop previous sound first
+        
+        if (['binaural', 'white', 'brown'].includes(soundType)) {
+             if (!audioContextRef.current) {
+                audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+                gainNodeRef.current = audioContextRef.current.createGain();
+                gainNodeRef.current.connect(audioContextRef.current.destination);
+            }
         }
 
+        switch (soundType) {
+            case 'binaural': startBinaural(); break;
+            case 'white': startNoise('white'); break;
+            case 'brown': startNoise('brown'); break;
+            case 'rain': playAudioFile('https://actions.google.com/sounds/v1/weather/rain_heavy_loud.ogg'); break;
+            case 'ocean': playAudioFile('https://actions.google.com/sounds/v1/ambiences/ocean_waves.ogg'); break;
+        }
+    }, [soundType, startBinaural, startNoise, playAudioFile, stopSound]);
+
+    const togglePlay = () => {
         if (isPlaying) {
             stopSound();
         } else {
@@ -145,23 +143,28 @@ const AmbiancePlayer = () => {
         setIsPlaying(!isPlaying);
     };
 
+    // --- Effects ---
+
     useEffect(() => {
+        // Adjust volume for both types of players
         if (gainNodeRef.current && audioContextRef.current) {
             gainNodeRef.current.gain.setValueAtTime(volume / 100, audioContextRef.current.currentTime);
+        }
+        if (audioFilePlayerRef.current) {
+            audioFilePlayerRef.current.volume = volume / 100;
         }
     }, [volume]);
     
     useEffect(() => {
+        // This effect handles changing the sound type or settings *while playing*
         if(isPlaying) {
             startSound();
-        } else {
-            stopSound();
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [soundType, binauralSettings]);
     
     useEffect(() => {
-        // Cleanup on unmount
+        // Cleanup on component unmount
         return () => {
             stopSound();
             if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
@@ -179,13 +182,7 @@ const AmbiancePlayer = () => {
                 {isPlaying ? <Power className="h-4 w-4" /> : <Power className="h-4 w-4"/>}
                 {isPlaying ? 'Detener' : 'Iniciar'} Sonido
             </Button>
-            <Select value={soundType} onValueChange={(v) => {
-                setSoundType(v as SoundType)
-                if(isPlaying) {
-                    // If it was already playing, restart with new sound
-                    startSound();
-                }
-            }}>
+            <Select value={soundType} onValueChange={(v) => setSoundType(v as SoundType)}>
                 <SelectTrigger><SelectValue/></SelectTrigger>
                 <SelectContent>
                     <SelectItem value="binaural">Ondas Binaurales</SelectItem>
