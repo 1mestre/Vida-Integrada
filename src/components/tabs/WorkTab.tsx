@@ -27,7 +27,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useAppState, WorkItem } from '@/context/AppStateContext';
-import { MessageSquare, PlusCircle, Clipboard, TrendingUp, Trash2, Settings } from 'lucide-react';
+import { MessageSquare, PlusCircle, Clipboard, TrendingUp, Trash2, Settings, Wrench } from 'lucide-react';
 import WorkItemModal from '@/components/WorkItemModal';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
@@ -39,6 +39,64 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useSound } from '@/context/SoundContext';
 import PackageSettingsModal from '@/components/PackageSettingsModal';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+
+const generateFileNames = (item: WorkItem) => {
+    const packageNameUC = item.packageName.toUpperCase();
+
+    return {
+        stems: `✩Separate Audio Tracks (STEMS) ${packageNameUC} ${item.key} ${item.bpm} BPM - ${item.clientName}✩`,
+        wav: `♬WAV FILE • ${item.genre} • ${packageNameUC} • ${item.key} • ${item.bpm} BPM - ${item.clientName}♬`,
+        project: `♪FLP PROJECT • ${item.genre}• ${packageNameUC} • ${item.key}• ${item.bpm} BPM - ${item.clientName} ♪`
+    };
+};
+
+const FileNameToolsPopover = ({ item }: { item: WorkItem }) => {
+    const [copySuccess, setCopySuccess] = React.useState('');
+    const filenames = generateFileNames(item);
+
+    const handleCopy = (text: string, type: string) => {
+        navigator.clipboard.writeText(text).then(() => {
+            setCopySuccess(type);
+            setTimeout(() => setCopySuccess(''), 2000); // Reset after 2 seconds
+        }, (err) => {
+            console.error('Could not copy text: ', err);
+        });
+    };
+
+    return (
+        <Popover>
+            <PopoverTrigger asChild>
+                <Button variant="ghost" size="icon">
+                    <Wrench className="h-4 w-4" />
+                </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-96">
+                <div className="grid gap-4">
+                    <div className="space-y-2">
+                        <h4 className="font-medium leading-none">Nombres de Archivo</h4>
+                        <p className="text-sm text-muted-foreground">
+                            Copia los nombres estandarizados para tus archivos.
+                        </p>
+                    </div>
+                    <div className="grid gap-2">
+                        {Object.entries(filenames).map(([key, value]) => (
+                            <div key={key} className="grid grid-cols-3 items-center gap-4">
+                                <span className="col-span-2 text-xs font-mono p-2 bg-muted rounded-md overflow-x-auto whitespace-nowrap">{value}</span>
+                                <Button
+                                    size="sm"
+                                    onClick={() => handleCopy(value, key)}
+                                >
+                                    {copySuccess === key ? '¡Copiado!' : 'Copiar'}
+                                </Button>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </PopoverContent>
+        </Popover>
+    );
+};
 
 const generateClientMessage = (item: WorkItem): string => {
   let message = `Heyyy ${item.clientName}! 👋👋\n\n`;
@@ -245,6 +303,14 @@ const WorkTab = () => {
                     <MessageSquare className="h-4 w-4 text-primary" />
                 </Button>
             )
+        },
+        {
+          id: 'tools',
+          header: 'Tools',
+          cell: ({ row }) => {
+            const item = row.original;
+            return <FileNameToolsPopover item={item} />;
+          },
         },
         { accessorKey: 'clientName', header: 'Cliente' },
         { accessorKey: 'orderNumber', header: 'Orden #' },
@@ -535,3 +601,5 @@ const WorkTab = () => {
 };
 
 export default WorkTab;
+
+    
