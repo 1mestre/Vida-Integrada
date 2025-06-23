@@ -130,7 +130,7 @@ const AmbiancePlayer = () => {
             case 'white': startNoise('white'); break;
             case 'brown': startNoise('brown'); break;
             case 'rain': playAudioFile('https://actions.google.com/sounds/v1/weather/rain_heavy_loud.ogg'); break;
-            case 'ocean': playAudioFile('https://actions.google.com/sounds/v1/ambiences/ocean_waves.ogg'); break;
+            case 'ocean': playAudioFile('https://www.soundjay.com/nature/ocean-wave-1.mp3'); break;
         }
     }, [soundType, startBinaural, startNoise, playAudioFile, stopSound]);
 
