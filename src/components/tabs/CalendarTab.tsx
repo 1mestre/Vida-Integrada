@@ -52,6 +52,13 @@ const CalendarTab = () => {
     
     return { yearProgress, monthProgress, dayProgress };
   }, [time]);
+
+  const calendarEventsWithBorder = useMemo(() => {
+    return appState.calendarEventsData.map(event => ({
+      ...event,
+      borderColor: event.color === '#171717' ? 'hsl(var(--foreground))' : event.color
+    }));
+  }, [appState.calendarEventsData]);
   
   const handleEventClick = useCallback((clickInfo: any) => {
     const event = appState.calendarEventsData.find(e => e.id === clickInfo.event.id);
@@ -110,7 +117,7 @@ const CalendarTab = () => {
             </CardHeader>
             <CardContent>
               <FullCalendar 
-                events={appState.calendarEventsData}
+                events={calendarEventsWithBorder}
                 onEventClick={handleEventClick}
                 onDateSelect={handleDateSelect}
                 onEventDrop={handleEventDrop}
@@ -147,7 +154,14 @@ const CalendarTab = () => {
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ duration: 0.3, delay: index * 0.1 }}
                         >
-                          <span className="h-2 w-2 rounded-full mr-3" style={{ backgroundColor: event.color || 'var(--ios-green)' }}></span>
+                          <span
+                            className="h-2 w-2 rounded-full mr-3"
+                            style={{
+                              backgroundColor: event.color || 'var(--ios-green)',
+                              border: event.color === '#171717' ? '1px solid hsl(var(--foreground))' : 'none',
+                              boxSizing: 'border-box'
+                            }}
+                          ></span>
                           <span className="text-sm">{event.title}</span>
                         </motion.li>
                       ))}

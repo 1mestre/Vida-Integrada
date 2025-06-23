@@ -120,7 +120,11 @@ const UniversityTab = () => {
                   <motion.div
                       key={event.id}
                       className="p-2 rounded-lg text-white text-sm flex flex-col items-center justify-center text-center cursor-pointer overflow-hidden"
-                      style={{ ...getGridPosition(event), backgroundColor: event.color || '#0091FF' }}
+                      style={{
+                        ...getGridPosition(event), 
+                        backgroundColor: event.color || '#0091FF',
+                        border: event.color === '#171717' ? '1px solid hsl(var(--foreground))' : 'none'
+                      }}
                       onClick={() => handleEventClick(event)}
                       initial={{ opacity: 0, scale: 0.8 }}
                       animate={{ opacity: 1, scale: 1 }}
@@ -149,7 +153,10 @@ const UniversityTab = () => {
                                             key={event.id} 
                                             onClick={() => handleEventClick(event)} 
                                             className="p-3 rounded-lg text-white cursor-pointer" 
-                                            style={{ backgroundColor: event.color }}
+                                            style={{
+                                              backgroundColor: event.color,
+                                              border: event.color === '#171717' ? '1px solid hsl(var(--foreground))' : 'none'
+                                            }}
                                             initial={{ opacity: 0, x: -20 }}
                                             animate={{ opacity: 1, x: 0 }}
                                             whileTap={{ scale: 0.95 }}
