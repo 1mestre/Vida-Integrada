@@ -10,8 +10,7 @@ import { Progress } from "@/components/ui/progress";
 import { useAppState } from '@/context/AppStateContext';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { PlusCircle, Trash2, TrendingUp } from 'lucide-react';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { PlusCircle, TrendingUp } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 const formatCOP = (value: number) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(value);
@@ -59,18 +58,6 @@ const IncomeTab = () => {
     
     setAppState({ contributions: [newContribution, ...appState.contributions] });
     setAmount('');
-  };
-
-  const handleClearCurrentMonth = () => {
-    const contributionsKept = appState.contributions.filter(c => !c.date.startsWith(currentMonthKey));
-    
-    const newTargets = { ...appState.monthlyTargets };
-    delete newTargets[currentMonthKey];
-
-    setAppState({
-      contributions: contributionsKept,
-      monthlyTargets: newTargets,
-    });
   };
   
   const financialSummary = useMemo(() => {
@@ -127,7 +114,7 @@ const IncomeTab = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <Select value={appState.selectedInputCurrencyIngresos} onValueChange={(val: 'USD' | 'COP') => setAppState({ selectedInputCurrencyIngresos: val })}>
-                <SelectTrigger><SelectValue /></SelectValue></SelectTrigger>
+                <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent><SelectItem value="COP">COP</SelectItem><SelectItem value="USD">USD</SelectItem></SelectContent>
               </Select>
               <Input
@@ -213,25 +200,6 @@ const IncomeTab = () => {
                 <p className="font-bold text-ios-green animate-pulse">🎉✨ ¡FELICITACIONES! ¡META ALCANZADA! ✨🎉</p>
             </Card>
         )}
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button variant="destructive" className="w-full">
-              <Trash2 className="mr-2 h-4 w-4" /> Limpiar Mes Actual
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Esta acción eliminará permanentemente los ingresos y la meta para el mes actual. No se puede deshacer.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-              <AlertDialogAction onClick={handleClearCurrentMonth} className="bg-destructive hover:bg-destructive/90">Confirmar</AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
       </div>
     </div>
   );
