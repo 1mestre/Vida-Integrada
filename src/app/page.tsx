@@ -80,6 +80,7 @@ export default function Home() {
     <AppStateProvider>
       <main className="relative min-h-screen w-full overflow-hidden">
         <FloatingEmojis />
+        <div className="absolute inset-0 z-10 bg-black/20 backdrop-blur-sm"></div>
         
         <header className="sticky top-0 z-40 w-full glassmorphism-nav">
           <div className="container mx-auto flex h-16 items-center justify-center px-4">
@@ -90,7 +91,7 @@ export default function Home() {
                   variant={activeTab === tab.id ? 'default' : 'ghost'}
                   onClick={() => {
                     setActiveTab(tab.id);
-                    playSound('tabChange'); // Llama a playSound con 'tabChange'
+                    playSound('tabChange');
                   }}
                   className={`transition-all duration-300 rounded-full px-3 py-1.5 h-auto text-xs sm:text-sm sm:px-4 ${activeTab === tab.id ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/30' : 'text-muted-foreground'}`}
                 >
@@ -102,7 +103,7 @@ export default function Home() {
           </div>
         </header>
 
-        <div className="container mx-auto p-4 sm:p-6 lg:p-8">
+        <div className="relative z-20 container mx-auto p-4 sm:p-6 lg:p-8">
            <React.Suspense fallback={<div className="text-center p-8">Cargando...</div>}>
             <AnimatePresence mode="wait">
               <motion.div
