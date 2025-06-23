@@ -37,7 +37,7 @@ const FullCalendar: React.FC<FullCalendarProps> = ({ events, onEventClick, onDat
                 headerToolbar: {
                     left: 'prev,next today',
                     center: 'title',
-                    right: 'dayGridMonth'
+                    right: ''
                 },
                 editable: true,
                 selectable: true,
