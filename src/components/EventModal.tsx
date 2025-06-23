@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect, useRef } from 'react';
@@ -7,14 +8,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useForm, Controller } from "react-hook-form";
-import { useAppState } from '@/context/AppStateContext';
+import { useAppState, CalendarEvent } from '@/context/AppStateContext';
 import { useSound } from '@/context/SoundContext';
 
 interface EventModalProps {
   isOpen: boolean;
   onClose: () => void;
   eventType: 'calendar' | 'timetable';
-  eventData?: any | null;
+  eventData?: CalendarEvent | null;
   selectedDate?: string | null;
 }
 
@@ -71,11 +72,45 @@ const EventModal: React.FC<EventModalProps> = ({ isOpen, onClose, eventType, eve
     if(!eventData) return;
     closeIntent.current = 'delete';
     playSound('deleteItem');
-    if (eventType === 'calendar') {
-        setAppState({ calendarEventsData: appState.calendarEventsData.filter(e => e.id !== eventData.id) });
-    } else {
-        setAppState({ timetableData: appState.timetableData.filter(e => e.id !== eventData.id) });
-    }
+    
+    setAppState(prevState => {
+        const eventToDelete = prevState.calendarEventsData.find(e => e.id === eventData.id);
+        if (!eventToDelete) return prevState;
+
+        // Filter to remove the calendar event
+        const updatedEvents = prevState.calendarEventsData.filter(e => e.id !== eventData.id);
+
+        let updatedWorkItems = prevState.workItems;
+        let updatedUniversityTasks = prevState.universityTasks;
+        let updatedTasks = prevState.tasks;
+
+        // If it's a Work event, cascade delete linked items
+        if (eventToDelete.workItemId) {
+          updatedWorkItems = prevState.workItems.filter(item => item.id !== eventToDelete.workItemId);
+          updatedTasks = prevState.tasks.filter(task => task.workItemId !== eventToDelete.workItemId);
+        }
+
+        // If it's a University event, cascade delete linked items
+        if (eventToDelete.universityTaskId) {
+          updatedUniversityTasks = prevState.universityTasks.filter(item => item.id !== eventToDelete.universityTaskId);
+          updatedTasks = prevState.tasks.filter(task => task.universityTaskId !== eventToDelete.universityTaskId);
+        }
+        
+        let updatedTimetable = prevState.timetableData;
+        if(eventType === 'timetable') {
+          updatedTimetable = prevState.timetableData.filter(e => e.id !== eventData.id);
+        }
+
+        return {
+          ...prevState,
+          calendarEventsData: updatedEvents,
+          timetableData: updatedTimetable,
+          workItems: updatedWorkItems,
+          universityTasks: updatedUniversityTasks,
+          tasks: updatedTasks
+        };
+    });
+
     onClose();
   };
 

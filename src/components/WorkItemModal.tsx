@@ -73,68 +73,77 @@ const WorkItemModal: React.FC<WorkItemModalProps> = ({ isOpen, onClose, item }) 
   }, [isOpen, item, reset]);
 
   const onSubmit = (data: WorkItem) => {
-    let updatedWorkItems: WorkItem[];
-    let updatedTasks: KanbanTask[] = [...appState.tasks];
-    let updatedCalendarEvents: CalendarEvent[] = [...appState.calendarEventsData];
+    setAppState(prevState => {
+      let updatedWorkItems: WorkItem[];
+      let updatedTasks: KanbanTask[] = [...prevState.tasks];
+      let updatedCalendarEvents: CalendarEvent[] = [...prevState.calendarEventsData];
 
-    if (item) { // Editing existing item
-      updatedWorkItems = appState.workItems.map(i => i.id === item.id ? { ...i, ...data } : i);
-      
-      const newColumn = statusToColumnMap[data.deliveryStatus];
-      const taskIndex = updatedTasks.findIndex(t => t.workItemId === item.id);
-      if (taskIndex !== -1 && newColumn) {
-        updatedTasks[taskIndex] = { 
-            ...updatedTasks[taskIndex], 
-            column: newColumn,
-            content: `Orden de ${data.clientName}`,
-        };
-      }
-
-      const eventIndex = updatedCalendarEvents.findIndex(e => e.id === `event-${item.id}`);
-      if (eventIndex !== -1) {
-          updatedCalendarEvents[eventIndex] = {
-              ...updatedCalendarEvents[eventIndex],
-              title: `${data.clientName} orden`,
-              start: data.deliveryDate,
+      if (item) { // Editing existing item
+        updatedWorkItems = prevState.workItems.map(i => i.id === item.id ? { ...i, ...data } : i);
+        
+        const newColumn = statusToColumnMap[data.deliveryStatus];
+        const taskIndex = updatedTasks.findIndex(t => t.workItemId === item.id);
+        if (taskIndex !== -1 && newColumn) {
+          updatedTasks[taskIndex] = { 
+              ...updatedTasks[taskIndex], 
+              column: newColumn,
+              content: `Orden de ${data.clientName}`,
           };
+        }
+
+        const eventIndex = updatedCalendarEvents.findIndex(e => e.workItemId === item.id);
+        if (eventIndex !== -1) {
+            updatedCalendarEvents[eventIndex] = {
+                ...updatedCalendarEvents[eventIndex],
+                title: `${data.clientName} orden`,
+                start: data.deliveryDate,
+            };
+        }
+
+      } else { // Creating new item
+        const newWorkItem = { ...data, id: new Date().toISOString() };
+        updatedWorkItems = [...prevState.workItems, newWorkItem];
+        
+        const newKanbanTask: KanbanTask = {
+          id: `task-${newWorkItem.id}`,
+          workItemId: newWorkItem.id,
+          content: `Orden de ${newWorkItem.clientName}`,
+          column: 'todo',
+          color: 'bg-emerald-950 text-emerald-200 border border-emerald-800',
+        };
+        updatedTasks.push(newKanbanTask);
+
+        const newCalendarEvent: CalendarEvent = {
+            id: `event-${newWorkItem.id}`,
+            workItemId: newWorkItem.id,
+            title: `${newWorkItem.clientName} orden`,
+            start: newWorkItem.deliveryDate,
+            allDay: true,
+            color: '#134E4A',
+            backgroundColor: '#134E4A',
+            borderColor: '#0F766E'
+        };
+        updatedCalendarEvents.push(newCalendarEvent);
       }
-
-    } else { // Creating new item
-      const newWorkItem = { ...data, id: new Date().toISOString() };
-      updatedWorkItems = [...appState.workItems, newWorkItem];
       
-      const newKanbanTask: KanbanTask = {
-        id: `task-${newWorkItem.id}`,
-        workItemId: newWorkItem.id,
-        content: `Orden de ${newWorkItem.clientName}`,
-        column: 'todo',
-        color: 'bg-emerald-950 text-emerald-200 border border-emerald-800',
+      return { 
+        ...prevState,
+        workItems: updatedWorkItems, 
+        tasks: updatedTasks, 
+        calendarEventsData: updatedCalendarEvents 
       };
-      updatedTasks.push(newKanbanTask);
-
-      const newCalendarEvent: CalendarEvent = {
-          id: `event-${newWorkItem.id}`,
-          title: `${newWorkItem.clientName} orden`,
-          start: newWorkItem.deliveryDate,
-          allDay: true,
-          color: '#134E4A',
-          backgroundColor: '#134E4A',
-          borderColor: '#0F766E'
-      };
-      updatedCalendarEvents.push(newCalendarEvent);
-    }
-    
-    setAppState({ workItems: updatedWorkItems, tasks: updatedTasks, calendarEventsData: updatedCalendarEvents });
+    });
     onClose();
   };
 
   const handleDelete = () => {
     if (!item) return;
-    setAppState({ 
-      workItems: appState.workItems.filter(i => i.id !== item.id),
-      tasks: appState.tasks.filter(t => t.workItemId !== item.id),
-      calendarEventsData: appState.calendarEventsData.filter(e => e.id !== `event-${item.id}`)
-    });
+    setAppState(prevState => ({
+      ...prevState,
+      workItems: prevState.workItems.filter(i => i.id !== item.id),
+      tasks: prevState.tasks.filter(t => t.workItemId !== item.id),
+      calendarEventsData: prevState.calendarEventsData.filter(e => e.workItemId !== item.id)
+    }));
     onClose();
   };
 

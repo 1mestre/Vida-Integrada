@@ -5,12 +5,13 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import FullCalendar from '@/components/FullCalendar';
-import { useAppState } from '@/context/AppStateContext';
+import { useAppState, CalendarEvent } from '@/context/AppStateContext';
 import EventModal from '@/components/EventModal';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useSound } from '@/context/SoundContext';
+import { format, parseISO } from 'date-fns';
 
 const ProgressBar = ({ label, value, textColorClass, barClassName }: { label: string; value: number; textColorClass: string; barClassName: string; }) => (
   <div className="space-y-2">
@@ -25,7 +26,7 @@ const ProgressBar = ({ label, value, textColorClass, barClassName }: { label: st
 const CalendarTab = () => {
   const [time, setTime] = useState<Date | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState<any>(null);
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const { playSound } = useSound();
 
@@ -56,6 +57,10 @@ const CalendarTab = () => {
   const calendarEventsForFc = useMemo(() => {
     return appState.calendarEventsData.map(event => ({
       ...event,
+      extendedProps: {
+        workItemId: event.workItemId,
+        universityTaskId: event.universityTaskId,
+      },
       backgroundColor: event.backgroundColor || event.color,
       borderColor: event.borderColor || (event.color === '#171717' ? 'hsl(var(--foreground))' : (event.backgroundColor || event.color)),
     }));
@@ -63,10 +68,6 @@ const CalendarTab = () => {
   
   const handleEventClick = useCallback((clickInfo: any) => {
     const eventId = clickInfo.event.id;
-    // Prevent opening modal for events linked to work items or university tasks
-    if (eventId.startsWith('event-') || eventId.startsWith('uni-task-') || eventId.startsWith('cal-event-')) {
-      return;
-    }
     const event = appState.calendarEventsData.find(e => e.id === eventId);
     if(event) {
         setSelectedEvent(event);
@@ -83,33 +84,49 @@ const CalendarTab = () => {
   
   const handleEventDrop = useCallback((dropInfo: any) => {
     const { event } = dropInfo;
-    setAppState({
-      calendarEventsData: appState.calendarEventsData.map(e =>
-        e.id === event.id ? { ...e, start: event.startStr } : e
-      ),
+    const newDate = format(event.start!, 'yyyy-MM-dd');
+    const eventId = event.id;
+    const { workItemId, universityTaskId } = event.extendedProps;
+
+    setAppState(prevState => {
+      const updatedEvents = prevState.calendarEventsData.map(e => 
+        e.id === eventId ? { ...e, start: newDate } : e
+      );
+
+      let updatedWorkItems = prevState.workItems;
+      if (workItemId) {
+        updatedWorkItems = prevState.workItems.map(item =>
+          item.id === workItemId ? { ...item, deliveryDate: newDate } : item
+        );
+      }
+
+      let updatedUniversityTasks = prevState.universityTasks;
+      if (universityTaskId) {
+        updatedUniversityTasks = prevState.universityTasks.map(item =>
+          item.id === universityTaskId ? { ...item, dueDate: newDate } : item
+        );
+      }
+
+      return { 
+        ...prevState,
+        calendarEventsData: updatedEvents, 
+        workItems: updatedWorkItems,
+        universityTasks: updatedUniversityTasks 
+      };
     });
-  }, [appState.calendarEventsData, setAppState]);
+  }, [setAppState]);
 
   const selectAllow = useCallback((selectInfo: any) => {
     const todayStr = new Date().toISOString().split('T')[0];
     return selectInfo.startStr >= todayStr;
   }, []);
 
-  const handleEventAllow = useCallback((dropInfo: any, draggedEvent: any) => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // Normalize to start of day
-    
-    // Prevent dragging events linked to WorkItems or university tasks
-    if (draggedEvent.id.startsWith('event-') || draggedEvent.id.startsWith('uni-task-') || draggedEvent.id.startsWith('cal-event-')) {
-        return false;
-    }
-    
-    return dropInfo.start.getTime() >= today.getTime();
-  }, []);
-
-
-  const todayStr = new Date().toISOString().split('T')[0];
-  const todaysEvents = calendarEventsForFc.filter(event => event.start === todayStr);
+  const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
+  
+  const todaysEvents = useMemo(() => 
+    calendarEventsForFc.filter(event => event.start === todayStr),
+    [calendarEventsForFc, todayStr]
+  );
 
   const handleNewActivity = () => {
     playSound('genericClick');
@@ -134,7 +151,6 @@ const CalendarTab = () => {
                 onDateSelect={handleDateSelect}
                 onEventDrop={handleEventDrop}
                 selectAllow={selectAllow}
-                eventAllow={handleEventAllow}
               />
             </CardContent>
           </Card>

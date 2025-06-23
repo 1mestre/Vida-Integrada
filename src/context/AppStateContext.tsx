@@ -23,7 +23,7 @@ interface TimetableEvent {
   color: string;
 }
 
-interface CalendarEvent {
+export interface CalendarEvent {
   id: string;
   title: string;
   start: string; // YYYY-MM-DD
@@ -31,6 +31,8 @@ interface CalendarEvent {
   color: string;
   backgroundColor?: string;
   borderColor?: string;
+  workItemId?: string;
+  universityTaskId?: string;
 }
 
 export interface KanbanTask {
@@ -77,7 +79,7 @@ interface AppState {
 
 interface AppStateContextType {
   appState: AppState;
-  setAppState: (newState: Partial<AppState>) => void;
+  setAppState: (newState: Partial<AppState> | ((prevState: AppState) => Partial<AppState>)) => void;
   loading: boolean;
   error: string | null;
 }
@@ -140,8 +142,9 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleSetAppState = (newState: Partial<AppState>) => {
+  const handleSetAppState = (newStateOrFn: Partial<AppState> | ((prevState: AppState) => Partial<AppState>)) => {
     setAppState(prevState => {
+      const newState = typeof newStateOrFn === 'function' ? newStateOrFn(prevState) : newStateOrFn;
       const updatedState = { ...prevState, ...newState };
 
       if (db) {

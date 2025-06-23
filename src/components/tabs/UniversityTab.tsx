@@ -3,7 +3,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useAppState, UniversityTask } from '@/context/AppStateContext';
+import { useAppState, UniversityTask, KanbanTask, CalendarEvent } from '@/context/AppStateContext';
 import { Button } from '@/components/ui/button';
 import { BookCopy, PlusCircle, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -36,22 +36,23 @@ const UniversityTab = () => {
       status: 'pendiente',
     };
 
-    const newKanbanTask = {
-      id: `kanban-${newUniversityTask.id}`,
+    const newKanbanTask: KanbanTask = {
+      id: `task-${newUniversityTask.id}`,
       content: `Tarea: ${newUniversityTask.subject}`,
       column: 'todo' as const,
       universityTaskId: newUniversityTask.id,
       color: 'bg-purple-950 text-purple-200 border border-purple-800',
     };
 
-    const newCalendarEvent = {
-      id: `cal-event-${newUniversityTask.id}`,
+    const newCalendarEvent: CalendarEvent = {
+      id: `event-${newUniversityTask.id}`,
       title: `Tarea: ${newUniversityTask.subject}`,
       start: newUniversityTask.dueDate,
       allDay: true,
       color: '#8b5cf6', // purple-500
       backgroundColor: '#581c87', // purple-900
       borderColor: '#a855f7', // purple-600
+      universityTaskId: newUniversityTask.id,
     };
 
     setAppState({
@@ -63,11 +64,12 @@ const UniversityTab = () => {
   
   const handleDeleteTask = (taskId: string) => {
       playSound('deleteItem');
-      setAppState({
-          universityTasks: appState.universityTasks.filter(t => t.id !== taskId),
-          tasks: appState.tasks.filter(t => t.universityTaskId !== taskId),
-          calendarEventsData: appState.calendarEventsData.filter(e => e.id !== `cal-event-${taskId}`),
-      });
+      setAppState(prevState => ({
+          ...prevState,
+          universityTasks: prevState.universityTasks.filter(t => t.id !== taskId),
+          tasks: prevState.tasks.filter(t => t.universityTaskId !== taskId),
+          calendarEventsData: prevState.calendarEventsData.filter(e => e.universityTaskId !== taskId),
+      }));
   };
   
   const handleStatusChange = (task: UniversityTask, newStatus: UniversityTask['status']) => {
@@ -77,17 +79,20 @@ const UniversityTab = () => {
           completado: 'done',
       };
       
-      const updatedUniversityTasks = appState.universityTasks.map(t => 
-          t.id === task.id ? { ...t, status: newStatus } : t
-      );
-      
-      const updatedKanbanTasks = appState.tasks.map(k => 
-          k.universityTaskId === task.id ? { ...k, column: statusToColumnMap[newStatus] } : k
-      );
-      
-      setAppState({
+      setAppState(prevState => {
+        const updatedUniversityTasks = prevState.universityTasks.map(t => 
+            t.id === task.id ? { ...t, status: newStatus } : t
+        );
+        
+        const updatedKanbanTasks = prevState.tasks.map(k => 
+            k.universityTaskId === task.id ? { ...k, column: statusToColumnMap[newStatus] } : k
+        );
+        
+        return {
+          ...prevState,
           universityTasks: updatedUniversityTasks,
           tasks: updatedKanbanTasks,
+        }
       });
   };
 
