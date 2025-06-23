@@ -72,6 +72,11 @@ const CalendarTab = () => {
     setModalOpen(true);
   }, []);
   
+  const selectAllow = useCallback((selectInfo: any) => {
+    const todayStr = new Date().toISOString().split('T')[0];
+    return selectInfo.startStr === todayStr;
+  }, []);
+
   const todayStr = new Date().toISOString().split('T')[0];
   const todaysEvents = appState.calendarEventsData.filter(event => event.start === todayStr);
 
@@ -89,6 +94,7 @@ const CalendarTab = () => {
                 events={appState.calendarEventsData}
                 onEventClick={handleEventClick}
                 onDateSelect={handleDateSelect}
+                selectAllow={selectAllow}
               />
             </CardContent>
           </Card>

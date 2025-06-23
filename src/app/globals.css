@@ -4,59 +4,59 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 214 100% 50%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
-    --destructive: 2 100% 59%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 214 100% 50%;
-    --radius: 0.75rem;
-
-    /* Custom iOS Colors */
-    --ios-blue: 214 100% 50%;
-    --ios-red: 2 100% 59%;
-    --ios-green: 145 59% 49%;
-    --ios-orange: 36 100% 50%;
-  }
-
-  .dark {
     --background: 0 0% 0%;
     --foreground: 0 0% 100%;
     --card: 240 4% 11%;
     --card-foreground: 0 0% 100%;
     --popover: 240 4% 11%;
     --popover-foreground: 0 0% 100%;
-    --primary: 214 100% 50%;
+    --primary: 211 100% 50%; /* iOS Blue */
     --primary-foreground: 0 0% 100%;
     --secondary: 240 4% 11%;
-    --secondary-foreground: 240 17% 95%;
+    --secondary-foreground: 0 0% 100%;
     --muted: 240 4% 11%;
     --muted-foreground: 240 2% 57%;
-    --accent: 214 100% 50%;
+    --accent: 211 100% 50%;
     --accent-foreground: 0 0% 100%;
-    --destructive: 2 100% 59%;
+    --destructive: 0 72% 51%; /* iOS Red */
     --destructive-foreground: 0 0% 98%;
     --border: 240 2% 34%;
     --input: 240 2% 34%;
-    --ring: 214 100% 50%;
+    --ring: 211 100% 50%;
+    --radius: 0.75rem;
 
     /* Custom iOS Colors */
-    --ios-blue: 214 100% 50%;
-    --ios-red: 2 100% 59%;
-    --ios-green: 145 59% 49%;
+    --ios-blue: 211 100% 50%; /* #007AFF */
+    --ios-red: 0 100% 60%; /* #FF3B30 */
+    --ios-green: 145 58% 49%; /* #34C759 */
+    --ios-orange: 36 100% 50%; /* #FF9500 */
+  }
+
+  .dark {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+    --card: 257 6% 11%; /* #1C1C1E */
+    --card-foreground: 0 0% 100%;
+    --popover: 257 6% 11%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 211 100% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 257 6% 11%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 257 6% 11%;
+    --muted-foreground: 240 5% 65%; /* Adjusted for dark mode */
+    --accent: 211 100% 50%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 100% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 4% 21%; /* rgba(84, 84, 88, 0.65) */
+    --input: 240 4% 21%;
+    --ring: 211 100% 50%;
+
+    /* Custom iOS Colors */
+    --ios-blue: 211 100% 50%;
+    --ios-red: 0 100% 60%;
+    --ios-green: 145 58% 49%;
     --ios-orange: 36 100% 50%;
   }
 }
@@ -155,4 +155,11 @@
 }
 .fc .fc-day-other .fc-daygrid-day-number {
   color: hsl(var(--muted-foreground));
+}
+
+.fc .fc-day-today {
+  box-shadow: 0 0 12px hsl(var(--primary) / 0.5);
+  border-radius: var(--radius);
+  position: relative;
+  z-index: 1;
 }
