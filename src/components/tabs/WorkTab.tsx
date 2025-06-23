@@ -163,7 +163,7 @@ const WorkTab = () => {
                 <CardHeader>
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <div>
-                            <CardTitle>🎶 Gestión de Producción Musical</CardTitle>
+                            <CardTitle>FIVERR📀</CardTitle>
                             <CardDescription>Organiza tus proyectos, clientes y entregas.</CardDescription>
                         </div>
                         <Button onClick={() => {
