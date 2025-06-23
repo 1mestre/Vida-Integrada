@@ -36,6 +36,7 @@ interface AppState {
   selectedInputCurrencyIngresos: 'USD' | 'COP';
   timetableData: TimetableEvent[];
   calendarEventsData: CalendarEvent[];
+  secretKey?: string;
 }
 
 interface AppStateContextType {
@@ -111,7 +112,8 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
     try {
       const docRef = doc(db, 'organizador-publico', 'datos-compartidos');
       await setDoc(docRef, { 
-        ...updatedState
+        ...updatedState,
+        secretKey: "DEVdrf49"
       });
     } catch (err) {
       console.error("Firebase setDoc error:", err);

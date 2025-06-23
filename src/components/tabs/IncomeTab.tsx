@@ -82,6 +82,14 @@ const IncomeTab = () => {
     return { totalNetCOP, totalNetUSD, incomeThisMonth, progress };
   }, [appState.contributions, currentMonthTarget, currentMonthKey]);
 
+  const monthTimeProgress = useMemo(() => {
+    const today = new Date();
+    const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    const totalDaysInMonth = endOfMonth.getDate();
+    const currentDayOfMonth = today.getDate();
+    return (currentDayOfMonth / totalDaysInMonth) * 100;
+  }, []);
+
   return (
     <div className="grid gap-8 lg:grid-cols-3">
       <div className="lg:col-span-2 space-y-8">
@@ -108,8 +116,13 @@ const IncomeTab = () => {
             </div>
             
             <div className="space-y-2">
-                <p className="text-sm font-medium">Progreso Meta del Mes</p>
+                <p className="text-sm font-medium">Progreso Meta del Mes ({financialSummary.progress.toFixed(1)}%)</p>
                 <Progress value={financialSummary.progress} className="h-4 shimmer [&>div]:bg-gradient-to-r [&>div]:from-ios-green [&>div]:to-green-400"/>
+            </div>
+
+            <div className="space-y-2">
+                <p className="text-sm font-medium text-muted-foreground">Progreso del Mes (Tiempo: {monthTimeProgress.toFixed(1)}%)</p>
+                <Progress value={monthTimeProgress} className="h-4 [&>div]:bg-muted-foreground/50"/>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

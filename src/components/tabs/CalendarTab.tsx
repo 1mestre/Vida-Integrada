@@ -10,13 +10,13 @@ import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 
-const ProgressBar = ({ label, value, colorClass, alwaysGreen }: { label: string, value: number, colorClass: string, alwaysGreen?: boolean }) => (
+const ProgressBar = ({ label, value, textColorClass, barClassName }: { label: string; value: number; textColorClass: string; barClassName: string; }) => (
   <div className="space-y-2">
     <div className="flex justify-between items-center">
       <p className="text-sm font-medium text-muted-foreground">{label}</p>
-      <p className={`text-sm font-bold ${alwaysGreen ? 'text-ios-green' : colorClass}`}>{value.toFixed(2)}%</p>
+      <p className={`text-sm font-bold ${textColorClass}`}>{value.toFixed(2)}%</p>
     </div>
-    <Progress value={value} className={`h-2 ${alwaysGreen ? '[&>div]:bg-ios-green' : ''}`} />
+    <Progress value={value} className={`h-2 ${barClassName}`} />
   </div>
 );
 
@@ -49,13 +49,6 @@ const CalendarTab = () => {
     
     return { yearProgress, monthProgress, dayProgress };
   }, [time]);
-
-
-  const getProgressColor = (progress: number) => {
-    if (progress < 40) return 'text-ios-orange';
-    if (progress < 80) return 'text-ios-blue';
-    return 'text-ios-green';
-  };
   
   const handleEventClick = useCallback((clickInfo: any) => {
     const event = appState.calendarEventsData.find(e => e.id === clickInfo.event.id);
@@ -105,9 +98,9 @@ const CalendarTab = () => {
               <CardTitle>⏳ Progreso del Tiempo</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <ProgressBar label="Año" value={yearProgress} colorClass={getProgressColor(yearProgress)} alwaysGreen />
-              <ProgressBar label="Mes" value={monthProgress} colorClass={getProgressColor(monthProgress)} />
-              <ProgressBar label="Día" value={dayProgress} colorClass={getProgressColor(dayProgress)} />
+              <ProgressBar label="Año" value={yearProgress} textColorClass="text-ios-green" barClassName="[&>div]:bg-ios-green" />
+              <ProgressBar label="Mes" value={monthProgress} textColorClass="text-ios-blue" barClassName="[&>div]:bg-ios-blue" />
+              <ProgressBar label="Día" value={dayProgress} textColorClass="text-ios-orange" barClassName="[&>div]:bg-ios-orange" />
             </CardContent>
           </Card>
            <Card className="glassmorphism-card">
