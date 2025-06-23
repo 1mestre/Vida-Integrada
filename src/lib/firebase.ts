@@ -1,17 +1,16 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import { getFirestore, doc, onSnapshot, setDoc, serverTimestamp, type Firestore } from "firebase/firestore";
-import { getAuth, type Auth } from "firebase/auth";
+import { getAuth } from "firebase/auth";
 
 // Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  apiKey: "AIzaSyDE3bJ_94ioTUXhF71gpDs9DP_TDkx7fq4",
+  authDomain: "vida-integrada.firebaseapp.com",
+  projectId: "vida-integrada",
+  storageBucket: "vida-integrada.firebasestorage.app",
+  messagingSenderId: "824927129146",
+  appId: "1:824927129146:web:f9c91d122591a26ef3af03"
 };
 
 let app: FirebaseApp | undefined;
@@ -27,7 +26,7 @@ if (firebaseConfig.apiKey && firebaseConfig.projectId) {
     console.error("Error initializing Firebase", e);
   }
 } else {
-  console.warn("Firebase configuration is incomplete. Firebase features will be disabled.");
+  console.error("Firebase configuration is incomplete. Firebase features will be disabled.");
 }
 
 export { app, db, auth, doc, onSnapshot, setDoc, serverTimestamp };
