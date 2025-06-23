@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useForm, Controller } from "react-hook-form";
 import { useAppState } from '@/context/AppStateContext';
-import { playSound } from '@/lib/audio';
+import { useSound } from '@/context/SoundContext';
 
 interface EventModalProps {
   isOpen: boolean;
@@ -33,6 +33,7 @@ const HOURS = Array.from({ length: 18 }, (_, i) => `${String(i + 5).padStart(2, 
 const EventModal: React.FC<EventModalProps> = ({ isOpen, onClose, eventType, eventData, selectedDate }) => {
   const { appState, setAppState } = useAppState();
   const { control, handleSubmit, reset, setValue } = useForm();
+  const { playSound } = useSound();
 
   useEffect(() => {
     if (eventData) {
@@ -45,7 +46,7 @@ const EventModal: React.FC<EventModalProps> = ({ isOpen, onClose, eventType, eve
   }, [eventData, selectedDate, eventType, isOpen, reset]);
   
   const onSubmit = (data: any) => {
-    playSound('https://storage.googleapis.com/hub-sounds/success.mp3');
+    playSound('pomodoroStart'); // Success sound
     if (eventType === 'calendar') {
         const calendarEvents = eventData
             ? appState.calendarEventsData.map(e => e.id === eventData.id ? { ...e, ...data } : e)
@@ -62,7 +63,7 @@ const EventModal: React.FC<EventModalProps> = ({ isOpen, onClose, eventType, eve
 
   const handleDelete = () => {
     if(!eventData) return;
-    playSound('https://storage.googleapis.com/hub-sounds/error.mp3');
+    playSound('deleteItem');
     if (eventType === 'calendar') {
         setAppState({ calendarEventsData: appState.calendarEventsData.filter(e => e.id !== eventData.id) });
     } else {
@@ -72,7 +73,7 @@ const EventModal: React.FC<EventModalProps> = ({ isOpen, onClose, eventType, eve
   };
 
   const handleCancel = () => {
-    playSound('https://storage.googleapis.com/hub-sounds/cancel.mp3');
+    playSound('pomodoroReset'); // Cancel sound
     onClose();
   }
 

@@ -8,7 +8,7 @@ import EventModal from '@/components/EventModal';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { playSound } from '@/lib/audio';
+import { useSound } from '@/context/SoundContext';
 
 const DAYS = ['LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES'];
 const HOURS = Array.from({ length: 18 }, (_, i) => `${String(i + 5).padStart(2, '0')}:00`);
@@ -17,6 +17,7 @@ const UniversityTab = () => {
   const { appState } = useAppState();
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const { playSound } = useSound();
 
   const handleEventClick = (event: any) => {
     setSelectedEvent(event);
@@ -24,7 +25,7 @@ const UniversityTab = () => {
   };
   
   const handleAddNew = () => {
-    playSound('https://storage.googleapis.com/hub-sounds/click.mp3');
+    playSound('genericClick');
     setSelectedEvent(null);
     setModalOpen(true);
   };

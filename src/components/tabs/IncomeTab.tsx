@@ -12,7 +12,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { PlusCircle, TrendingUp, Trash2 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { playSound } from '@/lib/audio';
+import { useSound } from '@/context/SoundContext';
 
 const formatCOP = (value: number) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(value);
 const formatUSD = (value: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
@@ -22,6 +22,7 @@ const IncomeTab = () => {
   const [exchangeRate, setExchangeRate] = useState<number | null>(null);
   const [rateLoading, setRateLoading] = useState(true);
   const [amount, setAmount] = useState('');
+  const { playSound } = useSound();
   
   const currentMonthKey = format(new Date(), 'yyyy-MM');
   const currentMonthTarget = appState.monthlyTargets[currentMonthKey] || 0;
@@ -42,7 +43,7 @@ const IncomeTab = () => {
   const handleAddIncome = () => {
     if (!amount || !exchangeRate) return;
 
-    playSound('https://storage.googleapis.com/hub-sounds/success.mp3');
+    playSound('pomodoroStart'); // Success sound
     
     const numericAmount = parseFloat(amount);
     let newContribution;
@@ -65,7 +66,7 @@ const IncomeTab = () => {
   };
 
   const handleDeleteIncome = (id: string) => {
-    playSound('https://storage.googleapis.com/hub-sounds/error.mp3');
+    playSound('deleteItem');
     const updatedContributions = appState.contributions.filter(c => c.id !== id);
     setAppState({ contributions: updatedContributions });
   };

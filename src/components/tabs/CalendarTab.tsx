@@ -10,7 +10,7 @@ import EventModal from '@/components/EventModal';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { playSound } from '@/lib/audio';
+import { useSound } from '@/context/SoundContext';
 
 const ProgressBar = ({ label, value, textColorClass, barClassName }: { label: string; value: number; textColorClass: string; barClassName: string; }) => (
   <div className="space-y-2">
@@ -27,6 +27,7 @@ const CalendarTab = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const { playSound } = useSound();
 
   const { appState } = useAppState();
 
@@ -76,7 +77,7 @@ const CalendarTab = () => {
   const todaysEvents = appState.calendarEventsData.filter(event => event.start === todayStr);
 
   const handleNewActivity = () => {
-    playSound('https://storage.googleapis.com/hub-sounds/click.mp3');
+    playSound('genericClick');
     setSelectedEvent(null); 
     setSelectedDate(todayStr); 
     setModalOpen(true);
