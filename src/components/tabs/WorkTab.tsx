@@ -42,29 +42,80 @@ import PackageSettingsModal from '@/components/PackageSettingsModal';
 
 const generateClientMessage = (item: WorkItem): string => {
   let message = `Heyyy ${item.clientName}! 👋👋\n\n`;
-  message += `Here are the details for your "${item.packageName}" order (#${item.orderNumber}):\n\n`;
 
-  message += "📎📎 DELIVERABLES:\n";
-  if (item.masterAudio) message += `- Professionally Mixed & Mastered Audio 🔥\n`;
-  if (item.separateFiles) message += `- Separate Tracks/STEMS for full control 🎛️\n`;
-  if (item.projectFileDelivery) message += `- Full Project File (e.g., FLP) 📁\n`;
-  if (item.vocalProduction) message += `- Custom Vocal Production/Chain 🎤\n`;
+  // Bloque Principal: Elige la plantilla base según el nombre del paquete
+  if (item.packageName === 'Masterpiece') {
+    // --- Plantilla Masterpiece ---
+    message += `Yooo, your ${item.genre} masterpiece${item.remakeType === 'Multiple Remakes' ? 's are' : ' is'} officially done and it's straighttt fire fr!! ${item.remakeType === 'Multiple Remakes' ? '🔥🔥✨ Hahaha, we went CRAZY on these!!' : '🔥✨'}\n\n`;
+    
+    if (item.remakeType === 'Single Remake') {
+      message += "🎛️🎛️ This remake got the FULL treatment - custom-built and clean as hell!! Readyyy for the big leagues!! 🏆🏆\n\n";
+    } else if (item.remakeType === 'Multiple Remakes') {
+      message += "🎛️🎛️ These remakes are CLEANNN as hell and ready to make some NOISEEE!! Each one hits different!! 🚀🚀\n\n";
+    }
 
-  message += `\n- Song Length: Up to ${item.songLength} seconds\n`;
-  message += `- Instruments: Up to ${item.numberOfInstruments}\n`;
+    message += "📎📎 WHAT YOU'RE GETTING:\n";
+    if (item.separateFiles) message += "- Full WAV + STEMS: The WHOLE package, no bs!! 💎\n";
+    if (item.projectFileDelivery) message += "- FLP Project File: Full creative control in your hands!! 🎚️🎚️\n";
+    if (item.exclusiveLicense) message += "- Exclusive Rights Contract: It's 100000% yours, period!! 📜\n";
+    // MODIFICACIÓN: Se añade la producción vocal como un extra condicional
+    if (item.vocalProduction) message += "- Vocal Production: Pro-level vocal mixing & tuning to make your voice SHINE!! ✨🎙️\n";
+    
+    if (item.vocalChainPreset) {
+      message += `\n🎁 EXCLUSIVE GIFT: Custom vocal chain preset made for ${item.remakeType === 'Multiple Remakes' ? `these ${item.genre} vibes` : `this ${item.genre} vibe`} 🎙️🎙️\n`;
+      message += "(Appreciate you being chill to work with, let's keep the collabs going!!) 🤝🤝\n\n";
+    }
 
-  if (item.exclusiveLicense) {
-      message += "\n📜 You get FULL EXCLUSIVE RIGHTS to this track. It's 100% yours!\n\n";
-  } else {
-      message += "\n📜 This order includes a non-exclusive license.\n\n";
+  } else if (item.packageName === 'Exclusive') {
+    // --- Plantilla Exclusive ---
+    message += `Your ${item.genre} ${item.remakeType === 'Multiple Remakes' ? 'beats are' : 'beat is'} readyyy to drop!! ${item.remakeType === 'Multiple Remakes' ? '💣💣 No cap, these ones hit DIFFERENT!! 💯🎵' : 'No cap, this one hits different 💯🎵'}\n\n`;
+
+    if (item.remakeType === 'Single Remake') {
+      message += "🎛️ The remake is LOCKED and loaded!! 🔫 Custom-made just for you, readyyy for your vocals!! 🎤✨\n\n";
+    } else if (item.remakeType === 'Multiple Remakes') {
+      message += "🎛️ All these remakes are LOCKED IN!! 🔒 Multiple vibes, same CRAZY energy!! 💪💪 Hahaha let's gooo!\n\n";
+    }
+
+    message += "📎📎 WHAT YOU'RE GETTING:\n";
+    if (item.masterAudio) message += "- Full WAV: Mixed, mastered, and READYYY to upload!! 🎯\n";
+    if (item.exclusiveLicense) message += "- Exclusive Rights Contract: 100% ownership, no sharing needed!! 📋\n";
+    // MODIFICACIÓN: Se añade la producción vocal como un extra condicional
+    if (item.vocalProduction) message += "- Vocal Production: Pro-level vocal mixing & tuning to make your voice SHINE!! ✨🎙️\n";
+    
+    if (item.vocalChainPreset) {
+      message += `\n🎁 EXCLUSIVE GIFT: Custom vocal chain preset made for ${item.remakeType === 'Multiple Remakes' ? `these ${item.genre} styles` : `this ${item.genre} style`} 🎤✨\n`;
+      message += "(Appreciate you being chill to work with, let's keep the collabs going!!) 🤝\n\n";
+    }
+
+  } else { // Asumimos 'Amateurs' o cualquier otro
+    // --- Plantilla Amateurs ---
+    message += `So here's that ${item.genre} demo you wanted!! Just a quick vibe check, nothing too wild yet 😎🎧\n\n`;
+    message += "🎛️ This is just the demo version of the remake - think of it as the rough draft with MADDD potential!! 🎨\n\n";
+    
+    message += "📎📎 WHAT YOU'RE GETTING:\n";
+    if (item.songLength > 0) message += `- ${item.songLength}-sec MP3 demo: Just the vibe, raw and UNFILTEREDDD!! 🎵\n`;
+    message += "- Heads up: No exclusive rights or pro mixing included (this is just a taste!!) 👀👀\n\n";
+    // MODIFICACIÓN: Se añade la producción vocal como un extra condicional también aquí
+    if (item.vocalProduction) message += "- Vocal Production Add-on: Available for this track!! 🎤 Ask me about it!\n\n";
+
+    message += "🤔 BUT WAIT - If you're feeling this demo and want the full experience, just pay the difference:\n[Aquí puedes poner la lógica de precios de upgrade si la necesitas]\n\nJust holla at me if you wanna upgrade! 🚀🚀\n\n";
   }
 
-  message += `Key: ${item.key} | BPM: ${item.bpm}\n\n`;
-  message += `You have ${item.revisionsRemaining} revisions remaining. 🔧\n\n`;
-  message += `Let me know what you think! Let's make some magic happen! ✨`;
+  // --- Secciones Finales (Sin Cambios) ---
+  message += `${item.remakeType === 'Multiple Remakes' ? 'Keys' : 'Key'}: ${item.key} | ${item.remakeType === 'Multiple Remakes' ? 'BPMs' : 'BPM'}: ${item.bpm}\n\n`;
+  message += `📦📦 Order #${item.orderNumber}\n\n`;
+
+  if (item.packageName === 'Masterpiece') {
+    message += `✅✅ This is built for the BIGGG stages - Spotify, radio, wherever you wanna take it!! 🌟🌟\n${item.revisionsRemaining} revisions remaining 🔧🔧\n\n🎁 PRO TIP: Drop a 5-star review and I'll hook you UPPP with $10 off your next order!! Helps me out FOR REALLL 🙏🙏\n\nNow go make some MAGIC happen!! ✨🎤`;
+  } else if (item.packageName === 'Exclusive') {
+    message += `✅ ${item.revisionsRemaining} revisions remaining 🔧\n${item.remakeType === 'Multiple Remakes' ? "Time to make these BEATS slap!! 💥💥" : "Time to make some WAVES!! 🌊🌊"}\n\n🎁 PRO TIP: Leave me a 5-star review and I'll give you $10 off your next beat!! WIN-WIN SITUATION 😉💰💰\n\nLet's get this music out there!!! 🚀🚀`;
+  } else { // Amateurs
+    message += "✅ Let me know what you think of the direction!! If you're vibing with it, we can ALWAYSSS take it to the next level!! 🎯🎯\n\n(No revisions on demos, but that's what upgrades are for!! 😉💡💡)";
+  }
 
   return message;
 };
+
 
 const statusColorMap: Record<WorkItem['deliveryStatus'], string> = {
   'Pending': 'bg-yellow-500 hover:bg-yellow-600 text-white',

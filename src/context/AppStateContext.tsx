@@ -57,6 +57,7 @@ export interface WorkPackageTemplate {
   projectFileDelivery: boolean;
   exclusiveLicense: boolean;
   vocalProduction: boolean;
+  vocalChainPreset: boolean;
 }
 
 export interface WorkItem {
@@ -68,7 +69,8 @@ export interface WorkItem {
   bpm: string;
   key: string;
   deliveryStatus: 'Pending' | 'In Transit' | 'In Revision' | 'Delivered' | 'Returned';
-  
+  remakeType: 'Single Remake' | 'Multiple Remakes' | 'Original' | 'Original Multiple Beats';
+
   // Snapshot fields from template
   packageName: string;
   price: number;
@@ -80,6 +82,7 @@ export interface WorkItem {
   projectFileDelivery: boolean;
   exclusiveLicense: boolean;
   vocalProduction: boolean;
+  vocalChainPreset: boolean;
 }
 
 export interface UniversityTask {
@@ -125,6 +128,7 @@ const initialAppState: AppState = {
       projectFileDelivery: false,
       exclusiveLicense: false,
       vocalProduction: false,
+      vocalChainPreset: false,
     },
     {
       id: uuidv4(),
@@ -138,6 +142,7 @@ const initialAppState: AppState = {
       projectFileDelivery: false,
       exclusiveLicense: true,
       vocalProduction: false,
+      vocalChainPreset: false,
     },
     {
       id: uuidv4(),
@@ -150,7 +155,8 @@ const initialAppState: AppState = {
       masterAudio: true,
       projectFileDelivery: true,
       exclusiveLicense: true,
-      vocalProduction: true,
+      vocalProduction: false,
+      vocalChainPreset: false,
     }
   ],
 };

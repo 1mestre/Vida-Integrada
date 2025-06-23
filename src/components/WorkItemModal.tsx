@@ -36,6 +36,13 @@ const keyOptions = [
     { value: 'Bb / Gm', label: 'A# / Gm' }, { value: 'B / G#m', label: 'B / G#m' },
 ];
 
+const remakeTypeOptions: { value: WorkItem['remakeType'], label: string }[] = [
+    { value: 'Single Remake', label: 'Single Remake' },
+    { value: 'Multiple Remakes', label: 'Multiple Remakes' },
+    { value: 'Original', label: 'Original' },
+    { value: 'Original Multiple Beats', label: 'Original Multiple Beats' },
+];
+
 const statusToColumnMap: { [key in WorkItem['deliveryStatus']]?: 'todo' | 'inprogress' | 'done' } = {
   'Pending': 'todo',
   'In Transit': 'inprogress',
@@ -52,10 +59,11 @@ const WorkItemModal: React.FC<WorkItemModalProps> = ({ isOpen, onClose, item }) 
       deliveryDate: format(new Date(), 'yyyy-MM-dd'),
       genre: '', bpm: '', key: '',
       deliveryStatus: 'Pending',
+      remakeType: 'Single Remake',
       packageName: '', price: 0, revisionsRemaining: 0,
       songLength: 0, numberOfInstruments: 0,
       separateFiles: false, masterAudio: false, projectFileDelivery: false,
-      exclusiveLicense: false, vocalProduction: false,
+      exclusiveLicense: false, vocalProduction: false, vocalChainPreset: false,
     }
   });
 
@@ -75,6 +83,7 @@ const WorkItemModal: React.FC<WorkItemModalProps> = ({ isOpen, onClose, item }) 
             deliveryDate: format(new Date(), 'yyyy-MM-dd'),
             genre: '', bpm: '', key: keyOptions[0].value,
             deliveryStatus: 'Pending',
+            remakeType: 'Single Remake',
             packageName: defaultTemplate.name,
             price: defaultTemplate.price,
             revisionsRemaining: defaultTemplate.revisions,
@@ -85,6 +94,7 @@ const WorkItemModal: React.FC<WorkItemModalProps> = ({ isOpen, onClose, item }) 
             projectFileDelivery: defaultTemplate.projectFileDelivery,
             exclusiveLicense: defaultTemplate.exclusiveLicense,
             vocalProduction: defaultTemplate.vocalProduction,
+            vocalChainPreset: defaultTemplate.vocalChainPreset,
             packageTemplateId: defaultTemplate.id,
           });
         }
@@ -106,6 +116,7 @@ const WorkItemModal: React.FC<WorkItemModalProps> = ({ isOpen, onClose, item }) 
       setValue('projectFileDelivery', template.projectFileDelivery);
       setValue('exclusiveLicense', template.exclusiveLicense);
       setValue('vocalProduction', template.vocalProduction);
+      setValue('vocalChainPreset', template.vocalChainPreset);
     }
   }, [selectedTemplateId, appState.workPackageTemplates, setValue]);
 
@@ -189,7 +200,7 @@ const WorkItemModal: React.FC<WorkItemModalProps> = ({ isOpen, onClose, item }) 
     <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm">
       <Label htmlFor={name}>{label}</Label>
       <Controller
-        name={name}
+        name={name as any}
         control={control}
         render={({ field }) => (
           <Switch
@@ -222,6 +233,15 @@ const WorkItemModal: React.FC<WorkItemModalProps> = ({ isOpen, onClose, item }) 
                 <div>
                   <Label htmlFor="orderNumber">Número de Orden</Label>
                   <Controller name="orderNumber" control={control} rules={{ required: true }} render={({ field }) => <Input id="orderNumber" {...field} />} />
+                </div>
+                 <div>
+                  <Label htmlFor="remakeType">Tipo de Remake</Label>
+                  <Controller name="remakeType" control={control} render={({ field }) => (
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>{remakeTypeOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}</SelectContent>
+                    </Select>
+                  )} />
                 </div>
                 <div>
                   <Label htmlFor="deliveryDate">Fecha de Entrega</Label>
@@ -315,6 +335,7 @@ const WorkItemModal: React.FC<WorkItemModalProps> = ({ isOpen, onClose, item }) 
                     <DeliverableSwitch name="projectFileDelivery" label="Archivo de Proyecto (FLP)" />
                     <DeliverableSwitch name="exclusiveLicense" label="Licencia Exclusiva" />
                     <DeliverableSwitch name="vocalProduction" label="Producción Vocal" />
+                    <DeliverableSwitch name="vocalChainPreset" label="Preset Cadena Vocal (Regalo)" />
                 </div>
               </div>
             </div>

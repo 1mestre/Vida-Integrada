@@ -31,6 +31,7 @@ const defaultTemplateValues: Omit<WorkPackageTemplate, 'id' | 'name'> = {
   projectFileDelivery: false,
   exclusiveLicense: false,
   vocalProduction: false,
+  vocalChainPreset: false,
 };
 
 const PackageSettingsModal: React.FC<PackageSettingsModalProps> = ({ isOpen, onClose }) => {
@@ -177,6 +178,7 @@ const PackageSettingsModal: React.FC<PackageSettingsModalProps> = ({ isOpen, onC
                                     <DeliverableSwitch index={editingTemplateIndex} name="projectFileDelivery" label="Archivo de Proyecto (FLP)" />
                                     <DeliverableSwitch index={editingTemplateIndex} name="exclusiveLicense" label="Licencia Exclusiva" />
                                     <DeliverableSwitch index={editingTemplateIndex} name="vocalProduction" label="Producción Vocal" />
+                                    <DeliverableSwitch index={editingTemplateIndex} name="vocalChainPreset" label="Preset Cadena Vocal (Regalo)" />
                                 </div>
                             ) : (
                                 <div className="flex items-center justify-center h-full text-muted-foreground">
