@@ -5,6 +5,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { db, doc, onSnapshot, setDoc, serverTimestamp } from '@/lib/firebase';
 import { useToast } from "@/hooks/use-toast";
 import { v4 as uuidv4 } from 'uuid';
+import { format } from 'date-fns';
 
 interface Contribution {
   id: string;
@@ -188,11 +189,46 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
       (docSnap) => {
         if (docSnap.exists()) {
           const data = docSnap.data();
-          // Default values for fields that might not exist in old data
-          setAppState({
-            ...initialAppState,
-            ...data
+          
+          // Sanitize WorkItems to ensure they conform to the latest interface
+          // This prevents "undefined" values from being written back to Firestore
+          const sanitizedWorkItems = (data.workItems || []).map((item: Partial<WorkItem>): WorkItem => {
+            const defaults: Omit<WorkItem, 'id'> = {
+              clientName: '',
+              orderNumber: '',
+              deliveryDate: format(new Date(), 'yyyy-MM-dd'),
+              genre: '',
+              bpm: '',
+              key: 'C / Am',
+              deliveryStatus: 'Pending',
+              remakeType: 'Single Remake',
+              packageName: 'Amateurs',
+              price: 0,
+              revisionsRemaining: 0,
+              songLength: 0,
+              numberOfInstruments: 0,
+              separateFiles: false,
+              masterAudio: false,
+              projectFileDelivery: false,
+              exclusiveLicense: false,
+              vocalProduction: false,
+              vocalChainPreset: false,
+            };
+            return {
+              ...defaults,
+              ...item,
+              id: item.id || uuidv4(),
+            };
           });
+
+          // Create a sanitized state object to avoid saving undefined fields
+          const sanitizedState = {
+            ...initialAppState,
+            ...data,
+            workItems: sanitizedWorkItems,
+          };
+          
+          setAppState(sanitizedState);
         } else {
           // Document doesn't exist, create it with initial state
           setDoc(docRef, { ...initialAppState, lastUpdated: serverTimestamp() });
