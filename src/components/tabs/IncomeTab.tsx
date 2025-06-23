@@ -10,7 +10,7 @@ import { Progress } from "@/components/ui/progress";
 import { useAppState } from '@/context/AppStateContext';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { PlusCircle, TrendingUp } from 'lucide-react';
+import { PlusCircle, TrendingUp, Trash2 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 const formatCOP = (value: number) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(value);
@@ -58,6 +58,11 @@ const IncomeTab = () => {
     
     setAppState({ contributions: [newContribution, ...appState.contributions] });
     setAmount('');
+  };
+
+  const handleDeleteIncome = (id: string) => {
+    const updatedContributions = appState.contributions.filter(c => c.id !== id);
+    setAppState({ contributions: updatedContributions });
   };
   
   const financialSummary = useMemo(() => {
@@ -140,14 +145,21 @@ const IncomeTab = () => {
                     <ScrollArea className="h-64">
                         <ul className="space-y-3 pr-4">
                             {appState.contributions.map(c => (
-                                <li key={c.id} className="text-sm border-b border-border/50 pb-2">
-                                    <div className="flex justify-between font-medium">
-                                        <span>{format(new Date(c.date), 'dd MMM yyyy', { locale: es })}</span>
-                                        <span className="text-ios-green">{formatCOP(c.netCOP)}</span>
+                                <li key={c.id} className="flex items-center justify-between text-sm border-b border-border/50 pb-2">
+                                    <div>
+                                        <div className="font-medium text-ios-green">{formatCOP(c.netCOP)}</div>
+                                        <div className="text-xs text-muted-foreground">
+                                            {format(new Date(c.date), 'dd MMM yyyy', { locale: es })} - {formatUSD(c.netUSD)}
+                                        </div>
                                     </div>
-                                    <div className="text-xs text-muted-foreground">
-                                        {formatUSD(c.netUSD)} @ {c.rate.toFixed(2)}
-                                    </div>
+                                    <Button 
+                                        variant="ghost" 
+                                        size="icon" 
+                                        className="h-8 w-8 text-muted-foreground hover:text-destructive shrink-0"
+                                        onClick={() => handleDeleteIncome(c.id)}
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
                                 </li>
                             ))}
                         </ul>
