@@ -60,6 +60,7 @@ export interface WorkItem {
 
 export interface UniversityTask {
   id: string;
+  title: string;
   subject: string;
   description: string;
   dueDate: string; // Formato 'yyyy-MM-dd'

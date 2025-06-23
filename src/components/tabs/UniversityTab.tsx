@@ -38,7 +38,7 @@ const UniversityTab = () => {
 
     const newKanbanTask: KanbanTask = {
       id: `task-${newUniversityTask.id}`,
-      content: `Tarea: ${newUniversityTask.subject}`,
+      content: newUniversityTask.title,
       column: 'todo' as const,
       universityTaskId: newUniversityTask.id,
       color: 'bg-purple-950 text-purple-200 border border-purple-800',
@@ -46,7 +46,7 @@ const UniversityTab = () => {
 
     const newCalendarEvent: CalendarEvent = {
       id: `event-${newUniversityTask.id}`,
-      title: `Tarea: ${newUniversityTask.subject}`,
+      title: newUniversityTask.title,
       start: newUniversityTask.dueDate,
       allDay: true,
       color: '#8b5cf6', // purple-500
@@ -258,7 +258,8 @@ const UniversityTab = () => {
                                         <div key={task.id} className="p-3 rounded-md bg-secondary/50 border border-border">
                                             <div className="flex justify-between items-start gap-4">
                                                 <div>
-                                                    <p className="font-semibold">{task.description}</p>
+                                                    <p className="font-semibold">{task.title}</p>
+                                                    <p className="text-sm text-muted-foreground">{task.description}</p>
                                                     <p className="text-sm text-muted-foreground">
                                                         Vence: {format(new Date(task.dueDate + 'T00:00:00'), 'PPP', { locale: es })}
                                                     </p>

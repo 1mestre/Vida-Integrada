@@ -34,6 +34,7 @@ const UniversityTaskModal: React.FC<UniversityTaskModalProps> = ({ isOpen, onClo
     if (isOpen) {
       reset(task || {
         subject: subjects[0] || '',
+        title: '',
         description: '',
         dueDate: format(new Date(), 'yyyy-MM-dd'),
       });
@@ -70,6 +71,17 @@ const UniversityTaskModal: React.FC<UniversityTaskModalProps> = ({ isOpen, onClo
                 )}
               />
               {errors.subject && <p className="text-sm text-red-500 mt-1">{errors.subject.message}</p>}
+            </div>
+
+            <div>
+                <Label htmlFor="title">Título de la Tarea</Label>
+                <Controller
+                    name="title"
+                    control={control}
+                    rules={{ required: 'El título es obligatorio' }}
+                    render={({ field }) => <Input id="title" {...field} />}
+                />
+                {errors.title && <p className="text-sm text-red-500 mt-1">{errors.title.message}</p>}
             </div>
 
              <div>

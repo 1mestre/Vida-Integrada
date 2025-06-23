@@ -50,8 +50,37 @@ const TaskManager = () => {
   
   const handleDeleteTask = (taskId: string) => {
     playSound('deleteItem');
-    setAppState({
-        tasks: appState.tasks.filter(task => task.id !== taskId)
+    setAppState(prevState => {
+      const taskToDelete = prevState.tasks.find(t => t.id === taskId);
+      if (!taskToDelete) {
+        console.warn("Se intentó borrar una tarea que no existe:", taskId);
+        return prevState;
+      }
+
+      const updatedTasks = prevState.tasks.filter(t => t.id !== taskId);
+
+      let updatedWorkItems = prevState.workItems;
+      let updatedUniversityTasks = prevState.universityTasks;
+      let updatedEvents = prevState.calendarEventsData;
+
+      if (taskToDelete.workItemId) {
+        const linkedWorkId = taskToDelete.workItemId;
+        updatedWorkItems = prevState.workItems.filter(item => item.id !== linkedWorkId);
+        updatedEvents = prevState.calendarEventsData.filter(event => event.workItemId !== linkedWorkId);
+      }
+      else if (taskToDelete.universityTaskId) {
+        const linkedUniId = taskToDelete.universityTaskId;
+        updatedUniversityTasks = prevState.universityTasks.filter(item => item.id !== linkedUniId);
+        updatedEvents = prevState.calendarEventsData.filter(event => event.universityTaskId !== linkedUniId);
+      }
+
+      return {
+        ...prevState,
+        tasks: updatedTasks,
+        workItems: updatedWorkItems,
+        universityTasks: updatedUniversityTasks,
+        calendarEventsData: updatedEvents,
+      };
     });
   };
 
