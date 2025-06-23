@@ -86,12 +86,15 @@ const UniversityTab = () => {
     <>
       <Card className="glassmorphism-card overflow-hidden">
         <CardHeader>
-          <CardTitle className="flex flex-col sm:flex-row justify-between items-center gap-4">
-            <span>🎓 Horario Universitario</span>
-            <Button onClick={handleAddNew} className="w-full sm:w-auto">
-              <PlusCircle className="mr-2 h-4 w-4"/>
-              Añadir Evento
-            </Button>
+          <CardTitle className="flex justify-between items-center">
+            <span className="flex-1"></span>
+            <span className="flex-1 text-center">🎓 Horario Universitario</span>
+            <div className="flex-1 flex justify-end">
+              <Button onClick={handleAddNew} className="w-auto">
+                <PlusCircle className="mr-2 h-4 w-4"/>
+                Añadir Evento
+              </Button>
+            </div>
           </CardTitle>
         </CardHeader>
         <CardContent>
