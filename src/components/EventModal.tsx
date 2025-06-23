@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,6 +34,7 @@ const EventModal: React.FC<EventModalProps> = ({ isOpen, onClose, eventType, eve
   const { appState, setAppState } = useAppState();
   const { control, handleSubmit, reset, setValue } = useForm();
   const { playSound } = useSound();
+  const closeIntent = useRef<'save' | 'delete' | 'cancel'>('cancel');
 
   useEffect(() => {
     if (eventData) {
@@ -46,6 +47,7 @@ const EventModal: React.FC<EventModalProps> = ({ isOpen, onClose, eventType, eve
   }, [eventData, selectedDate, eventType, isOpen, reset]);
   
   const onSubmit = (data: any) => {
+    closeIntent.current = 'save';
     playSound('pomodoroStart'); // Success sound
     if (eventType === 'calendar') {
         const calendarEvents = eventData
@@ -63,6 +65,7 @@ const EventModal: React.FC<EventModalProps> = ({ isOpen, onClose, eventType, eve
 
   const handleDelete = () => {
     if(!eventData) return;
+    closeIntent.current = 'delete';
     playSound('deleteItem');
     if (eventType === 'calendar') {
         setAppState({ calendarEventsData: appState.calendarEventsData.filter(e => e.id !== eventData.id) });
@@ -73,12 +76,23 @@ const EventModal: React.FC<EventModalProps> = ({ isOpen, onClose, eventType, eve
   };
 
   const handleCancel = () => {
-    playSound('pomodoroReset'); // Cancel sound
+    closeIntent.current = 'cancel';
     onClose();
-  }
+  };
+
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      if (closeIntent.current === 'cancel') {
+        playSound('deleteItem'); // "swish" sound for cancel/X
+      }
+      onClose();
+      // Reset intent for the next time the modal is opened
+      closeIntent.current = 'cancel';
+    }
+  };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="glassmorphism-card">
         <DialogHeader>
           <DialogTitle>{eventData ? 'Editar' : 'Nuevo'} Evento de {eventType === 'calendar' ? 'Calendario' : 'Horario'}</DialogTitle>
