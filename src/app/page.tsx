@@ -1,12 +1,16 @@
+
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { getAuth, onAuthStateChanged, type User } from 'firebase/auth';
 import { Calendar, DollarSign, University, Rocket } from 'lucide-react';
 
+import { app } from '@/lib/firebase';
 import { AppStateProvider } from '@/context/AppStateContext';
 import FloatingEmojis from '@/components/FloatingEmojis';
 import { Button } from '@/components/ui/button';
 import { AnimatePresence, motion } from 'framer-motion';
+import { Login } from '@/components/Login';
 
 // Lazy load tab components for better initial performance
 const CalendarTab = React.lazy(() => import('@/components/tabs/CalendarTab'));
@@ -25,12 +29,21 @@ const TABS: { id: Tab; label: string; icon: React.ElementType }[] = [
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<Tab>('calendar');
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate initial data loading from Firebase
-    const timer = setTimeout(() => setLoading(false), 2500);
-    return () => clearTimeout(timer);
+    if (!app) {
+        setAuthLoading(false);
+        return;
+    }
+    const auth = getAuth(app);
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setAuthLoading(false);
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const renderContent = () => {
@@ -48,15 +61,19 @@ export default function Home() {
     }
   };
 
-  if (loading) {
+  if (authLoading) {
     return (
       <div className="fixed inset-0 bg-background flex flex-col items-center justify-center z-50">
         <h1 className="text-3xl font-bold text-foreground animate-pulse">
-          Cargando datos compartidos...
+          Verificando autenticación...
         </h1>
         <div className="mt-8 text-4xl animate-bounce">🚀</div>
       </div>
     );
+  }
+  
+  if (!user) {
+    return <Login />;
   }
 
   return (
