@@ -126,8 +126,8 @@ const AmbiancePlayer = () => {
         if(soundType === 'binaural') startBinaural();
         if(soundType === 'white') startNoise('white');
         if(soundType === 'brown') startNoise('brown');
-        if(soundType === 'rain') playAudioFile('https://www.soundjay.com/nature/rain-07.mp3');
-        if(soundType === 'ocean') playAudioFile('https://www.soundjay.com/nature/ocean-wave-1.mp3');
+        if(soundType === 'rain') playAudioFile('https://actions.google.com/sounds/v1/weather/rain_heavy_loud.ogg');
+        if(soundType === 'ocean') playAudioFile('https://actions.google.com/sounds/v1/ambiences/ocean_waves.ogg');
     }, [soundType, startBinaural, startNoise, playAudioFile]);
 
     const togglePlay = () => {
