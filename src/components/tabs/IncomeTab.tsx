@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -9,7 +10,7 @@ import { Progress } from "@/components/ui/progress";
 import { useAppState } from '@/context/AppStateContext';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { AlertTriangle, PlusCircle, Trash2, TrendingUp } from 'lucide-react';
+import { PlusCircle, Trash2, TrendingUp } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { ScrollArea } from '@/components/ui/scroll-area';
 
@@ -46,7 +47,7 @@ const IncomeTab = () => {
     if (appState.selectedInputCurrencyIngresos === 'USD') {
       const fee = 3;
       const percentageFee = 0.03;
-      if (numericAmount <= fee) return; // Not enough to cover fee
+      if (numericAmount <= fee) return;
       const netUSD = (numericAmount - fee) * (1 - percentageFee);
       const netCOP = netUSD * exchangeRate;
       newContribution = { id: new Date().toISOString(), date: new Date().toISOString(), netUSD, rate: exchangeRate, netCOP };
@@ -63,12 +64,12 @@ const IncomeTab = () => {
   const handleClearCurrentMonth = () => {
     const contributionsKept = appState.contributions.filter(c => !c.date.startsWith(currentMonthKey));
     
-    const targetsKept = { ...appState.monthlyTargets };
-    delete targetsKept[currentMonthKey];
-    
+    const newTargets = { ...appState.monthlyTargets };
+    delete newTargets[currentMonthKey];
+
     setAppState({
       contributions: contributionsKept,
-      monthlyTargets: targetsKept,
+      monthlyTargets: newTargets,
     });
   };
   
@@ -86,9 +87,7 @@ const IncomeTab = () => {
   const monthTimeProgress = useMemo(() => {
     const today = new Date();
     const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-    const totalDaysInMonth = endOfMonth.getDate();
-    const currentDayOfMonth = today.getDate();
-    return (currentDayOfMonth / totalDaysInMonth) * 100;
+    return (today.getDate() / endOfMonth.getDate()) * 100;
   }, []);
 
   return (
