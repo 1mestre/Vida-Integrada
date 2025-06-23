@@ -29,6 +29,8 @@ interface CalendarEvent {
   start: string; // YYYY-MM-DD
   allDay: boolean;
   color: string;
+  backgroundColor?: string;
+  borderColor?: string;
 }
 
 export interface KanbanTask {
@@ -100,14 +102,18 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
       (docSnap) => {
         if (docSnap.exists()) {
           const data = docSnap.data() as AppState;
-          if (!data.selectedInputcurrencyIngresos) {
-            data.selectedInputcurrencyIngresos = 'USD';
+          // Default values for fields that might not exist in old data
+          if (!data.selectedInputCurrencyIngresos) {
+            data.selectedInputCurrencyIngresos = 'USD';
           }
           if (!data.workItems) {
             data.workItems = [];
           }
           if (!data.tasks) {
             data.tasks = [];
+          }
+           if (!data.calendarEventsData) {
+            data.calendarEventsData = [];
           }
           setAppState(data);
         } else {

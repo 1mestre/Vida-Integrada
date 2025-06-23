@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useSound } from '@/context/SoundContext'; 
 import { useAppState, KanbanTask, WorkItem } from '@/context/AppStateContext';
 import StatusUpdateModal from '@/components/StatusUpdateModal';
+import { cn } from '@/lib/utils';
 
 
 type ColumnId = 'todo' | 'inprogress' | 'done';
@@ -25,7 +26,6 @@ const TaskManager = () => {
   const [newTaskText, setNewTaskText] = useState('');
   const { playSound } = useSound(); 
   
-  // State for the status update modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [taskToUpdate, setTaskToUpdate] = useState<KanbanTask | null>(null);
   const [targetColumn, setTargetColumn] = useState<ColumnId | null>(null);
@@ -44,11 +44,8 @@ const TaskManager = () => {
   
   const handleDeleteTask = (taskToDelete: KanbanTask) => {
     playSound('deleteItem');
-    // If the task is linked to a work item, we should probably not delete it,
-    // or we should ask for confirmation. For now, we'll prevent deletion.
     if(taskToDelete.workItemId) {
-        // Maybe show a toast? For now, just log and do nothing.
-        console.log("Cannot delete a task linked to a work item.");
+        console.log("Cannot delete a task linked to a work item from here.");
         return;
     }
     setAppState({
@@ -70,12 +67,10 @@ const TaskManager = () => {
       playSound('genericClick');
 
       if (task.workItemId) {
-        // Task is linked, open modal to confirm new status
         setTaskToUpdate(task);
         setTargetColumn(targetColumnId);
         setIsModalOpen(true);
       } else {
-        // Task is not linked, just move it
         const updatedTasks = appState.tasks.map(t => 
             t.id === taskId ? { ...t, column: targetColumnId } : t
         );
@@ -90,7 +85,6 @@ const TaskManager = () => {
         'Pending': 'todo', 'In Transit': 'inprogress', 'In Revision': 'inprogress', 'Delivered': 'done', 'Returned': 'done'
     };
 
-    // Ensure the new status corresponds to the target column
     if (columnMap[newStatus] !== targetColumn) {
         console.error("Status-column mismatch!");
         setIsModalOpen(false);
@@ -133,14 +127,16 @@ const TaskManager = () => {
                       exit={{ opacity: 0, x: -20 }}
                       draggable
                       onDragStart={(e) => handleDragStart(e, task)}
-                      className="bg-secondary p-2 rounded-md text-sm flex justify-between items-center cursor-grab active:cursor-grabbing"
+                      className={cn(
+                        "p-3 rounded-md text-sm flex justify-between items-center cursor-grab active:cursor-grabbing",
+                        task.color ? task.color : "bg-secondary"
+                      )}
                   >
                       <div className="flex items-center gap-2 flex-1 min-w-0">
-                        {task.color && <div className="w-1 h-4 rounded-full flex-shrink-0" style={{ backgroundColor: task.color }} />}
                         <span className="truncate">{task.content}</span>
                       </div>
 
-                      {!task.workItemId && (
+                      {task.column === 'done' && !task.workItemId && (
                         <Button variant="ghost" size="icon" className="h-6 w-6 flex-shrink-0" onClick={() => handleDeleteTask(task)}>
                             <X className="h-3 w-3" />
                         </Button>

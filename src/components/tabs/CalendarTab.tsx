@@ -53,16 +53,21 @@ const CalendarTab = () => {
     return { yearProgress, monthProgress, dayProgress };
   }, [time]);
 
-  const calendarEventsWithBorder = useMemo(() => {
+  const calendarEventsForFc = useMemo(() => {
     return appState.calendarEventsData.map(event => ({
       ...event,
-      borderColor: event.color === '#171717' ? 'hsl(var(--foreground))' : event.color
+      backgroundColor: event.backgroundColor || event.color,
+      borderColor: event.borderColor || (event.color === '#171717' ? 'hsl(var(--foreground))' : (event.backgroundColor || event.color)),
     }));
   }, [appState.calendarEventsData]);
   
   const handleEventClick = useCallback((clickInfo: any) => {
     const event = appState.calendarEventsData.find(e => e.id === clickInfo.event.id);
     if(event) {
+        // Prevent opening modal for events linked to work items
+        if (event.id.startsWith('event-')) {
+          return;
+        }
         setSelectedEvent(event);
         setSelectedDate(null);
         setModalOpen(true);
@@ -92,12 +97,18 @@ const CalendarTab = () => {
   const handleEventAllow = useCallback((dropInfo: any, draggedEvent: any) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0); // Normalize to start of day
+    
+    // Prevent dragging events linked to WorkItems
+    if (draggedEvent.id.startsWith('event-')) {
+        return false;
+    }
+    
     return dropInfo.start.getTime() >= today.getTime();
   }, []);
 
 
   const todayStr = new Date().toISOString().split('T')[0];
-  const todaysEvents = appState.calendarEventsData.filter(event => event.start === todayStr);
+  const todaysEvents = calendarEventsForFc.filter(event => event.start === todayStr);
 
   const handleNewActivity = () => {
     playSound('genericClick');
@@ -117,7 +128,7 @@ const CalendarTab = () => {
             </CardHeader>
             <CardContent>
               <FullCalendar 
-                events={calendarEventsWithBorder}
+                events={calendarEventsForFc}
                 onEventClick={handleEventClick}
                 onDateSelect={handleDateSelect}
                 onEventDrop={handleEventDrop}
@@ -155,10 +166,10 @@ const CalendarTab = () => {
                           transition={{ duration: 0.3, delay: index * 0.1 }}
                         >
                           <span
-                            className="h-2 w-2 rounded-full mr-3"
+                            className="h-2 w-2 rounded-full mr-3 flex-shrink-0"
                             style={{
-                              backgroundColor: event.color || 'var(--ios-green)',
-                              border: event.color === '#171717' ? '1px solid hsl(var(--foreground))' : 'none',
+                              backgroundColor: event.backgroundColor,
+                              border: `1px solid ${event.borderColor}`,
                               boxSizing: 'border-box'
                             }}
                           ></span>

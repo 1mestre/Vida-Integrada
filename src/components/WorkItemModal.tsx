@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useAppState, WorkItem, KanbanTask } from '@/context/AppStateContext';
+import { useAppState, WorkItem, KanbanTask, CalendarEvent } from '@/context/AppStateContext';
 import { ScrollArea } from './ui/scroll-area';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -75,14 +75,30 @@ const WorkItemModal: React.FC<WorkItemModalProps> = ({ isOpen, onClose, item }) 
   const onSubmit = (data: WorkItem) => {
     let updatedWorkItems: WorkItem[];
     let updatedTasks: KanbanTask[] = [...appState.tasks];
+    let updatedCalendarEvents: CalendarEvent[] = [...appState.calendarEventsData];
 
     if (item) { // Editing existing item
       updatedWorkItems = appState.workItems.map(i => i.id === item.id ? { ...i, ...data } : i);
+      
       const newColumn = statusToColumnMap[data.deliveryStatus];
       const taskIndex = updatedTasks.findIndex(t => t.workItemId === item.id);
       if (taskIndex !== -1 && newColumn) {
-        updatedTasks[taskIndex] = { ...updatedTasks[taskIndex], column: newColumn };
+        updatedTasks[taskIndex] = { 
+            ...updatedTasks[taskIndex], 
+            column: newColumn,
+            content: `Orden de ${data.clientName}`,
+        };
       }
+
+      const eventIndex = updatedCalendarEvents.findIndex(e => e.id === `event-${item.id}`);
+      if (eventIndex !== -1) {
+          updatedCalendarEvents[eventIndex] = {
+              ...updatedCalendarEvents[eventIndex],
+              title: `${data.clientName} orden`,
+              start: data.deliveryDate,
+          };
+      }
+
     } else { // Creating new item
       const newWorkItem = { ...data, id: new Date().toISOString() };
       updatedWorkItems = [...appState.workItems, newWorkItem];
@@ -92,12 +108,23 @@ const WorkItemModal: React.FC<WorkItemModalProps> = ({ isOpen, onClose, item }) 
         workItemId: newWorkItem.id,
         content: `Orden de ${newWorkItem.clientName}`,
         column: 'todo',
-        color: '#10B981',
+        color: 'bg-emerald-950 text-emerald-200 border border-emerald-800',
       };
       updatedTasks.push(newKanbanTask);
+
+      const newCalendarEvent: CalendarEvent = {
+          id: `event-${newWorkItem.id}`,
+          title: `${newWorkItem.clientName} orden`,
+          start: newWorkItem.deliveryDate,
+          allDay: true,
+          color: '#134E4A',
+          backgroundColor: '#134E4A',
+          borderColor: '#0F766E'
+      };
+      updatedCalendarEvents.push(newCalendarEvent);
     }
     
-    setAppState({ workItems: updatedWorkItems, tasks: updatedTasks });
+    setAppState({ workItems: updatedWorkItems, tasks: updatedTasks, calendarEventsData: updatedCalendarEvents });
     onClose();
   };
 
@@ -105,7 +132,8 @@ const WorkItemModal: React.FC<WorkItemModalProps> = ({ isOpen, onClose, item }) 
     if (!item) return;
     setAppState({ 
       workItems: appState.workItems.filter(i => i.id !== item.id),
-      tasks: appState.tasks.filter(t => t.workItemId !== item.id)
+      tasks: appState.tasks.filter(t => t.workItemId !== item.id),
+      calendarEventsData: appState.calendarEventsData.filter(e => e.id !== `event-${item.id}`)
     });
     onClose();
   };
