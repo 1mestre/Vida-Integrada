@@ -27,7 +27,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useAppState, WorkItem } from '@/context/AppStateContext';
-import { MessageSquare, Clipboard, TrendingUp, Trash2, Wrench, Link, Music, Flame, DollarSign } from 'lucide-react';
+import { MessageSquare, Clipboard, TrendingUp, Trash2, Wrench, Link, Music, Flame, DollarSign, PlusCircle } from 'lucide-react';
 import WorkItemModal from '@/components/WorkItemModal';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
@@ -609,5 +609,7 @@ const WorkTab = () => {
 };
 
 export default WorkTab;
+
+    
 
     
