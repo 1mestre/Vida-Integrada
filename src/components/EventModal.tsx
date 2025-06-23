@@ -40,11 +40,15 @@ const EventModal: React.FC<EventModalProps> = ({ isOpen, onClose, eventType, eve
     if (eventData) {
       reset(eventData);
     } else if (eventType === 'calendar' && selectedDate) {
-      reset({ title: '', start: selectedDate, color: COLORS[0].value, allDay: true });
+      const nextColorIndex = appState.calendarEventsData.length % COLORS.length;
+      const nextColor = COLORS[nextColorIndex].value;
+      reset({ title: '', start: selectedDate, color: nextColor, allDay: true });
     } else {
-      reset({ title: '', teacher: '', day: DAYS[0], startTime: HOURS[0], endTime: HOURS[1], color: COLORS[0].value });
+      const nextColorIndex = appState.timetableData.length % COLORS.length;
+      const nextColor = COLORS[nextColorIndex].value;
+      reset({ title: '', teacher: '', day: DAYS[0], startTime: HOURS[0], endTime: HOURS[1], color: nextColor });
     }
-  }, [eventData, selectedDate, eventType, isOpen, reset]);
+  }, [eventData, selectedDate, eventType, isOpen, reset, appState.calendarEventsData.length, appState.timetableData.length]);
   
   const onSubmit = (data: any) => {
     closeIntent.current = 'save';
