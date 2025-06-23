@@ -21,11 +21,11 @@ interface EventModalProps {
 
 const COLORS = [
     { name: 'Azul', value: '#0091FF' },
-    { name: 'Verde', value: '#39ff14' },
     { name: 'Rojo', value: '#FF4245' },
-    { name: 'Amarillo', value: '#FFD600' },
     { name: 'Púrpura', value: '#DB34F2' },
-    { name: 'Menta', value: '#00DAC3' },
+    { name: 'Carbón', value: '#171717' },
+    { name: 'Teal Profundo', value: '#134E4A' },
+    { name: 'Dorado Arena', value: '#AA824B' },
 ];
 
 const DAYS = ['LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES'];
