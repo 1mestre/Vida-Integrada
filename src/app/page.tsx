@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -11,13 +10,7 @@ import FloatingEmojis from '@/components/FloatingEmojis';
 import { Button } from '@/components/ui/button';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Login } from '@/components/Login';
-import { playSound } from '@/lib/audio';
-
-// Lazy load tab components for better initial performance
-const CalendarTab = React.lazy(() => import('@/components/tabs/CalendarTab'));
-const IncomeTab = React.lazy(() => import('@/components/tabs/IncomeTab'));
-const UniversityTab = React.lazy(() => import('@/components/tabs/UniversityTab'));
-const ProductivityTab = React.lazy(() => import('@/components/tabs/ProductivityTab'));
+import { useSound } from '@/context/SoundContext'; // Importa useSound
 
 type Tab = 'calendar' | 'income' | 'university' | 'productivity';
 
@@ -32,6 +25,7 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<Tab>('calendar');
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const { playSound } = useSound(); // Utiliza el hook useSound
 
   useEffect(() => {
     if (!app) {
@@ -91,7 +85,7 @@ export default function Home() {
                   variant={activeTab === tab.id ? 'default' : 'ghost'}
                   onClick={() => {
                     setActiveTab(tab.id);
-                    playSound('https://storage.googleapis.com/hub-sounds/click.mp3', 0.3);
+                    playSound('tabChange'); // Llama a playSound con 'tabChange'
                   }}
                   className={`transition-all duration-300 rounded-full px-3 py-1.5 h-auto text-xs sm:text-sm sm:px-4 ${activeTab === tab.id ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/30' : 'text-muted-foreground'}`}
                 >

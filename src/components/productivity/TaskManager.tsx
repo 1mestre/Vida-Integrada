@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from 'react';
@@ -7,7 +6,7 @@ import { ListTodo, Plus, X, Hourglass, Play, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { motion, AnimatePresence } from 'framer-motion';
-import { playSound } from '@/lib/audio';
+import { useSound } from '@/context/SoundContext'; // Importa useSound
 
 type Task = { id: number; text: string };
 type Status = 'todo' | 'inProgress' | 'done';
@@ -23,17 +22,18 @@ const TaskManager = () => {
     done: [],
   });
   const [newTask, setNewTask] = useState('');
+  const { playSound } = useSound(); // Utiliza el hook useSound
 
   const handleAddTask = () => {
     if (newTask.trim() === '') return;
-    playSound('https://storage.googleapis.com/hub-sounds/success.mp3');
+    playSound('genericClick'); // Sonido de clic genérico al añadir tarea
     const newId = Date.now();
     setTasks(prev => ({ ...prev, todo: [...prev.todo, { id: newId, text: newTask }] }));
     setNewTask('');
   };
   
   const handleDeleteTask = (id: number, status: Status) => {
-    playSound('https://storage.googleapis.com/hub-sounds/error.mp3');
+    playSound('deleteItem'); // Llama a playSound con 'deleteItem' al eliminar
     setTasks(prev => ({
         ...prev,
         [status]: prev[status].filter(task => task.id !== id)
@@ -52,7 +52,7 @@ const TaskManager = () => {
 
       if (sourceStatus === targetStatus) return;
       
-      playSound('https://storage.googleapis.com/hub-sounds/drop.mp3', 0.4);
+      playSound('genericClick'); // Sonido de clic genérico al soltar tarea
 
       const taskToMove = tasks[sourceStatus].find(t => t.id === taskId);
       if (!taskToMove) return;

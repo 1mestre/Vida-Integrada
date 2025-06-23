@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -7,7 +6,7 @@ import { Hourglass, Play, Pause, RotateCcw, Settings, AlertTriangle } from 'luci
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { playSound } from '@/lib/audio';
+import { useSound } from '@/context/SoundContext'; // Importa useSound
 
 const PomodoroTimer = () => {
   const [durations, setDurations] = useState({ work: 25, shortBreak: 5, longBreak: 15 });
@@ -18,6 +17,7 @@ const PomodoroTimer = () => {
   const [showSettings, setShowSettings] = useState(false);
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const { playSound } = useSound(); // Utiliza el hook useSound
 
   const resetTimer = useCallback(() => {
     if (intervalRef.current) clearInterval(intervalRef.current);
@@ -48,7 +48,11 @@ const PomodoroTimer = () => {
         setTimeLeft(prev => prev - 1);
       }, 1000);
     } else if (isActive && timeLeft === 0) {
-      playSound('https://storage.googleapis.com/hub-sounds/success.mp3');
+      // Este sonido podría ser un 'completion' sound, no 'pomodoroStart' ni 'pomodoroReset'
+      // Mantendremos el original o usaremos genericClick si no hay uno específico
+      // Por ahora, se mantiene el playSound existente (que parece ser del archivo de audio antiguo)
+      // Si se desea un sonido de finalización, se podría añadir al soundMap.
+      // playSound('https://storage.googleapis.com/hub-sounds/success.mp3');
       resetTimer();
     }
     return () => {
@@ -63,12 +67,14 @@ const PomodoroTimer = () => {
   }, [durations, mode, isActive]);
 
   const toggleTimer = () => {
-      playSound('https://storage.googleapis.com/hub-sounds/tick.mp3');
-      setIsActive(!isActive)
+    if (!isActive) {
+      playSound('pomodoroStart'); // Llama a playSound con 'pomodoroStart' solo al iniciar
+    }
+    setIsActive(!isActive);
   };
 
   const handleManualReset = () => {
-      playSound('https://storage.googleapis.com/hub-sounds/cancel.mp3');
+      playSound('pomodoroReset'); // Llama a playSound con 'pomodoroReset'
       if (intervalRef.current) clearInterval(intervalRef.current);
       setIsActive(false);
       setMode('work');
@@ -77,7 +83,8 @@ const PomodoroTimer = () => {
   }
 
   const handleToggleSettings = () => {
-    playSound('https://storage.googleapis.com/hub-sounds/click.mp3', 0.4);
+    // playSound('https://storage.googleapis.com/hub-sounds/click.mp3', 0.4); // Puedes cambiarlo a genericClick
+    playSound('genericClick');
     setShowSettings(!showSettings);
   }
 
