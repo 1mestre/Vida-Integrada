@@ -48,7 +48,7 @@ interface AppStateContextType {
 const initialAppState: AppState = {
   contributions: [],
   monthlyTargets: {},
-  selectedInputCurrencyIngresos: 'COP',
+  selectedInputCurrencyIngresos: 'USD',
   timetableData: [],
   calendarEventsData: [],
 };
@@ -73,6 +73,9 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
       (docSnap) => {
         if (docSnap.exists()) {
           const data = docSnap.data() as AppState;
+          if (!data.selectedInputCurrencyIngresos) {
+            data.selectedInputCurrencyIngresos = 'USD';
+          }
           setAppState(data);
         } else {
           // Document doesn't exist, create it with initial state
@@ -93,6 +96,7 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
     );
 
     return () => unsubscribe();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSetAppState = async (newState: Partial<AppState>) => {
