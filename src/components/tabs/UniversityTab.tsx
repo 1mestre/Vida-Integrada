@@ -61,10 +61,27 @@ const UniversityTab = () => {
     }, {} as Record<string, typeof appState.timetableData>);
   }, [appState.timetableData]);
 
-  const gridStyle = { 
-    gridTemplateColumns: '4rem repeat(5, minmax(120px, 1fr))', 
-    gridTemplateRows: 'auto repeat(18, 4rem)' 
-  };
+  const activeHours = useMemo(() => {
+    const hoursWithEvents = new Set<string>();
+    appState.timetableData.forEach(event => {
+      const startIndex = HOURS.indexOf(event.startTime);
+      const endIndex = HOURS.indexOf(event.endTime);
+      if (startIndex !== -1 && endIndex !== -1) {
+        for (let i = startIndex; i < endIndex; i++) {
+          hoursWithEvents.add(HOURS[i]);
+        }
+      }
+    });
+    return hoursWithEvents;
+  }, [appState.timetableData]);
+
+  const gridStyle = useMemo(() => {
+    const rowHeights = HOURS.map(hour => activeHours.has(hour) ? '4rem' : '1.5rem').join(' ');
+    return {
+      gridTemplateColumns: '4rem repeat(5, minmax(120px, 1fr))',
+      gridTemplateRows: `auto ${rowHeights}`
+    };
+  }, [activeHours]);
 
   return (
     <>
@@ -90,7 +107,7 @@ const UniversityTab = () => {
                 ))}
                 {HOURS.map(hour => (
                   <React.Fragment key={hour}>
-                    <div className="p-2 text-xs text-right font-mono text-muted-foreground sticky left-0 bg-secondary z-10">{hour}</div>
+                    <div className="p-2 pr-4 text-xs text-right font-mono text-muted-foreground sticky left-0 bg-secondary z-10 flex items-center justify-end">{hour}</div>
                     {DAYS.map(day => (
                       <div key={`${day}-${hour}`} className="border-t border-l border-border/20"></div>
                     ))}
@@ -102,7 +119,7 @@ const UniversityTab = () => {
                 {appState.timetableData.map(event => (
                   <motion.div
                       key={event.id}
-                      className="p-2 rounded-lg text-white text-xs flex flex-col items-center justify-center text-center cursor-pointer overflow-hidden"
+                      className="p-2 rounded-lg text-white text-sm flex flex-col items-center justify-center text-center cursor-pointer overflow-hidden"
                       style={{ ...getGridPosition(event), backgroundColor: event.color || '#0091FF' }}
                       onClick={() => handleEventClick(event)}
                       initial={{ opacity: 0, scale: 0.8 }}
