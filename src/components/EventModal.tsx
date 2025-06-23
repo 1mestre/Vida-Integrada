@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useEffect } from 'react';
@@ -148,7 +147,7 @@ const EventModal: React.FC<EventModalProps> = ({ isOpen, onClose, eventType, eve
                         {COLORS.map(color => (
                             <SelectItem key={color.value} value={color.value}>
                                 <div className="flex items-center gap-2">
-                                    <div className="h-4 w-4 rounded-full" style={{ backgroundColor: color.value }}></div>
+                                    <div className="h-4 w-4 rounded-full border border-neutral-400" style={{ backgroundColor: color.value }}></div>
                                     {color.name}
                                 </div>
                             </SelectItem>
