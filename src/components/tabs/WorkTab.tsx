@@ -27,7 +27,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useAppState, WorkItem } from '@/context/AppStateContext';
-import { MessageSquare, PlusCircle, Clipboard, TrendingUp, Trash2, Settings, Wrench, Link, Music } from 'lucide-react';
+import { MessageSquare, Clipboard, TrendingUp, Trash2, Wrench, Link, Music, Flame, DollarSign } from 'lucide-react';
 import WorkItemModal from '@/components/WorkItemModal';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
@@ -53,9 +53,8 @@ const generateFileNames = (item: WorkItem) => {
 
 const FileNameToolsPopover = ({ item }: { item: WorkItem }) => {
     const [copySuccess, setCopySuccess] = React.useState('');
-    const filenames = generateFileNames(item); // Asume que la función generateFileNames ya existe
+    const filenames = generateFileNames(item);
 
-    // Mapa de etiquetas para mostrar en la UI
     const labels: { [key: string]: string } = {
         stems: 'STEMS',
         wav: 'WAV',
@@ -65,7 +64,7 @@ const FileNameToolsPopover = ({ item }: { item: WorkItem }) => {
     const handleCopy = (text: string, type: string) => {
         navigator.clipboard.writeText(text).then(() => {
             setCopySuccess(type);
-            setTimeout(() => setCopySuccess(''), 2000); // Resetea el mensaje después de 2 segundos
+            setTimeout(() => setCopySuccess(''), 2000);
         }, (err) => {
             console.error('No se pudo copiar el texto: ', err);
         });
@@ -78,9 +77,8 @@ const FileNameToolsPopover = ({ item }: { item: WorkItem }) => {
                     <Wrench className="h-4 w-4 text-muted-foreground" />
                 </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-80"> {/* Ajustado el ancho para la nueva interfaz */}
+            <PopoverContent className="w-80">
                 <div className="grid gap-6">
-                    {/* SECCIÓN DE NOMBRES DE ARCHIVO MODIFICADA */}
                     <div className="space-y-2">
                         <h4 className="font-medium leading-none">Nombres de Archivo</h4>
                         <p className="text-sm text-muted-foreground">
@@ -94,34 +92,12 @@ const FileNameToolsPopover = ({ item }: { item: WorkItem }) => {
                                 <Button
                                     size="sm"
                                     onClick={() => handleCopy(value, key)}
-                                    className="w-24" // Ancho fijo para los botones
+                                    className="w-24"
                                 >
                                     {copySuccess === key ? '¡Copiado!' : 'Copiar'}
                                 </Button>
                             </div>
                         ))}
-                    </div>
-
-                    {/* SECCIÓN DE ENLACES RÁPIDOS (existente) */}
-                    <div className="space-y-2">
-                        <h4 className="font-medium leading-none">Enlaces Rápidos</h4>
-                        <p className="text-sm text-muted-foreground">
-                            Accede a tus herramientas externas.
-                        </p>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                        <a href="https://www.fiverr.com/dashboard" target="_blank" rel="noopener noreferrer">
-                            <Button variant="outline" className="w-full">
-                                <Link className="mr-2 h-4 w-4" />
-                                Fiverr
-                            </Button>
-                        </a>
-                        <a href="https://tunebat.com/Analyzer" target="_blank" rel="noopener noreferrer">
-                            <Button variant="outline" className="w-full">
-                                <Music className="mr-2 h-4 w-4" />
-                                Tunebat
-                            </Button>
-                        </a>
                     </div>
                 </div>
             </PopoverContent>
@@ -133,9 +109,7 @@ const FileNameToolsPopover = ({ item }: { item: WorkItem }) => {
 const generateClientMessage = (item: WorkItem): string => {
   let message = `Heyyy ${item.clientName}! 👋👋\n\n`;
 
-  // Bloque Principal: Elige la plantilla base según el nombre del paquete
   if (item.packageName === 'Masterpiece') {
-    // --- Plantilla Masterpiece ---
     message += `Yooo, your ${item.genre} masterpiece${item.remakeType === 'Multiple Remakes' ? 's are' : ' is'} officially done and it's straighttt fire fr!! ${item.remakeType === 'Multiple Remakes' ? '🔥🔥✨ Hahaha, we went CRAZY on these!!' : '🔥✨'}\n\n`;
     
     if (item.remakeType === 'Single Remake') {
@@ -148,7 +122,6 @@ const generateClientMessage = (item: WorkItem): string => {
     if (item.separateFiles) message += "- Full WAV + STEMS: The WHOLE package, no bs!! 💎\n";
     if (item.projectFileDelivery) message += "- FLP Project File: Full creative control in your hands!! 🎚️🎚️\n";
     if (item.exclusiveLicense) message += "- Exclusive Rights Contract: It's 100000% yours, period!! 📜\n";
-    // MODIFICACIÓN: Se añade la producción vocal como un extra condicional
     if (item.vocalProduction) message += "- Vocal Production: Pro-level vocal mixing & tuning to make your voice SHINE!! ✨🎙️\n";
     
     if (item.vocalChainPreset) {
@@ -157,7 +130,6 @@ const generateClientMessage = (item: WorkItem): string => {
     }
 
   } else if (item.packageName === 'Exclusive') {
-    // --- Plantilla Exclusive ---
     message += `Your ${item.genre} ${item.remakeType === 'Multiple Remakes' ? 'beats are' : 'beat is'} readyyy to drop!! ${item.remakeType === 'Multiple Remakes' ? '💣💣 No cap, these ones hit DIFFERENT!! 💯🎵' : 'No cap, this one hits different 💯🎵'}\n\n`;
 
     if (item.remakeType === 'Single Remake') {
@@ -169,7 +141,6 @@ const generateClientMessage = (item: WorkItem): string => {
     message += "📎📎 WHAT YOU'RE GETTING:\n";
     if (item.masterAudio) message += "- Full WAV: Mixed, mastered, and READYYY to upload!! 🎯\n";
     if (item.exclusiveLicense) message += "- Exclusive Rights Contract: 100% ownership, no sharing needed!! 📋\n";
-    // MODIFICACIÓN: Se añade la producción vocal como un extra condicional
     if (item.vocalProduction) message += "- Vocal Production: Pro-level vocal mixing & tuning to make your voice SHINE!! ✨🎙️\n";
     
     if (item.vocalChainPreset) {
@@ -177,21 +148,18 @@ const generateClientMessage = (item: WorkItem): string => {
       message += "(Appreciate you being chill to work with, let's keep the collabs going!!) 🤝\n\n";
     }
 
-  } else { // Asumimos 'Amateurs' o cualquier otro
-    // --- Plantilla Amateurs ---
+  } else {
     message += `So here's that ${item.genre} demo you wanted!! Just a quick vibe check, nothing too wild yet 😎🎧\n\n`;
     message += "🎛️ This is just the demo version of the remake - think of it as the rough draft with MADDD potential!! 🎨\n\n";
     
     message += "📎📎 WHAT YOU'RE GETTING:\n";
     if (item.songLength > 0) message += `- ${item.songLength}-sec MP3 demo: Just the vibe, raw and UNFILTEREDDD!! 🎵\n`;
     message += "- Heads up: No exclusive rights or pro mixing included (this is just a taste!!) 👀👀\n\n";
-    // MODIFICACIÓN: Se añade la producción vocal como un extra condicional también aquí
     if (item.vocalProduction) message += "- Vocal Production Add-on: Available for this track!! 🎤 Ask me about it!\n\n";
 
     message += "🤔 BUT WAIT - If you're feeling this demo and want the full experience, just pay the difference:\n[Aquí puedes poner la lógica de precios de upgrade si la necesitas]\n\nJust holla at me if you wanna upgrade! 🚀🚀\n\n";
   }
 
-  // --- Secciones Finales (Sin Cambios) ---
   message += `${item.remakeType === 'Multiple Remakes' ? 'Keys' : 'Key'}: ${item.key} | ${item.remakeType === 'Multiple Remakes' ? 'BPMs' : 'BPM'}: ${item.bpm}\n\n`;
   message += `📦📦 Order #${item.orderNumber}\n\n`;
 
@@ -199,7 +167,7 @@ const generateClientMessage = (item: WorkItem): string => {
     message += `✅✅ This is built for the BIGGG stages - Spotify, radio, wherever you wanna take it!! 🌟🌟\n${item.revisionsRemaining} revisions remaining 🔧🔧\n\n🎁 PRO TIP: Drop a 5-star review and I'll hook you UPPP with $10 off your next order!! Helps me out FOR REALLL 🙏🙏\n\nNow go make some MAGIC happen!! ✨🎤`;
   } else if (item.packageName === 'Exclusive') {
     message += `✅ ${item.revisionsRemaining} revisions remaining 🔧\n${item.remakeType === 'Multiple Remakes' ? "Time to make these BEATS slap!! 💥💥" : "Time to make some WAVES!! 🌊🌊"}\n\n🎁 PRO TIP: Leave me a 5-star review and I'll give you $10 off your next beat!! WIN-WIN SITUATION 😉💰💰\n\nLet's get this music out there!!! 🚀🚀`;
-  } else { // Amateurs
+  } else {
     message += "✅ Let me know what you think of the direction!! If you're vibing with it, we can ALWAYSSS take it to the next level!! 🎯🎯\n\n(No revisions on demos, but that's what upgrades are for!! 😉💡💡)";
   }
 
@@ -229,7 +197,6 @@ const WorkTab = () => {
     const { toast } = useToast();
     const { playSound } = useSound();
 
-    // --- Income State ---
     const [exchangeRate, setExchangeRate] = useState<number | null>(null);
     const [rateLoading, setRateLoading] = useState(true);
     const [amount, setAmount] = useState('');
@@ -272,8 +239,13 @@ const WorkTab = () => {
             calendarEventsData: appState.calendarEventsData.filter(event => event.id !== `event-${itemToDelete.id}`)
         });
     };
+    
+    const handleOpenNewOrderModal = () => {
+        playSound('genericClick');
+        setSelectedItem(null);
+        setIsModalOpen(true);
+    };
 
-    // --- Income Handlers ---
     const handleAddIncome = () => {
         if (!amount || !exchangeRate) return;
 
@@ -407,28 +379,32 @@ const WorkTab = () => {
     
     return (
         <div className="space-y-8">
+            <div className="flex items-center justify-between">
+                <div className="text-2xl font-bold tracking-tight flex items-center">
+                    FIVERR <Flame className="h-6 w-6 ml-2 text-orange-400" />
+                </div>
+                <div className="flex items-center gap-2">
+                    <a href="https://www.fiverr.com/seller_dashboard" target="_blank" rel="noopener noreferrer" onClick={() => playSound('genericClick')}>
+                        <Button className="bg-green-600 hover:bg-green-700 text-white shadow-sm">
+                            <Link className="mr-2 h-4 w-4" />
+                            Fiverr
+                        </Button>
+                    </a>
+                    <a href="https://tunebat.com/Analyzer" target="_blank" rel="noopener noreferrer" onClick={() => playSound('genericClick')}>
+                        <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm">
+                            <Music className="mr-2 h-4 w-4" />
+                            Tunebat
+                        </Button>
+                    </a>
+                    <Button onClick={handleOpenNewOrderModal}>
+                        <DollarSign className="mr-2 h-4 w-4" />
+                        Nueva Orden
+                    </Button>
+                </div>
+            </div>
+
             <Card className="glassmorphism-card">
-                <CardHeader>
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                        <div>
-                            <CardTitle>FIVERR📀</CardTitle>
-                            <CardDescription>Organiza tus proyectos, clientes y entregas.</CardDescription>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Button variant="outline" size="icon" onClick={() => setIsSettingsModalOpen(true)}>
-                                <Settings className="h-4 w-4" />
-                            </Button>
-                            <Button onClick={() => {
-                                setSelectedItem(null);
-                                setIsModalOpen(true);
-                            }}>
-                                <PlusCircle className="mr-2 h-4 w-4" />
-                                Nueva Orden 💵
-                            </Button>
-                        </div>
-                    </div>
-                </CardHeader>
-                <CardContent>
+                <CardContent className="pt-6">
                     <div className="rounded-md border">
                         <Table>
                             <TableHeader>
@@ -633,7 +609,5 @@ const WorkTab = () => {
 };
 
 export default WorkTab;
-
-    
 
     
