@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
@@ -30,6 +31,13 @@ interface CalendarEvent {
   color: string;
 }
 
+export interface KanbanTask {
+  id: string;
+  content: string;
+  column: 'todo' | 'inprogress' | 'done';
+  workItemId?: string;
+}
+
 export interface WorkItem {
   id: string;
   clientName: string;
@@ -40,7 +48,7 @@ export interface WorkItem {
   remakeType: 'Original' | 'Single Remake' | 'Multiple Remakes' | 'Original Multiple Beats';
   key: string;
   bpm: string;
-  deliveryStatus: 'Pending' | 'In Transit' | 'Delivered' | 'Revised' | 'PAYED' | 'Returned';
+  deliveryStatus: 'Pending' | 'In Transit' | 'In Revision' | 'Delivered' | 'Returned';
   revisionsRemaining: number;
 }
 
@@ -51,6 +59,7 @@ interface AppState {
   timetableData: TimetableEvent[];
   calendarEventsData: CalendarEvent[];
   workItems: WorkItem[];
+  tasks: KanbanTask[];
 }
 
 interface AppStateContextType {
@@ -67,6 +76,7 @@ const initialAppState: AppState = {
   timetableData: [],
   calendarEventsData: [],
   workItems: [],
+  tasks: [],
 };
 
 const AppStateContext = createContext<AppStateContextType | undefined>(undefined);
@@ -94,6 +104,9 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
           }
           if (!data.workItems) {
             data.workItems = [];
+          }
+          if (!data.tasks) {
+            data.tasks = [];
           }
           setAppState(data);
         } else {

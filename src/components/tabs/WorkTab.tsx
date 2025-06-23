@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -17,7 +18,6 @@ import {
 } from "@/components/ui/table";
 import {
     AlertDialog,
-    AlertDialogAction,
     AlertDialogContent,
     AlertDialogDescription,
     AlertDialogFooter,
@@ -102,8 +102,7 @@ const statusColorMap: Record<WorkItem['deliveryStatus'], string> = {
   'Pending': 'bg-yellow-500 hover:bg-yellow-600 text-white',
   'In Transit': 'bg-blue-500 hover:bg-blue-600 text-white',
   'Delivered': 'bg-green-600 hover:bg-green-700 text-white',
-  'Revised': 'bg-purple-500 hover:bg-purple-600 text-white',
-  'PAYED': 'bg-emerald-500 hover:bg-emerald-600 font-bold text-white',
+  'In Revision': 'bg-purple-500 hover:bg-purple-600 text-white',
   'Returned': 'bg-red-600 hover:bg-red-700 text-white'
 };
 
@@ -219,7 +218,7 @@ const WorkTab = () => {
                             setIsModalOpen(true);
                         }}>
                             <PlusCircle className="mr-2 h-4 w-4" />
-                            Nuevo Ítem
+                            Nueva Orden 💵
                         </Button>
                     </div>
                 </CardHeader>

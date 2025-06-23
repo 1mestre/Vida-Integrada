@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect } from 'react';
@@ -7,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useAppState, WorkItem } from '@/context/AppStateContext';
+import { useAppState, WorkItem, KanbanTask } from '@/context/AppStateContext';
 import { ScrollArea } from './ui/scroll-area';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -25,14 +26,21 @@ interface WorkItemModalProps {
 
 const PACKAGE_TYPES: WorkItem['packageType'][] = ['Masterpiece', 'Exclusive', 'Amateurs'];
 const REMAKE_TYPES: WorkItem['remakeType'][] = ['Original', 'Single Remake', 'Multiple Remakes', 'Original Multiple Beats'];
-const DELIVERY_STATUSES: WorkItem['deliveryStatus'][] = ['Pending', 'In Transit', 'Delivered', 'Revised', 'PAYED', 'Returned'];
+const DELIVERY_STATUSES: WorkItem['deliveryStatus'][] = ['Pending', 'In Transit', 'In Revision', 'Delivered', 'Returned'];
 
+const statusToColumnMap: { [key in WorkItem['deliveryStatus']]?: 'todo' | 'inprogress' | 'done' } = {
+  'Pending': 'todo',
+  'In Transit': 'inprogress',
+  'In Revision': 'inprogress',
+  'Delivered': 'done',
+  'Returned': 'done',
+};
 
 const WorkItemModal: React.FC<WorkItemModalProps> = ({ isOpen, onClose, item }) => {
   const { appState, setAppState } = useAppState();
   const { control, handleSubmit, reset } = useForm<WorkItem>({
     defaultValues: item || {
-      id: new Date().toISOString(),
+      id: '',
       clientName: '',
       orderNumber: '',
       deliveryDate: '',
@@ -65,16 +73,39 @@ const WorkItemModal: React.FC<WorkItemModalProps> = ({ isOpen, onClose, item }) 
   }, [isOpen, item, reset]);
 
   const onSubmit = (data: WorkItem) => {
-    const workItems = item
-      ? appState.workItems.map(i => i.id === item.id ? { ...i, ...data } : i)
-      : [...appState.workItems, { ...data, id: new Date().toISOString() }];
-    setAppState({ workItems });
+    let updatedWorkItems: WorkItem[];
+    let updatedTasks: KanbanTask[] = [...appState.tasks];
+
+    if (item) { // Editing existing item
+      updatedWorkItems = appState.workItems.map(i => i.id === item.id ? { ...i, ...data } : i);
+      const newColumn = statusToColumnMap[data.deliveryStatus];
+      const taskIndex = updatedTasks.findIndex(t => t.workItemId === item.id);
+      if (taskIndex !== -1 && newColumn) {
+        updatedTasks[taskIndex] = { ...updatedTasks[taskIndex], column: newColumn };
+      }
+    } else { // Creating new item
+      const newWorkItem = { ...data, id: new Date().toISOString() };
+      updatedWorkItems = [...appState.workItems, newWorkItem];
+      
+      const newKanbanTask: KanbanTask = {
+        id: `task-${newWorkItem.id}`,
+        workItemId: newWorkItem.id,
+        content: `Producir orden #${newWorkItem.orderNumber} para ${newWorkItem.clientName}`,
+        column: 'todo',
+      };
+      updatedTasks.push(newKanbanTask);
+    }
+    
+    setAppState({ workItems: updatedWorkItems, tasks: updatedTasks });
     onClose();
   };
 
   const handleDelete = () => {
     if (!item) return;
-    setAppState({ workItems: appState.workItems.filter(i => i.id !== item.id) });
+    setAppState({ 
+      workItems: appState.workItems.filter(i => i.id !== item.id),
+      tasks: appState.tasks.filter(t => t.workItemId !== item.id)
+    });
     onClose();
   };
 
@@ -82,7 +113,7 @@ const WorkItemModal: React.FC<WorkItemModalProps> = ({ isOpen, onClose, item }) 
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="glassmorphism-card max-w-2xl">
         <DialogHeader>
-          <DialogTitle>{item ? 'Editar' : 'Nuevo'} Ítem de Trabajo</DialogTitle>
+          <DialogTitle>{item ? 'Editar' : 'Nueva'} Orden</DialogTitle>
           <DialogDescription>Completa los detalles de la orden de producción musical.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)}>
