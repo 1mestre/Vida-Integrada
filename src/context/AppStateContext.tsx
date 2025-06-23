@@ -99,31 +99,35 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleSetAppState = async (newState: Partial<AppState>) => {
-    const updatedState = { ...appState, ...newState };
-    setAppState(updatedState); // Optimistic update
-    
-    if (!db) {
-      console.warn("Firebase no está configurado, los cambios no se guardarán.");
-      return;
-    }
+  const handleSetAppState = (newState: Partial<AppState>) => {
+    setAppState(prevState => {
+      // Create the new state based on the previous state to avoid stale state issues
+      const updatedState = { ...prevState, ...newState };
 
-    try {
-      const docRef = doc(db, 'organizador-publico', 'datos-compartidos');
-      await setDoc(docRef, { 
-        ...updatedState,
-        lastUpdated: serverTimestamp()
-      });
-    } catch (err) {
-      console.error("Firebase setDoc error:", err);
-      setError("No se pudieron guardar los cambios.");
-      toast({
-        variant: "destructive",
-        title: "Error al Guardar",
-        description: "Tus últimos cambios no se pudieron guardar. Por favor, inténtalo de nuevo.",
-      });
-      // Optionally, revert to previous state here
-    }
+      // Save to Firestore fire-and-forget style. The optimistic update is already done.
+      if (db) {
+        const docRef = doc(db, 'organizador-publico', 'datos-compartidos');
+        setDoc(docRef, { 
+          ...updatedState,
+          lastUpdated: serverTimestamp()
+        }).catch(err => {
+          console.error("Firebase setDoc error:", err);
+          setError("No se pudieron guardar los cambios.");
+          toast({
+            variant: "destructive",
+            title: "Error al Guardar",
+            description: "Tus últimos cambios no se pudieron guardar. Por favor, inténtalo de nuevo.",
+          });
+          // Revert to the previous state on failure
+          setAppState(prevState);
+        });
+      } else {
+         console.warn("Firebase no está configurado, los cambios no se guardarán.");
+      }
+
+      // Return the new state for React to use for the render
+      return updatedState;
+    });
   };
 
   return (
