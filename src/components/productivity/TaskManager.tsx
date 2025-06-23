@@ -105,17 +105,17 @@ const TaskManager = () => {
           <Button onClick={handleAddTask}><Plus className="h-4 w-4"/></Button>
         </div>
 
-        <div className="text-xs text-muted-foreground p-3 rounded-lg bg-red-500/10 border border-red-500/30 flex gap-2">
-            <X className="h-4 w-4 text-red-400 mt-1 flex-shrink-0" />
+        <div className="text-xs text-muted-foreground p-3 rounded-lg bg-ios-red/10 border border-ios-red/30 flex gap-2">
+            <X className="h-4 w-4 text-ios-red mt-1 flex-shrink-0" />
             <div>
-                <span className="font-bold text-red-400">QUÉ NO HACER HOY:</span> Consumir videos de YouTube, redes sociales sin propósito, procrastinar decisiones.
+                <span className="font-bold text-ios-red">QUÉ NO HACER HOY:</span> Consumir videos de YouTube, redes sociales sin propósito, procrastinar decisiones.
             </div>
         </div>
 
         <div className="flex flex-col md:flex-row gap-4">
-            <Column title="Por Hacer" status="todo" icon={<Hourglass className="h-4 w-4"/>} color="text-orange-400"/>
-            <Column title="En Progreso" status="inProgress" icon={<Play className="h-4 w-4"/>} color="text-blue-400"/>
-            <Column title="Completadas" status="done" icon={<CheckCircle className="h-4 w-4"/>} color="text-green-400"/>
+            <Column title="Por Hacer" status="todo" icon={<Hourglass className="h-4 w-4"/>} color="text-ios-orange"/>
+            <Column title="En Progreso" status="inProgress" icon={<Play className="h-4 w-4"/>} color="text-ios-blue"/>
+            <Column title="Completadas" status="done" icon={<CheckCircle className="h-4 w-4"/>} color="text-ios-green"/>
         </div>
       </div>
     </ProductivityCard>

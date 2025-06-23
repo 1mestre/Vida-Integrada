@@ -4,62 +4,65 @@
 
 @layer base {
   :root {
+    /* Colores iOS del modo oscuro */
     --background: 0 0% 0%; /* #000000 */
     --foreground: 0 0% 100%; /* #FFFFFF */
     
-    --card: 240 4% 11%; /* #1C1C1E - Used as a base for glass effect */
+    --card: 240 4% 11%; /* #1C1C1E */
     --card-foreground: 0 0% 100%;
 
     --popover: 240 4% 11%;
     --popover-foreground: 0 0% 100%;
 
-    --primary: 212 100% 50%; /* #0091FF */
+    --primary: 214 100% 50%; /* #007AFF */
     --primary-foreground: 0 0% 100%;
 
     --secondary: 240 4% 17%; /* #2C2C2E */
-    --secondary-foreground: 245 33% 91%; /* #EBEBF5 (approx) */
+    --secondary-foreground: 240 17% 95%; /* #EBEBF5 */
 
-    --muted: 240 3% 22%; /* #38383A */
-    --muted-foreground: 245 33% 91%; /* #EBEBF5 (approx) with opacity */
+    --muted: 240 4% 17%;
+    --muted-foreground: 240 2% 57%; /* #8E8E93 */
 
-    --accent: 212 100% 50%;
+    --accent: 214 100% 50%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive: 2 100% 59%; /* #FF3B30 */
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 240 3% 22%; /* #38383A */
-    --input: 240 3% 22%;
-    --ring: 212 100% 50%;
+    --border: 240 2% 34%; /* rgba(84, 84, 88, 0.65) -> #545458 */
+    --input: 240 2% 34%;
+    --ring: 214 100% 50%;
 
-    --radius: 0.75rem;
+    --radius: 0.75rem; /* 12px */
 
-    --accent-green-neon: 127 100% 55%; /* #39ff14 */
-    --accent-blue-info: 194 95% 77%; /* #8be9fd */
-    --accent-yellow-pale: 64 93% 77%; /* #f1fa8c */
+    /* Colores adicionales iOS */
+    --ios-blue: 214 100% 50%;
+    --ios-red: 2 100% 59%;
+    --ios-green: 135 59% 49%;
+    --ios-orange: 36 100% 50%;
   }
 
   .dark {
-    /* Same as root for a forced dark theme */
+    /* Forzar modo oscuro igual que :root */
     --background: 0 0% 0%;
     --foreground: 0 0% 100%;
     --card: 240 4% 11%;
     --card-foreground: 0 0% 100%;
     --popover: 240 4% 11%;
     --popover-foreground: 0 0% 100%;
-    --primary: 212 100% 50%;
+    --primary: 214 100% 50%;
     --primary-foreground: 0 0% 100%;
     --secondary: 240 4% 17%;
-    --secondary-foreground: 245 33% 91%;
-    --muted: 240 3% 22%;
-    --muted-foreground: 245 33% 91%;
-    --accent: 212 100% 50%;
+    --secondary-foreground: 240 17% 95%;
+    --muted: 240 4% 17%;
+    --muted-foreground: 240 2% 57%;
+    --accent: 214 100% 50%;
     --accent-foreground: 0 0% 100%;
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 2 100% 59%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 3% 22%;
-    --input: 240 3% 22%;
-    --ring: 212 100% 50%;
+    --border: 240 2% 34%;
+    --input: 240 2% 34%;
+    --ring: 214 100% 50%;
   }
 }
 
@@ -69,23 +72,21 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: 'Rubik', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
   }
 }
 
 @layer components {
   .glassmorphism-card {
-    @apply bg-[rgba(28,28,30,0.7)] backdrop-blur-xl border border-[rgba(255,255,255,0.1)] rounded-2xl shadow-lg;
-    /* From Liquid Glass/Sidebars and Sheets/Dark */
-    background-color: hsla(0, 0%, 100%, 0.043);
-    background-image: linear-gradient(0deg, rgba(30, 30, 30, 0.247), rgba(30, 30, 30, 0.247)), linear-gradient(0deg, hsla(240, 5%, 11%, 0.7), hsla(240, 5%, 11%, 0.7));
-    box-shadow: 0px 4px 80px 0px rgba(0, 0, 0, 0.2), -0.25px -0.5px 0.15px 0.5px hsla(0, 0%, 100%, 0.047), 0.25px 0.5px 0.5px 0.25px hsla(0, 0%, 100%, 0.22);
+    backdrop-filter: blur(20px) saturate(180%);
+    background-color: hsl(var(--card) / 0.75);
+    @apply border shadow-lg;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
   }
   .glassmorphism-nav {
-    background: rgba(24, 24, 26, 0.6);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px) saturate(180%);
+    background-color: hsl(var(--card) / 0.75);
+    @apply border-b;
   }
 }
 
@@ -107,12 +108,8 @@
 }
 
 @keyframes shimmer {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(100%);
-  }
+  0% { transform: translateX(0); }
+  100% { transform: translateX(100%); }
 }
 
 @keyframes float {

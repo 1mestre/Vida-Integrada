@@ -109,7 +109,7 @@ const IncomeTab = () => {
             
             <div className="space-y-2">
                 <p className="text-sm font-medium">Progreso Meta del Mes</p>
-                <Progress value={financialSummary.progress} className="h-4 shimmer [&>div]:bg-gradient-to-r [&>div]:from-green-400 [&>div]:to-emerald-600"/>
+                <Progress value={financialSummary.progress} className="h-4 shimmer [&>div]:bg-gradient-to-r [&>div]:from-ios-green [&>div]:to-green-400"/>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -143,7 +143,7 @@ const IncomeTab = () => {
                                 <li key={c.id} className="text-sm border-b border-border/50 pb-2">
                                     <div className="flex justify-between font-medium">
                                         <span>{format(new Date(c.date), 'dd MMM yyyy', { locale: es })}</span>
-                                        <span className="text-green-400">{formatCOP(c.netCOP)}</span>
+                                        <span className="text-ios-green">{formatCOP(c.netCOP)}</span>
                                     </div>
                                     <div className="text-xs text-muted-foreground">
                                         {formatUSD(c.netUSD)} @ {c.rate.toFixed(2)}
@@ -169,7 +169,7 @@ const IncomeTab = () => {
                                         <p className="font-medium">{format(new Date(`${key}-02`), 'MMMM yyyy', { locale: es })}</p>
                                         <div className="flex justify-between items-center">
                                             <span className="text-muted-foreground">{formatCOP(monthIncome)} / {formatCOP(target)}</span>
-                                            <span className={`font-bold ${achieved ? 'text-green-400' : 'text-orange-400'}`}>
+                                            <span className={`font-bold ${achieved ? 'text-ios-green' : 'text-ios-orange'}`}>
                                                 {achieved ? 'Logrado' : 'Pendiente'}
                                             </span>
                                         </div>
@@ -185,19 +185,19 @@ const IncomeTab = () => {
       <div className="space-y-6">
         <Card className="glassmorphism-card text-center p-6">
             <p className="text-sm text-muted-foreground">Ingreso Neto Total</p>
-            <p className="text-4xl font-bold text-green-400">{formatCOP(financialSummary.totalNetCOP)}</p>
+            <p className="text-4xl font-bold text-ios-green">{formatCOP(financialSummary.totalNetCOP)}</p>
         </Card>
         <Card className="glassmorphism-card text-center p-6">
             <p className="text-sm text-muted-foreground">Ingreso Neto Total (USD)</p>
-            <p className="text-3xl font-semibold text-blue-400">{formatUSD(financialSummary.totalNetUSD)}</p>
+            <p className="text-3xl font-semibold text-ios-blue">{formatUSD(financialSummary.totalNetUSD)}</p>
         </Card>
         <Card className="glassmorphism-card text-center p-6">
             <p className="text-sm text-muted-foreground">Ingresos Este Mes</p>
             <p className="text-3xl font-semibold">{formatCOP(financialSummary.incomeThisMonth)}</p>
         </Card>
         {financialSummary.progress >= 100 && (
-            <Card className="glassmorphism-card bg-green-500/20 border-green-500 p-4 text-center">
-                <p className="font-bold text-green-300 animate-pulse">🎉✨ ¡FELICITACIONES! ¡META ALCANZADA! ✨🎉</p>
+            <Card className="glassmorphism-card bg-ios-green/20 border-ios-green p-4 text-center">
+                <p className="font-bold text-ios-green animate-pulse">🎉✨ ¡FELICITACIONES! ¡META ALCANZADA! ✨🎉</p>
             </Card>
         )}
         <AlertDialog>

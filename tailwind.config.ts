@@ -19,8 +19,7 @@ const config = {
     },
     extend: {
       fontFamily: {
-        body: ['Rubik', 'sans-serif'],
-        headline: ['Rubik', 'sans-serif'],
+        sans: ['-apple-system', 'BlinkMacSystemFont', '"SF Pro Display"', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -56,6 +55,10 @@ const config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        'ios-blue': 'hsl(var(--ios-blue))',
+        'ios-red': 'hsl(var(--ios-red))',
+        'ios-green': 'hsl(var(--ios-green))',
+        'ios-orange': 'hsl(var(--ios-orange))',
       },
       borderRadius: {
         lg: "var(--radius)",

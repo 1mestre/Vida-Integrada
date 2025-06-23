@@ -14,9 +14,9 @@ const ProgressBar = ({ label, value, colorClass, alwaysGreen }: { label: string,
   <div className="space-y-2">
     <div className="flex justify-between items-center">
       <p className="text-sm font-medium text-muted-foreground">{label}</p>
-      <p className={`text-sm font-bold ${alwaysGreen ? 'text-green-400' : colorClass}`}>{value.toFixed(2)}%</p>
+      <p className={`text-sm font-bold ${alwaysGreen ? 'text-ios-green' : colorClass}`}>{value.toFixed(2)}%</p>
     </div>
-    <Progress value={value} className={`h-2 ${alwaysGreen ? '[&>div]:bg-green-500' : ''}`} />
+    <Progress value={value} className={`h-2 ${alwaysGreen ? '[&>div]:bg-ios-green' : ''}`} />
   </div>
 );
 
@@ -52,10 +52,9 @@ const CalendarTab = () => {
 
 
   const getProgressColor = (progress: number) => {
-    if (progress < 25) return 'text-red-400';
-    if (progress < 50) return 'text-orange-400';
-    if (progress < 75) return 'text-yellow-400';
-    return 'text-green-400';
+    if (progress < 40) return 'text-ios-orange';
+    if (progress < 80) return 'text-ios-blue';
+    return 'text-ios-green';
   };
   
   const handleEventClick = useCallback((clickInfo: any) => {
@@ -121,7 +120,7 @@ const CalendarTab = () => {
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ duration: 0.3, delay: index * 0.1 }}
                         >
-                          <span className="h-2 w-2 rounded-full mr-3" style={{ backgroundColor: event.color || '#39ff14' }}></span>
+                          <span className="h-2 w-2 rounded-full mr-3" style={{ backgroundColor: event.color || 'var(--ios-green)' }}></span>
                           <span className="text-sm">{event.title}</span>
                         </motion.li>
                       ))}

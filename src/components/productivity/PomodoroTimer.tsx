@@ -131,10 +131,10 @@ const PomodoroTimer = () => {
                 </div>
             </div>
         )}
-        <div className="text-xs text-muted-foreground p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/30 flex gap-2">
-            <AlertTriangle className="h-4 w-4 text-yellow-400 mt-1 flex-shrink-0" />
+        <div className="text-xs text-muted-foreground p-3 rounded-lg bg-ios-orange/10 border border-ios-orange/30 flex gap-2">
+            <AlertTriangle className="h-4 w-4 text-ios-orange mt-1 flex-shrink-0" />
             <div>
-                <span className="font-bold text-yellow-400">TÁCTICA ANTI-PROCRASTINACIÓN:</span> Aplica la regla de los 2 minutos. Si una tarea toma menos de dos minutos, hazla ahora.
+                <span className="font-bold text-ios-orange">TÁCTICA ANTI-PROCRASTINACIÓN:</span> Aplica la regla de los 2 minutos. Si una tarea toma menos de dos minutos, hazla ahora.
             </div>
         </div>
       </div>
