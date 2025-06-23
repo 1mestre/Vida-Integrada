@@ -1,8 +1,7 @@
-
 "use client";
 
 import React, { useState, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAppState } from '@/context/AppStateContext';
 import EventModal from '@/components/EventModal';
 import { Button } from '@/components/ui/button';
@@ -94,7 +93,6 @@ const UniversityTab = () => {
               Añadir Evento
             </Button>
           </CardTitle>
-          <CardDescription>Visualiza y gestiona tu horario de clases y actividades académicas.</CardDescription>
         </CardHeader>
         <CardContent>
           {/* Desktop Grid View */}
