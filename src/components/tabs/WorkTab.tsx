@@ -30,6 +30,7 @@ import { useAppState, WorkItem } from '@/context/AppStateContext';
 import { MessageSquare, PlusCircle, Clipboard } from 'lucide-react';
 import WorkItemModal from '@/components/WorkItemModal';
 import { useToast } from '@/hooks/use-toast';
+import { Badge } from '@/components/ui/badge';
 
 
 const generateClientMessage = (item: WorkItem): string => {
@@ -97,6 +98,28 @@ const generateClientMessage = (item: WorkItem): string => {
   return message;
 };
 
+const statusColorMap: Record<WorkItem['deliveryStatus'], string> = {
+  'Pending': 'bg-yellow-500 hover:bg-yellow-600 text-white',
+  'In Transit': 'bg-blue-500 hover:bg-blue-600 text-white',
+  'Delivered': 'bg-green-600 hover:bg-green-700 text-white',
+  'Revised': 'bg-purple-500 hover:bg-purple-600 text-white',
+  'PAYED': 'bg-emerald-500 hover:bg-emerald-600 font-bold text-white',
+  'Returned': 'bg-red-600 hover:bg-red-700 text-white'
+};
+
+const packageColorMap: Record<WorkItem['packageType'], string> = {
+  'Masterpiece': 'bg-purple-600 hover:bg-purple-700 text-white',
+  'Exclusive': 'bg-sky-600 hover:bg-sky-700 text-white',
+  'Amateurs': 'bg-teal-600 hover:bg-teal-700 text-white'
+};
+
+const remakeColorMap: Record<WorkItem['remakeType'], string> = {
+  'Single Remake': 'bg-blue-800 hover:bg-blue-900 text-white',
+  'Multiple Remakes': 'bg-purple-800 hover:bg-purple-900 text-white',
+  'Original': 'bg-green-800 hover:bg-green-900 text-white',
+  'Original Multiple Beats': 'bg-orange-800 hover:bg-orange-900 text-white'
+};
+
 const WorkTab = () => {
     const { appState } = useAppState();
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -104,6 +127,10 @@ const WorkTab = () => {
     const [isAlertOpen, setIsAlertOpen] = useState(false);
     const [messageToShow, setMessageToShow] = useState('');
     const { toast } = useToast();
+
+    const sortedWorkItems = useMemo(() => {
+        return [...appState.workItems].sort((a, b) => new Date(a.deliveryDate).getTime() - new Date(b.deliveryDate).getTime());
+    }, [appState.workItems]);
 
     const handleCopy = () => {
         navigator.clipboard.writeText(messageToShow).then(() => {
@@ -132,11 +159,32 @@ const WorkTab = () => {
         { accessorKey: 'orderNumber', header: 'Orden #' },
         { accessorKey: 'deliveryDate', header: 'Entrega' },
         { accessorKey: 'genre', header: 'Género' },
-        { accessorKey: 'packageType', header: 'Paquete' },
-        { accessorKey: 'remakeType', header: 'Tipo Remake' },
+        { 
+            accessorKey: 'packageType', 
+            header: 'Paquete',
+            cell: ({ row }) => {
+                const packageType = row.getValue('packageType') as WorkItem['packageType'];
+                return <Badge className={packageColorMap[packageType]}>{packageType}</Badge>
+            }
+        },
+        { 
+            accessorKey: 'remakeType', 
+            header: 'Tipo Remake',
+            cell: ({ row }) => {
+                const remakeType = row.getValue('remakeType') as WorkItem['remakeType'];
+                return <Badge className={remakeColorMap[remakeType]}>{remakeType}</Badge>
+            }
+        },
         { accessorKey: 'key', header: 'Key' },
         { accessorKey: 'bpm', header: 'BPM' },
-        { accessorKey: 'deliveryStatus', header: 'Estado' },
+        { 
+            accessorKey: 'deliveryStatus', 
+            header: 'Estado',
+            cell: ({ row }) => {
+                const status = row.getValue('deliveryStatus') as WorkItem['deliveryStatus'];
+                return <Badge className={statusColorMap[status]}>{status}</Badge>
+            }
+        },
         { accessorKey: 'revisionsRemaining', header: 'Revisiones' },
         {
             id: 'edit',
@@ -152,7 +200,7 @@ const WorkTab = () => {
     ], []);
 
     const table = useReactTable({
-        data: appState.workItems,
+        data: sortedWorkItems,
         columns,
         getCoreRowModel: getCoreRowModel(),
     });
@@ -223,8 +271,10 @@ const WorkTab = () => {
                 <AlertDialogContent className="glassmorphism-card max-w-2xl">
                     <AlertDialogHeader>
                         <AlertDialogTitle>Mensaje para el Cliente</AlertDialogTitle>
-                        <AlertDialogDescription className="whitespace-pre-wrap max-h-[60vh] overflow-y-auto text-sm text-foreground/80 p-2 border rounded-md bg-black/20">
-                            {messageToShow}
+                        <AlertDialogDescription asChild>
+                           <pre className="whitespace-pre-wrap max-h-[60vh] overflow-y-auto text-sm text-foreground/80 p-2 border rounded-md bg-black/20 font-sans">
+                                {messageToShow}
+                            </pre>
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
