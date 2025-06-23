@@ -10,7 +10,7 @@ import FloatingEmojis from '@/components/FloatingEmojis';
 import { Button } from '@/components/ui/button';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Login } from '@/components/Login';
-import { useSound } from '@/context/SoundContext'; // Importa useSound
+import { useSound } from '@/context/SoundContext';
 
 const CalendarTab = lazy(() => import('@/components/tabs/CalendarTab'));
 const IncomeTab = lazy(() => import('@/components/tabs/IncomeTab'));
@@ -30,7 +30,7 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<Tab>('calendar');
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
-  const { playSound } = useSound(); // Utiliza el hook useSound
+  const { playSound } = useSound();
 
   useEffect(() => {
     if (!app) {
@@ -79,6 +79,11 @@ export default function Home() {
   return (
     <AppStateProvider>
       <main className="relative min-h-screen w-full overflow-hidden">
+        <div className="absolute inset-0 z-0 pointer-events-none">
+            <div className="light -top-1/4 -left-1/4 h-[50vw] w-[50vw] bg-primary" style={{ animationDelay: '0s', animationDuration: '25s' }}></div>
+            <div className="light -bottom-1/4 -right-1/4 h-[45vw] w-[45vw] bg-ios-orange" style={{ animationDelay: '5s', animationDuration: '35s' }}></div>
+            <div className="light top-1/4 right-1/3 h-[40vw] w-[40vw] bg-ios-green" style={{ animationDelay: '10s', animationDuration: '40s' }}></div>
+        </div>
         <FloatingEmojis />
         <div className="absolute inset-0 z-10 bg-black/20 backdrop-blur-sm"></div>
         

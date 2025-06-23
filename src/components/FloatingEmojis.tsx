@@ -15,7 +15,7 @@ const FloatingEmojis = () => {
   }
 
   return (
-    <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
+    <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-5 pointer-events-none">
       {EMOJIS.concat(EMOJIS).map((emoji, i) => (
         <span
           key={i}
