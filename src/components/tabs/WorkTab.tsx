@@ -27,7 +27,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useAppState, WorkItem } from '@/context/AppStateContext';
-import { MessageSquare, PlusCircle, Clipboard, TrendingUp, Trash2, Settings, Wrench } from 'lucide-react';
+import { MessageSquare, PlusCircle, Clipboard, TrendingUp, Trash2, Settings, Wrench, Link, Music } from 'lucide-react';
 import WorkItemModal from '@/components/WorkItemModal';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
@@ -53,14 +53,14 @@ const generateFileNames = (item: WorkItem) => {
 
 const FileNameToolsPopover = ({ item }: { item: WorkItem }) => {
     const [copySuccess, setCopySuccess] = React.useState('');
-    const filenames = generateFileNames(item);
+    const filenames = generateFileNames(item); // Asume que la función generateFileNames ya existe en el archivo
 
     const handleCopy = (text: string, type: string) => {
         navigator.clipboard.writeText(text).then(() => {
             setCopySuccess(type);
-            setTimeout(() => setCopySuccess(''), 2000); // Reset after 2 seconds
+            setTimeout(() => setCopySuccess(''), 2000); // Resetea el mensaje después de 2 segundos
         }, (err) => {
-            console.error('Could not copy text: ', err);
+            console.error('No se pudo copiar el texto: ', err);
         });
     };
 
@@ -68,11 +68,12 @@ const FileNameToolsPopover = ({ item }: { item: WorkItem }) => {
         <Popover>
             <PopoverTrigger asChild>
                 <Button variant="ghost" size="icon">
-                    <Wrench className="h-4 w-4" />
+                    <Wrench className="h-4 w-4 text-muted-foreground" />
                 </Button>
             </PopoverTrigger>
             <PopoverContent className="w-96">
-                <div className="grid gap-4">
+                <div className="grid gap-6">
+                    {/* Sección de Nombres de Archivo (ya existente) */}
                     <div className="space-y-2">
                         <h4 className="font-medium leading-none">Nombres de Archivo</h4>
                         <p className="text-sm text-muted-foreground">
@@ -83,14 +84,33 @@ const FileNameToolsPopover = ({ item }: { item: WorkItem }) => {
                         {Object.entries(filenames).map(([key, value]) => (
                             <div key={key} className="grid grid-cols-3 items-center gap-4">
                                 <span className="col-span-2 text-xs font-mono p-2 bg-muted rounded-md overflow-x-auto whitespace-nowrap">{value}</span>
-                                <Button
-                                    size="sm"
-                                    onClick={() => handleCopy(value, key)}
-                                >
+                                <Button size="sm" onClick={() => handleCopy(value, key)}>
                                     {copySuccess === key ? '¡Copiado!' : 'Copiar'}
                                 </Button>
                             </div>
                         ))}
+                    </div>
+
+                    {/* NUEVA SECCIÓN: Enlaces Rápidos */}
+                    <div className="space-y-2">
+                        <h4 className="font-medium leading-none">Enlaces Rápidos</h4>
+                        <p className="text-sm text-muted-foreground">
+                            Accede a tus herramientas externas.
+                        </p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                        <a href="https://www.fiverr.com/dashboard" target="_blank" rel="noopener noreferrer">
+                            <Button variant="outline" className="w-full">
+                                <Link className="mr-2 h-4 w-4" />
+                                Fiverr
+                            </Button>
+                        </a>
+                        <a href="https://tunebat.com/Analyzer" target="_blank" rel="noopener noreferrer">
+                            <Button variant="outline" className="w-full">
+                                <Music className="mr-2 h-4 w-4" />
+                                Tunebat
+                            </Button>
+                        </a>
                     </div>
                 </div>
             </PopoverContent>
