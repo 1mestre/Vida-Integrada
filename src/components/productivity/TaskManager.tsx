@@ -6,7 +6,7 @@ import { ListTodo, Plus, X, Hourglass, Play, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useSound } from '@/context/SoundContext'; // Importa useSound
+import { useSound } from '@/context/SoundContext'; 
 
 type Task = { id: number; text: string };
 type Status = 'todo' | 'inProgress' | 'done';
@@ -22,18 +22,18 @@ const TaskManager = () => {
     done: [],
   });
   const [newTask, setNewTask] = useState('');
-  const { playSound } = useSound(); // Utiliza el hook useSound
+  const { playSound } = useSound(); 
 
   const handleAddTask = () => {
     if (newTask.trim() === '') return;
-    playSound('genericClick'); // Sonido de clic genérico al añadir tarea
+    playSound('genericClick');
     const newId = Date.now();
     setTasks(prev => ({ ...prev, todo: [...prev.todo, { id: newId, text: newTask }] }));
     setNewTask('');
   };
   
   const handleDeleteTask = (id: number, status: Status) => {
-    playSound('deleteItem'); // Llama a playSound con 'deleteItem' al eliminar
+    playSound('deleteItem'); 
     setTasks(prev => ({
         ...prev,
         [status]: prev[status].filter(task => task.id !== id)
@@ -52,7 +52,7 @@ const TaskManager = () => {
 
       if (sourceStatus === targetStatus) return;
       
-      playSound('genericClick'); // Sonido de clic genérico al soltar tarea
+      playSound('genericClick');
 
       const taskToMove = tasks[sourceStatus].find(t => t.id === taskId);
       if (!taskToMove) return;
@@ -66,7 +66,7 @@ const TaskManager = () => {
 
   const Column = ({ title, status, icon, color }: { title: string, status: Status, icon: React.ReactNode, color: string }) => (
     <div 
-        className="bg-background/20 rounded-lg p-3 flex-1 min-w-[200px]"
+        className="bg-background/20 rounded-lg p-3 flex-1 min-w-[200px] md:min-w-0"
         onDrop={(e) => handleDrop(e, status)}
         onDragOver={(e) => e.preventDefault()}
     >

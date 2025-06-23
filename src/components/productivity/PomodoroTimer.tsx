@@ -48,17 +48,13 @@ const PomodoroTimer = () => {
         setTimeLeft(prev => prev - 1);
       }, 1000);
     } else if (isActive && timeLeft === 0) {
-      // Este sonido podría ser un 'completion' sound, no 'pomodoroStart' ni 'pomodoroReset'
-      // Mantendremos el original o usaremos genericClick si no hay uno específico
-      // Por ahora, se mantiene el playSound existente (que parece ser del archivo de audio antiguo)
-      // Si se desea un sonido de finalización, se podría añadir al soundMap.
-      // playSound('https://storage.googleapis.com/hub-sounds/success.mp3');
+      playSound('pomodoroStart');
       resetTimer();
     }
     return () => {
       if(intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [isActive, timeLeft, resetTimer]);
+  }, [isActive, timeLeft, resetTimer, playSound]);
   
   useEffect(() => {
       if(!isActive) {
@@ -68,13 +64,13 @@ const PomodoroTimer = () => {
 
   const toggleTimer = () => {
     if (!isActive) {
-      playSound('pomodoroStart'); // Llama a playSound con 'pomodoroStart' solo al iniciar
+      playSound('pomodoroStart'); 
     }
     setIsActive(!isActive);
   };
 
   const handleManualReset = () => {
-      playSound('pomodoroReset'); // Llama a playSound con 'pomodoroReset'
+      playSound('pomodoroReset'); 
       if (intervalRef.current) clearInterval(intervalRef.current);
       setIsActive(false);
       setMode('work');
@@ -83,7 +79,6 @@ const PomodoroTimer = () => {
   }
 
   const handleToggleSettings = () => {
-    // playSound('https://storage.googleapis.com/hub-sounds/click.mp3', 0.4); // Puedes cambiarlo a genericClick
     playSound('genericClick');
     setShowSettings(!showSettings);
   }
@@ -130,17 +125,17 @@ const PomodoroTimer = () => {
 
         {showSettings && (
             <div className="w-full space-y-4 p-4 border border-border rounded-lg">
-                <div className="grid grid-cols-3 gap-2 items-center">
+                <div className="space-y-2">
                     <Label htmlFor="work">Trabajo (min)</Label>
-                    <Input id="work" type="number" value={durations.work} onChange={e => setDurations(d => ({...d, work: +e.target.value}))} className="col-span-2 bg-background/30"/>
+                    <Input id="work" type="number" value={durations.work} onChange={e => setDurations(d => ({...d, work: +e.target.value}))} className="bg-background/30"/>
                 </div>
-                 <div className="grid grid-cols-3 gap-2 items-center">
+                 <div className="space-y-2">
                     <Label htmlFor="short">Descanso Corto</Label>
-                    <Input id="short" type="number" value={durations.shortBreak} onChange={e => setDurations(d => ({...d, shortBreak: +e.target.value}))} className="col-span-2 bg-background/30"/>
+                    <Input id="short" type="number" value={durations.shortBreak} onChange={e => setDurations(d => ({...d, shortBreak: +e.target.value}))} className="bg-background/30"/>
                 </div>
-                 <div className="grid grid-cols-3 gap-2 items-center">
+                 <div className="space-y-2">
                     <Label htmlFor="long">Descanso Largo</Label>
-                    <Input id="long" type="number" value={durations.longBreak} onChange={e => setDurations(d => ({...d, longBreak: +e.target.value}))} className="col-span-2 bg-background/30"/>
+                    <Input id="long" type="number" value={durations.longBreak} onChange={e => setDurations(d => ({...d, longBreak: +e.target.value}))} className="bg-background/30"/>
                 </div>
             </div>
         )}
