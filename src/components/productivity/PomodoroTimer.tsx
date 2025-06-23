@@ -17,7 +17,6 @@ const PomodoroTimer = () => {
   const [cycle, setCycle] = useState(0);
   const [showSettings, setShowSettings] = useState(false);
 
-  const audioRef = useRef<HTMLAudioElement | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const resetTimer = useCallback(() => {
@@ -44,16 +43,12 @@ const PomodoroTimer = () => {
   }, [mode, cycle, durations]);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-        audioRef.current = new Audio('https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg');
-    }
-
     if (isActive && timeLeft > 0) {
       intervalRef.current = setInterval(() => {
         setTimeLeft(prev => prev - 1);
       }, 1000);
     } else if (isActive && timeLeft === 0) {
-      audioRef.current?.play();
+      playSound('https://storage.googleapis.com/hub-sounds/success.mp3');
       resetTimer();
     }
     return () => {
