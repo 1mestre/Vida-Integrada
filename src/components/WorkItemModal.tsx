@@ -18,6 +18,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { v4 as uuidv4 } from 'uuid';
 import { Switch } from './ui/switch';
+import { useSound } from '@/context/SoundContext';
 
 interface WorkItemModalProps {
   isOpen: boolean;
@@ -53,6 +54,7 @@ const statusToColumnMap: { [key in WorkItem['deliveryStatus']]?: 'todo' | 'inpro
 
 const WorkItemModal: React.FC<WorkItemModalProps> = ({ isOpen, onClose, item }) => {
   const { appState, setAppState } = useAppState();
+  const { playSound } = useSound();
   const form = useForm<WorkItem & { packageTemplateId?: string }>();
 
   const { control, handleSubmit, reset, watch, setValue } = form;
@@ -129,6 +131,7 @@ const WorkItemModal: React.FC<WorkItemModalProps> = ({ isOpen, onClose, item }) 
 
 
   const onSubmit = (data: WorkItem) => {
+    playSound('pomodoroStart');
     setAppState(prevState => {
       let updatedWorkItems: WorkItem[];
       let updatedTasks: KanbanTask[] = [...prevState.tasks];
@@ -359,5 +362,3 @@ const WorkItemModal: React.FC<WorkItemModalProps> = ({ isOpen, onClose, item }) 
 };
 
 export default WorkItemModal;
-
-    

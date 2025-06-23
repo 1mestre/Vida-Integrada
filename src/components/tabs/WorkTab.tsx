@@ -254,6 +254,14 @@ const WorkTab = () => {
             cell: ({row}) => format(new Date(row.original.deliveryDate + 'T00:00:00'), "PPP", { locale: es })
         },
         { accessorKey: 'genre', header: 'Género' },
+        {
+          accessorKey: 'key',
+          header: 'Key',
+        },
+        {
+          accessorKey: 'bpm',
+          header: 'BPM',
+        },
         { 
             accessorKey: 'packageName', 
             header: 'Paquete',
