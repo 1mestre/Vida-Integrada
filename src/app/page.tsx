@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo, lazy } from 'react';
 import { getAuth, onAuthStateChanged, type User } from 'firebase/auth';
-import { Calendar, DollarSign, University, Rocket, Briefcase } from 'lucide-react';
+import { Calendar, University, Rocket, Briefcase } from 'lucide-react';
 
 import { app } from '@/lib/firebase';
 import { AppStateProvider } from '@/context/AppStateContext';
@@ -13,18 +13,16 @@ import { Login } from '@/components/Login';
 import { useSound } from '@/context/SoundContext';
 
 const CalendarTab = lazy(() => import('@/components/tabs/CalendarTab'));
-const IncomeTab = lazy(() => import('@/components/tabs/IncomeTab'));
 const UniversityTab = lazy(() => import('@/components/tabs/UniversityTab'));
 const ProductivityTab = lazy(() => import('@/components/tabs/ProductivityTab'));
 const WorkTab = lazy(() => import('@/components/tabs/WorkTab'));
 
-type Tab = 'calendar' | 'income' | 'university' | 'productivity' | 'work';
+type Tab = 'calendar' | 'university' | 'productivity' | 'work';
 
 const TABS: { id: Tab; label: string; icon: React.ElementType }[] = [
   { id: 'productivity', label: 'Productividad', icon: Rocket },
   { id: 'work', label: 'Work', icon: Briefcase },
   { id: 'calendar', label: 'Calendario', icon: Calendar },
-  { id: 'income', label: 'Ingresos', icon: DollarSign },
   { id: 'university', label: 'Universidad', icon: University },
 ];
 
@@ -52,8 +50,6 @@ export default function Home() {
     switch (activeTab) {
       case 'calendar':
         return <CalendarTab />;
-      case 'income':
-        return <IncomeTab />;
       case 'university':
         return <UniversityTab />;
       case 'productivity':
