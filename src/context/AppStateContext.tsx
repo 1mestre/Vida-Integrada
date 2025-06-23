@@ -190,42 +190,58 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
         if (docSnap.exists()) {
           const data = docSnap.data();
           
-          // Sanitize WorkItems to ensure they conform to the latest interface
-          // This prevents "undefined" values from being written back to Firestore
+          // --- Comprehensive Sanitization ---
           const sanitizedWorkItems = (data.workItems || []).map((item: Partial<WorkItem>): WorkItem => {
             const defaults: Omit<WorkItem, 'id'> = {
-              clientName: '',
-              orderNumber: '',
-              deliveryDate: format(new Date(), 'yyyy-MM-dd'),
-              genre: '',
-              bpm: '',
-              key: 'C / Am',
-              deliveryStatus: 'Pending',
-              remakeType: 'Single Remake',
-              packageName: 'Amateurs',
-              price: 0,
-              revisionsRemaining: 0,
-              songLength: 0,
-              numberOfInstruments: 0,
-              separateFiles: false,
-              masterAudio: false,
-              projectFileDelivery: false,
-              exclusiveLicense: false,
-              vocalProduction: false,
-              vocalChainPreset: false,
+              clientName: '', orderNumber: '', deliveryDate: format(new Date(), 'yyyy-MM-dd'),
+              genre: '', bpm: '', key: 'C / Am', deliveryStatus: 'Pending', remakeType: 'Single Remake',
+              packageName: 'Amateurs', price: 0, revisionsRemaining: 0, songLength: 0,
+              numberOfInstruments: 0, separateFiles: false, masterAudio: false, projectFileDelivery: false,
+              exclusiveLicense: false, vocalProduction: false, vocalChainPreset: false,
             };
-            return {
-              ...defaults,
-              ...item,
-              id: item.id || uuidv4(),
-            };
+            return { ...defaults, ...item, id: item.id || uuidv4() };
           });
 
-          // Create a sanitized state object to avoid saving undefined fields
+          const sanitizedUniversityTasks = (data.universityTasks || []).map((task: Partial<UniversityTask>): UniversityTask => {
+              const defaults: Omit<UniversityTask, 'id'> = {
+                  subject: 'Materia Desconocida', title: 'Tarea sin título', description: '',
+                  dueDate: format(new Date(), 'yyyy-MM-dd'), status: 'pendiente',
+              };
+              return { ...defaults, ...task, id: task.id || uuidv4() };
+          });
+
+          const sanitizedCalendarEvents = (data.calendarEventsData || []).map((event: Partial<CalendarEvent>): CalendarEvent => {
+              const defaults: Omit<CalendarEvent, 'id'> = {
+                  title: 'Evento sin título', start: format(new Date(), 'yyyy-MM-dd'),
+                  allDay: true, color: '#0091FF',
+              };
+              return { ...defaults, ...event, id: event.id || uuidv4() };
+          });
+          
+          const sanitizedTasks = (data.tasks || []).map((task: Partial<KanbanTask>): KanbanTask => {
+              const defaults: Omit<KanbanTask, 'id'> = {
+                  content: 'Tarea sin contenido', column: 'todo',
+              };
+              return { ...defaults, ...task, id: task.id || uuidv4() };
+          });
+          
+          const sanitizedTemplates = (data.workPackageTemplates || initialAppState.workPackageTemplates).map((template: Partial<WorkPackageTemplate>): WorkPackageTemplate => {
+              const defaults: Omit<WorkPackageTemplate, 'id'> = {
+                name: 'Plantilla sin nombre', price: 0, revisions: 0, songLength: 0, numberOfInstruments: 0,
+                separateFiles: false, masterAudio: false, projectFileDelivery: false, exclusiveLicense: false,
+                vocalProduction: false, vocalChainPreset: false,
+              };
+              return { ...defaults, ...template, id: template.id || uuidv4() };
+          });
+
           const sanitizedState = {
             ...initialAppState,
             ...data,
             workItems: sanitizedWorkItems,
+            universityTasks: sanitizedUniversityTasks,
+            calendarEventsData: sanitizedCalendarEvents,
+            tasks: sanitizedTasks,
+            workPackageTemplates: sanitizedTemplates.length > 0 ? sanitizedTemplates : initialAppState.workPackageTemplates,
           };
           
           setAppState(sanitizedState);
