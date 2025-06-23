@@ -29,7 +29,7 @@ const CalendarTab = () => {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const { playSound } = useSound();
 
-  const { appState } = useAppState();
+  const { appState, setAppState } = useAppState();
 
   useEffect(() => {
     setTime(new Date());
@@ -68,9 +68,18 @@ const CalendarTab = () => {
     setModalOpen(true);
   }, []);
   
+  const handleEventDrop = useCallback((dropInfo: any) => {
+    const { event } = dropInfo;
+    setAppState({
+      calendarEventsData: appState.calendarEventsData.map(e =>
+        e.id === event.id ? { ...e, start: event.startStr } : e
+      ),
+    });
+  }, [appState.calendarEventsData, setAppState]);
+
   const selectAllow = useCallback((selectInfo: any) => {
     const todayStr = new Date().toISOString().split('T')[0];
-    return selectInfo.startStr === todayStr;
+    return selectInfo.startStr >= todayStr;
   }, []);
 
   const todayStr = new Date().toISOString().split('T')[0];
@@ -97,6 +106,7 @@ const CalendarTab = () => {
                 events={appState.calendarEventsData}
                 onEventClick={handleEventClick}
                 onDateSelect={handleDateSelect}
+                onEventDrop={handleEventDrop}
                 selectAllow={selectAllow}
               />
             </CardContent>
