@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
@@ -9,6 +10,7 @@ import EventModal from '@/components/EventModal';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { playSound } from '@/lib/audio';
 
 const ProgressBar = ({ label, value, textColorClass, barClassName }: { label: string; value: number; textColorClass: string; barClassName: string; }) => (
   <div className="space-y-2">
@@ -73,6 +75,13 @@ const CalendarTab = () => {
   const todayStr = new Date().toISOString().split('T')[0];
   const todaysEvents = appState.calendarEventsData.filter(event => event.start === todayStr);
 
+  const handleNewActivity = () => {
+    playSound('https://actions.google.com/sounds/v1/ui/ui_tap_forward.ogg');
+    setSelectedEvent(null); 
+    setSelectedDate(todayStr); 
+    setModalOpen(true);
+  };
+
   return (
     <>
       <div className="grid gap-8 md:grid-cols-3">
@@ -128,7 +137,7 @@ const CalendarTab = () => {
                 ) : (
                   <p className="text-sm text-muted-foreground">No hay actividades programadas para hoy.</p>
                 )}
-                 <Button className="w-full mt-6" onClick={() => { setSelectedEvent(null); setSelectedDate(todayStr); setModalOpen(true); }}>
+                 <Button className="w-full mt-6" onClick={handleNewActivity}>
                     <PlusCircle className="mr-2 h-4 w-4" />
                     Nueva Actividad
                 </Button>

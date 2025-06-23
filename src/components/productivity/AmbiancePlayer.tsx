@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
@@ -125,8 +126,8 @@ const AmbiancePlayer = () => {
         if(soundType === 'binaural') startBinaural();
         if(soundType === 'white') startNoise('white');
         if(soundType === 'brown') startNoise('brown');
-        if(soundType === 'rain') playAudioFile('https://cdn.pixabay.com/audio/2022/11/17/audio_8858652eba.mp3');
-        if(soundType === 'ocean') playAudioFile('https://cdn.pixabay.com/audio/2023/09/10/audio_51abf64f06.mp3');
+        if(soundType === 'rain') playAudioFile('https://actions.google.com/sounds/v1/weather/rain_heavy_loud.ogg');
+        if(soundType === 'ocean') playAudioFile('https://actions.google.com/sounds/v1/ambiences/seaside.ogg');
     }, [soundType, startBinaural, startNoise, playAudioFile]);
 
     const togglePlay = () => {

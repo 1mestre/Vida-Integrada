@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from 'react';
@@ -7,6 +8,7 @@ import EventModal from '@/components/EventModal';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { playSound } from '@/lib/audio';
 
 const DAYS = ['LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES'];
 const HOURS = Array.from({ length: 18 }, (_, i) => `${String(i + 5).padStart(2, '0')}:00`);
@@ -22,6 +24,7 @@ const UniversityTab = () => {
   };
   
   const handleAddNew = () => {
+    playSound('https://actions.google.com/sounds/v1/ui/ui_tap_forward.ogg');
     setSelectedEvent(null);
     setModalOpen(true);
   };

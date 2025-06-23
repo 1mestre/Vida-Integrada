@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect } from 'react';
@@ -8,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useForm, Controller } from "react-hook-form";
 import { useAppState } from '@/context/AppStateContext';
+import { playSound } from '@/lib/audio';
 
 interface EventModalProps {
   isOpen: boolean;
@@ -44,6 +46,7 @@ const EventModal: React.FC<EventModalProps> = ({ isOpen, onClose, eventType, eve
   }, [eventData, selectedDate, eventType, isOpen, reset]);
   
   const onSubmit = (data: any) => {
+    playSound('https://actions.google.com/sounds/v1/ui/ui_tap_positive.ogg');
     if (eventType === 'calendar') {
         const calendarEvents = eventData
             ? appState.calendarEventsData.map(e => e.id === eventData.id ? { ...e, ...data } : e)
@@ -60,6 +63,7 @@ const EventModal: React.FC<EventModalProps> = ({ isOpen, onClose, eventType, eve
 
   const handleDelete = () => {
     if(!eventData) return;
+    playSound('https://actions.google.com/sounds/v1/ui/ui_tap_negative.ogg');
     if (eventType === 'calendar') {
         setAppState({ calendarEventsData: appState.calendarEventsData.filter(e => e.id !== eventData.id) });
     } else {
@@ -67,6 +71,11 @@ const EventModal: React.FC<EventModalProps> = ({ isOpen, onClose, eventType, eve
     }
     onClose();
   };
+
+  const handleCancel = () => {
+    playSound('https://actions.google.com/sounds/v1/ui/ui_tap_reverse.ogg');
+    onClose();
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -151,7 +160,7 @@ const EventModal: React.FC<EventModalProps> = ({ isOpen, onClose, eventType, eve
 
             <DialogFooter className="pt-4">
                 {eventData && <Button type="button" variant="destructive" onClick={handleDelete}>Eliminar</Button>}
-                <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
+                <Button type="button" variant="outline" onClick={handleCancel}>Cancelar</Button>
                 <Button type="submit">Guardar</Button>
             </DialogFooter>
         </form>

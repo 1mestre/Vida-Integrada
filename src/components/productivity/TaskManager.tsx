@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from 'react';
@@ -6,6 +7,7 @@ import { ListTodo, Plus, X, Hourglass, Play, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { motion, AnimatePresence } from 'framer-motion';
+import { playSound } from '@/lib/audio';
 
 type Task = { id: number; text: string };
 type Status = 'todo' | 'inProgress' | 'done';
@@ -24,12 +26,14 @@ const TaskManager = () => {
 
   const handleAddTask = () => {
     if (newTask.trim() === '') return;
+    playSound('https://actions.google.com/sounds/v1/ui/ui_tap_positive.ogg');
     const newId = Date.now();
     setTasks(prev => ({ ...prev, todo: [...prev.todo, { id: newId, text: newTask }] }));
     setNewTask('');
   };
   
   const handleDeleteTask = (id: number, status: Status) => {
+    playSound('https://actions.google.com/sounds/v1/ui/ui_tap_negative.ogg');
     setTasks(prev => ({
         ...prev,
         [status]: prev[status].filter(task => task.id !== id)
@@ -47,6 +51,8 @@ const TaskManager = () => {
       const sourceStatus = e.dataTransfer.getData("sourceStatus") as Status;
 
       if (sourceStatus === targetStatus) return;
+      
+      playSound('https://actions.google.com/sounds/v1/doors/door_close.ogg', 0.4);
 
       const taskToMove = tasks[sourceStatus].find(t => t.id === taskId);
       if (!taskToMove) return;

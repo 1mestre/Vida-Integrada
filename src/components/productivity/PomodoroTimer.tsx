@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
@@ -6,6 +7,7 @@ import { Hourglass, Play, Pause, RotateCcw, Settings, AlertTriangle } from 'luci
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { playSound } from '@/lib/audio';
 
 const PomodoroTimer = () => {
   const [durations, setDurations] = useState({ work: 25, shortBreak: 5, longBreak: 15 });
@@ -65,14 +67,23 @@ const PomodoroTimer = () => {
       }
   }, [durations, mode, isActive]);
 
-  const toggleTimer = () => setIsActive(!isActive);
+  const toggleTimer = () => {
+      playSound('https://actions.google.com/sounds/v1/ui/ui_tap_forward.ogg');
+      setIsActive(!isActive)
+  };
 
   const handleManualReset = () => {
+      playSound('https://actions.google.com/sounds/v1/ui/ui_tap_reverse.ogg');
       if (intervalRef.current) clearInterval(intervalRef.current);
       setIsActive(false);
       setMode('work');
       setTimeLeft(durations.work * 60);
       setCycle(0);
+  }
+
+  const handleToggleSettings = () => {
+    playSound('https://actions.google.com/sounds/v1/ui/ui_tap_forward.ogg', 0.4);
+    setShowSettings(!showSettings);
   }
 
   const progress = (durations[mode] * 60 - timeLeft) / (durations[mode] * 60) * 100;
@@ -112,7 +123,7 @@ const PomodoroTimer = () => {
                 {isActive ? <Pause className="h-8 w-8"/> : <Play className="h-8 w-8"/>}
             </Button>
             <Button onClick={handleManualReset} variant="outline" size="icon" className="self-end rounded-full"><RotateCcw /></Button>
-            <Button onClick={() => setShowSettings(!showSettings)} variant="outline" size="icon" className="self-end rounded-full"><Settings /></Button>
+            <Button onClick={handleToggleSettings} variant="outline" size="icon" className="self-end rounded-full"><Settings /></Button>
         </div>
 
         {showSettings && (

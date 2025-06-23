@@ -11,6 +11,7 @@ import FloatingEmojis from '@/components/FloatingEmojis';
 import { Button } from '@/components/ui/button';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Login } from '@/components/Login';
+import { playSound } from '@/lib/audio';
 
 // Lazy load tab components for better initial performance
 const CalendarTab = React.lazy(() => import('@/components/tabs/CalendarTab'));
@@ -88,7 +89,10 @@ export default function Home() {
                 <Button
                   key={tab.id}
                   variant={activeTab === tab.id ? 'default' : 'ghost'}
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => {
+                    setActiveTab(tab.id);
+                    playSound('https://actions.google.com/sounds/v1/ui/ui_tap_forward.ogg', 0.3);
+                  }}
                   className={`transition-all duration-300 rounded-full px-3 py-1.5 h-auto text-xs sm:text-sm sm:px-4 ${activeTab === tab.id ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/30' : 'text-muted-foreground'}`}
                 >
                   <tab.icon className="mr-2 h-4 w-4" />
