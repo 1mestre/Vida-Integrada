@@ -63,7 +63,8 @@ const IncomeTab = () => {
   const handleClearCurrentMonth = () => {
     const contributionsKept = appState.contributions.filter(c => !c.date.startsWith(currentMonthKey));
     
-    const { [currentMonthKey]: _, ...targetsKept } = appState.monthlyTargets;
+    const targetsKept = { ...appState.monthlyTargets };
+    delete targetsKept[currentMonthKey];
     
     setAppState({
       contributions: contributionsKept,
@@ -117,17 +118,17 @@ const IncomeTab = () => {
             
             <div className="space-y-2">
                 <p className="text-sm font-medium">Progreso Meta del Mes ({financialSummary.progress.toFixed(1)}%)</p>
-                <Progress value={financialSummary.progress} className="h-4 shimmer [&>div]:bg-gradient-to-r [&>div]:from-ios-green [&>div]:to-green-400"/>
+                <Progress value={financialSummary.progress} className="h-4 shimmer [&>div]:bg-ios-green"/>
             </div>
 
             <div className="space-y-2">
                 <p className="text-sm font-medium text-muted-foreground">Progreso del Mes (Tiempo: {monthTimeProgress.toFixed(1)}%)</p>
-                <Progress value={monthTimeProgress} className="h-4 [&>div]:bg-muted-foreground/50"/>
+                <Progress value={monthTimeProgress} className="h-4 [&>div]:bg-ios-orange"/>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <Select value={appState.selectedInputCurrencyIngresos} onValueChange={(val: 'USD' | 'COP') => setAppState({ selectedInputCurrencyIngresos: val })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger><SelectValue /></SelectValue></SelectTrigger>
                 <SelectContent><SelectItem value="COP">COP</SelectItem><SelectItem value="USD">USD</SelectItem></SelectContent>
               </Select>
               <Input
