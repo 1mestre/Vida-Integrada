@@ -8,14 +8,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useForm, Controller } from "react-hook-form";
-import { useAppState, CalendarEvent } from '@/context/AppStateContext';
+import { useAppState, CalendarEvent, TimetableEvent } from '@/context/AppStateContext';
 import { useSound } from '@/context/SoundContext';
 
 interface EventModalProps {
   isOpen: boolean;
   onClose: () => void;
   eventType: 'calendar' | 'timetable';
-  eventData?: CalendarEvent | null;
+  eventData?: CalendarEvent | TimetableEvent | null;
   selectedDate?: string | null;
 }
 
@@ -38,16 +38,18 @@ const EventModal: React.FC<EventModalProps> = ({ isOpen, onClose, eventType, eve
   const closeIntent = useRef<'save' | 'delete' | 'cancel'>('cancel');
 
   useEffect(() => {
-    if (eventData) {
-      reset(eventData);
-    } else if (eventType === 'calendar' && selectedDate) {
-      const nextColorIndex = appState.calendarEventsData.length % COLORS.length;
-      const nextColor = COLORS[nextColorIndex].value;
-      reset({ title: '', start: selectedDate, color: nextColor, allDay: true });
-    } else {
-      const nextColorIndex = appState.timetableData.length % COLORS.length;
-      const nextColor = COLORS[nextColorIndex].value;
-      reset({ title: '', teacher: '', day: DAYS[0], startTime: HOURS[0], endTime: HOURS[1], color: nextColor });
+    if (isOpen) {
+      if (eventData) {
+        reset(eventData);
+      } else if (eventType === 'calendar' && selectedDate) {
+        const nextColorIndex = appState.calendarEventsData.length % COLORS.length;
+        const nextColor = COLORS[nextColorIndex].value;
+        reset({ title: '', start: selectedDate, color: nextColor, allDay: true });
+      } else if (eventType === 'timetable') {
+        const nextColorIndex = appState.timetableData.length % COLORS.length;
+        const nextColor = COLORS[nextColorIndex].value;
+        reset({ title: '', teacher: '', day: DAYS[0], startTime: HOURS[0], endTime: HOURS[1], color: nextColor });
+      }
     }
   }, [eventData, selectedDate, eventType, isOpen, reset, appState.calendarEventsData.length, appState.timetableData.length]);
   
@@ -69,50 +71,51 @@ const EventModal: React.FC<EventModalProps> = ({ isOpen, onClose, eventType, eve
   };
 
   const handleDelete = () => {
-    if(!eventData) return;
+    if (!eventData?.id) return;
     closeIntent.current = 'delete';
     playSound('deleteItem');
-    
-    setAppState(prevState => {
-        const eventToDelete = prevState.calendarEventsData.find(e => e.id === eventData.id);
-        if (!eventToDelete) return prevState;
 
-        // Filter to remove the calendar event
-        const updatedEvents = prevState.calendarEventsData.filter(e => e.id !== eventData.id);
+    if (eventType === 'timetable') {
+        setAppState(prevState => ({
+            ...prevState,
+            timetableData: prevState.timetableData.filter(e => e.id !== eventData.id)
+        }));
+    } else { // 'calendar'
+        setAppState(prevState => {
+            const eventToDelete = prevState.calendarEventsData.find(e => e.id === (eventData as CalendarEvent).id);
+            if (!eventToDelete) return prevState;
 
-        let updatedWorkItems = prevState.workItems;
-        let updatedUniversityTasks = prevState.universityTasks;
-        let updatedTasks = prevState.tasks;
+            // Filter to remove the calendar event
+            const updatedEvents = prevState.calendarEventsData.filter(e => e.id !== eventData.id);
 
-        // If it's a Work event, cascade delete linked items
-        if (eventToDelete.workItemId) {
-          updatedWorkItems = prevState.workItems.filter(item => item.id !== eventToDelete.workItemId);
-          updatedTasks = prevState.tasks.filter(task => task.workItemId !== eventToDelete.workItemId);
-        }
+            let updatedWorkItems = prevState.workItems;
+            let updatedUniversityTasks = prevState.universityTasks;
+            let updatedTasks = prevState.tasks;
 
-        // If it's a University event, cascade delete linked items
-        if (eventToDelete.universityTaskId) {
-          updatedUniversityTasks = prevState.universityTasks.filter(item => item.id !== eventToDelete.universityTaskId);
-          updatedTasks = prevState.tasks.filter(task => task.universityTaskId !== eventToDelete.universityTaskId);
-        }
-        
-        let updatedTimetable = prevState.timetableData;
-        if(eventType === 'timetable') {
-          updatedTimetable = prevState.timetableData.filter(e => e.id !== eventData.id);
-        }
+            // If it's a Work event, cascade delete linked items
+            if (eventToDelete.workItemId) {
+              updatedWorkItems = prevState.workItems.filter(item => item.id !== eventToDelete.workItemId);
+              updatedTasks = prevState.tasks.filter(task => task.workItemId !== eventToDelete.workItemId);
+            }
 
-        return {
-          ...prevState,
-          calendarEventsData: updatedEvents,
-          timetableData: updatedTimetable,
-          workItems: updatedWorkItems,
-          universityTasks: updatedUniversityTasks,
-          tasks: updatedTasks
-        };
-    });
-
+            // If it's a University event, cascade delete linked items
+            if (eventToDelete.universityTaskId) {
+              updatedUniversityTasks = prevState.universityTasks.filter(item => item.id !== eventToDelete.universityTaskId);
+              updatedTasks = prevState.tasks.filter(task => task.universityTaskId !== eventToDelete.universityTaskId);
+            }
+            
+            return {
+              ...prevState,
+              calendarEventsData: updatedEvents,
+              workItems: updatedWorkItems,
+              universityTasks: updatedUniversityTasks,
+              tasks: updatedTasks
+            };
+        });
+    }
     onClose();
   };
+
 
   const handleCancel = () => {
     closeIntent.current = 'cancel';

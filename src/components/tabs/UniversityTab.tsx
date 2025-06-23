@@ -3,13 +3,14 @@
 
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useAppState, UniversityTask, KanbanTask, CalendarEvent } from '@/context/AppStateContext';
+import { useAppState, UniversityTask, KanbanTask, CalendarEvent, TimetableEvent } from '@/context/AppStateContext';
 import { Button } from '@/components/ui/button';
 import { BookCopy, PlusCircle, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useSound } from '@/context/SoundContext';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import UniversityTaskModal from '../UniversityTaskModal';
+import EventModal from '../EventModal'; // Import the generic event modal
 import { v4 as uuidv4 } from 'uuid';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -20,9 +21,15 @@ const HOURS = Array.from({ length: 18 }, (_, i) => `${String(i + 5).padStart(2, 
 
 const UniversityTab = () => {
   const { appState, setAppState } = useAppState();
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedTask, setSelectedTask] = useState<UniversityTask | null>(null);
   const { playSound } = useSound();
+
+  // State for University Task Modal
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<UniversityTask | null>(null);
+  
+  // State for Timetable Event Modal
+  const [isTimetableModalOpen, setIsTimetableModalOpen] = useState(false);
+  const [selectedTimetableEvent, setSelectedTimetableEvent] = useState<TimetableEvent | null>(null);
 
   const uniqueSubjects = useMemo(() => {
     const subjects = appState.timetableData.map(item => item.title);
@@ -145,7 +152,11 @@ const UniversityTab = () => {
               <span className="flex-1"></span>
               <span className="flex-1 text-center">🎓 Horario Universitario</span>
               <div className="flex-1 flex justify-end">
-                <Button onClick={() => { playSound('genericClick'); setIsModalOpen(true); }} className="w-auto">
+                <Button onClick={() => { 
+                  playSound('genericClick'); 
+                  setSelectedTimetableEvent(null);
+                  setIsTimetableModalOpen(true);
+                }}>
                   <PlusCircle className="mr-2 h-4 w-4"/>
                   Añadir Evento
                 </Button>
@@ -187,9 +198,13 @@ const UniversityTab = () => {
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ duration: 0.3 }}
                         whileHover={{ scale: 1.05, zIndex: 20 }}
+                        onClick={() => {
+                          setSelectedTimetableEvent(event);
+                          setIsTimetableModalOpen(true);
+                        }}
                     >
                         <p className="font-bold">{event.title}</p>
-                        <p>{event.teacher}</p>
+                        <p className="text-xs">{event.teacher}</p>
                     </motion.div>
                   ))}
                 </div>
@@ -218,6 +233,10 @@ const UniversityTab = () => {
                                               initial={{ opacity: 0, x: -20 }}
                                               animate={{ opacity: 1, x: 0 }}
                                               whileTap={{ scale: 0.95 }}
+                                              onClick={() => {
+                                                setSelectedTimetableEvent(event);
+                                                setIsTimetableModalOpen(true);
+                                              }}
                                           >
                                               <p className="font-bold">{event.title}</p>
                                               {event.teacher && <p className="text-sm opacity-90">{event.teacher}</p>}
@@ -241,9 +260,9 @@ const UniversityTab = () => {
                         <BookCopy className="text-primary"/>
                         Tareas Universitarias
                     </div>
-                    <Button onClick={() => { playSound('genericClick'); setSelectedTask(null); setIsModalOpen(true); }}>
+                    <Button onClick={() => { playSound('genericClick'); setSelectedTask(null); setIsTaskModalOpen(true); }}>
                         <PlusCircle className="mr-2 h-4 w-4"/>
-                        Crear Tarea
+                        Añadir Tarea Académica
                     </Button>
                 </CardTitle>
             </CardHeader>
@@ -298,11 +317,18 @@ const UniversityTab = () => {
       </div>
 
       <UniversityTaskModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        isOpen={isTaskModalOpen}
+        onClose={() => setIsTaskModalOpen(false)}
         onSubmit={handleSaveTask}
         subjects={uniqueSubjects}
         task={selectedTask}
+      />
+
+      <EventModal 
+        isOpen={isTimetableModalOpen} 
+        onClose={() => setIsTimetableModalOpen(false)} 
+        eventType="timetable"
+        eventData={selectedTimetableEvent}
       />
     </>
   );

@@ -13,7 +13,7 @@ interface Contribution {
   netCOP: number;
 }
 
-interface TimetableEvent {
+export interface TimetableEvent {
   id: string;
   title: string;
   teacher?: string;
