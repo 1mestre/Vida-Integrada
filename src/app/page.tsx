@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, lazy } from 'react';
 import { getAuth, onAuthStateChanged, type User } from 'firebase/auth';
 import { Calendar, DollarSign, University, Rocket } from 'lucide-react';
 
@@ -11,6 +11,11 @@ import { Button } from '@/components/ui/button';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Login } from '@/components/Login';
 import { useSound } from '@/context/SoundContext'; // Importa useSound
+
+const CalendarTab = lazy(() => import('@/components/tabs/CalendarTab'));
+const IncomeTab = lazy(() => import('@/components/tabs/IncomeTab'));
+const UniversityTab = lazy(() => import('@/components/tabs/UniversityTab'));
+const ProductivityTab = lazy(() => import('@/components/tabs/ProductivityTab'));
 
 type Tab = 'calendar' | 'income' | 'university' | 'productivity';
 
