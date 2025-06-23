@@ -14,6 +14,7 @@ import { ScrollArea } from './ui/scroll-area';
 import { Card, CardContent, CardHeader } from './ui/card';
 import { Trash2, Edit, PlusCircle } from 'lucide-react';
 import { Separator } from './ui/separator';
+import { cn } from '@/lib/utils';
 
 interface PackageSettingsModalProps {
   isOpen: boolean;
