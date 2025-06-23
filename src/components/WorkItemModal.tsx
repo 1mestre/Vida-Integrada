@@ -53,19 +53,7 @@ const statusToColumnMap: { [key in WorkItem['deliveryStatus']]?: 'todo' | 'inpro
 
 const WorkItemModal: React.FC<WorkItemModalProps> = ({ isOpen, onClose, item }) => {
   const { appState, setAppState } = useAppState();
-  const form = useForm<WorkItem & { packageTemplateId?: string }>({
-    defaultValues: item || {
-      id: '', clientName: '', orderNumber: '',
-      deliveryDate: format(new Date(), 'yyyy-MM-dd'),
-      genre: '', bpm: '', key: '',
-      deliveryStatus: 'Pending',
-      remakeType: 'Single Remake',
-      packageName: '', price: 0, revisionsRemaining: 0,
-      songLength: 0, numberOfInstruments: 0,
-      separateFiles: false, masterAudio: false, projectFileDelivery: false,
-      exclusiveLicense: false, vocalProduction: false, vocalChainPreset: false,
-    }
-  });
+  const form = useForm<WorkItem & { packageTemplateId?: string }>();
 
   const { control, handleSubmit, reset, watch, setValue } = form;
   const selectedTemplateId = watch('packageTemplateId');
@@ -76,28 +64,47 @@ const WorkItemModal: React.FC<WorkItemModalProps> = ({ isOpen, onClose, item }) 
         reset({ ...item, packageTemplateId: '' });
       } else {
         const defaultTemplate = appState.workPackageTemplates[0];
-        if (defaultTemplate) {
-          reset({
+
+        const newWorkItemData: WorkItem & { packageTemplateId?: string } = {
             id: uuidv4(),
-            clientName: '', orderNumber: '',
+            clientName: '',
+            orderNumber: '',
             deliveryDate: format(new Date(), 'yyyy-MM-dd'),
-            genre: '', bpm: '', key: keyOptions[0].value,
+            genre: '',
+            bpm: '',
+            key: keyOptions[0].value,
             deliveryStatus: 'Pending',
             remakeType: 'Single Remake',
-            packageName: defaultTemplate.name,
-            price: defaultTemplate.price,
-            revisionsRemaining: defaultTemplate.revisions,
-            songLength: defaultTemplate.songLength,
-            numberOfInstruments: defaultTemplate.numberOfInstruments,
-            separateFiles: defaultTemplate.separateFiles,
-            masterAudio: defaultTemplate.masterAudio,
-            projectFileDelivery: defaultTemplate.projectFileDelivery,
-            exclusiveLicense: defaultTemplate.exclusiveLicense,
-            vocalProduction: defaultTemplate.vocalProduction,
-            vocalChainPreset: defaultTemplate.vocalChainPreset,
-            packageTemplateId: defaultTemplate.id,
-          });
+            packageName: 'Custom',
+            price: 0,
+            revisionsRemaining: 0,
+            songLength: 0,
+            numberOfInstruments: 0,
+            separateFiles: false,
+            masterAudio: false,
+            projectFileDelivery: false,
+            exclusiveLicense: false,
+            vocalProduction: false,
+            vocalChainPreset: false,
+            packageTemplateId: '',
+        };
+
+        if (defaultTemplate) {
+          newWorkItemData.packageName = defaultTemplate.name;
+          newWorkItemData.price = defaultTemplate.price;
+          newWorkItemData.revisionsRemaining = defaultTemplate.revisions;
+          newWorkItemData.songLength = defaultTemplate.songLength;
+          newWorkItemData.numberOfInstruments = defaultTemplate.numberOfInstruments;
+          newWorkItemData.separateFiles = defaultTemplate.separateFiles;
+          newWorkItemData.masterAudio = defaultTemplate.masterAudio;
+          newWorkItemData.projectFileDelivery = defaultTemplate.projectFileDelivery;
+          newWorkItemData.exclusiveLicense = defaultTemplate.exclusiveLicense;
+          newWorkItemData.vocalProduction = defaultTemplate.vocalProduction;
+          newWorkItemData.vocalChainPreset = defaultTemplate.vocalChainPreset;
+          newWorkItemData.packageTemplateId = defaultTemplate.id;
         }
+        
+        reset(newWorkItemData);
       }
     }
   }, [isOpen, item, reset, appState.workPackageTemplates]);
@@ -352,3 +359,5 @@ const WorkItemModal: React.FC<WorkItemModalProps> = ({ isOpen, onClose, item }) 
 };
 
 export default WorkItemModal;
+
+    
