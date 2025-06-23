@@ -30,12 +30,27 @@ interface CalendarEvent {
   color: string;
 }
 
+export interface WorkItem {
+  id: string;
+  clientName: string;
+  orderNumber: string;
+  deliveryDate: string;
+  genre: string;
+  packageType: 'Masterpiece' | 'Exclusive' | 'Amateurs';
+  remakeType: 'Original' | 'Single Remake' | 'Multiple Remakes' | 'Original Multiple Beats';
+  key: string;
+  bpm: string;
+  deliveryStatus: 'Pending' | 'In Transit' | 'Delivered' | 'Revised' | 'PAYED' | 'Returned';
+  revisionsRemaining: number;
+}
+
 interface AppState {
   contributions: Contribution[];
   monthlyTargets: Record<string, number>;
   selectedInputCurrencyIngresos: 'USD' | 'COP';
   timetableData: TimetableEvent[];
   calendarEventsData: CalendarEvent[];
+  workItems: WorkItem[];
 }
 
 interface AppStateContextType {
@@ -51,6 +66,7 @@ const initialAppState: AppState = {
   selectedInputCurrencyIngresos: 'USD',
   timetableData: [],
   calendarEventsData: [],
+  workItems: [],
 };
 
 const AppStateContext = createContext<AppStateContextType | undefined>(undefined);
@@ -75,6 +91,9 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
           const data = docSnap.data() as AppState;
           if (!data.selectedInputCurrencyIngresos) {
             data.selectedInputCurrencyIngresos = 'USD';
+          }
+          if (!data.workItems) {
+            data.workItems = [];
           }
           setAppState(data);
         } else {
@@ -101,10 +120,8 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
 
   const handleSetAppState = (newState: Partial<AppState>) => {
     setAppState(prevState => {
-      // Create the new state based on the previous state to avoid stale state issues
       const updatedState = { ...prevState, ...newState };
 
-      // Save to Firestore fire-and-forget style. The optimistic update is already done.
       if (db) {
         const docRef = doc(db, 'organizador-publico', 'datos-compartidos');
         setDoc(docRef, { 
@@ -118,14 +135,11 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
             title: "Error al Guardar",
             description: "Tus últimos cambios no se pudieron guardar. Por favor, inténtalo de nuevo.",
           });
-          // Revert to the previous state on failure
           setAppState(prevState);
         });
       } else {
          console.warn("Firebase no está configurado, los cambios no se guardarán.");
       }
-
-      // Return the new state for React to use for the render
       return updatedState;
     });
   };
