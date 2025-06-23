@@ -22,10 +22,10 @@ type Tab = 'calendar' | 'income' | 'university' | 'productivity' | 'work';
 
 const TABS: { id: Tab; label: string; icon: React.ElementType }[] = [
   { id: 'productivity', label: 'Productividad', icon: Rocket },
+  { id: 'work', label: 'Work', icon: Briefcase },
   { id: 'calendar', label: 'Calendario', icon: Calendar },
   { id: 'income', label: 'Ingresos', icon: DollarSign },
   { id: 'university', label: 'Universidad', icon: University },
-  { id: 'work', label: 'Work', icon: Briefcase },
 ];
 
 export default function Home() {
