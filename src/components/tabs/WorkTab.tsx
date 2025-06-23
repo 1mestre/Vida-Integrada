@@ -27,7 +27,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useAppState, WorkItem } from '@/context/AppStateContext';
-import { MessageSquare, Clipboard, TrendingUp, Trash2, Wrench, Link, Music, Flame, DollarSign, PlusCircle } from 'lucide-react';
+import { MessageSquare, Clipboard, TrendingUp, Trash2, Wrench, Link, Music, Flame, DollarSign, PlusCircle, CalendarIcon } from 'lucide-react';
 import WorkItemModal from '@/components/WorkItemModal';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
@@ -35,11 +35,14 @@ import { Progress } from "@/components/ui/progress";
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { format } from 'date-fns';
+import { format, subDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useSound } from '@/context/SoundContext';
 import PackageSettingsModal from '@/components/PackageSettingsModal';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 
 const generateFileNames = (item: WorkItem) => {
     const packageNameUC = item.packageName.toUpperCase();
@@ -277,6 +280,45 @@ const WorkTab = () => {
         setAppState({ contributions: updatedContributions });
     };
 
+    const handleStatusUpdate = (itemId: string, newStatus: WorkItem['deliveryStatus']) => {
+        setAppState(prevState => {
+          const statusToColumnMap: Record<WorkItem['deliveryStatus'], 'todo' | 'inprogress' | 'done'> = {
+            'Pending': 'todo',
+            'In Transit': 'inprogress',
+            'In Revision': 'inprogress',
+            'Delivered': 'done',
+            'Returned': 'done',
+          };
+  
+          const updatedWorkItems = prevState.workItems.map(item =>
+            item.id === itemId ? { ...item, deliveryStatus: newStatus } : item
+          );
+  
+          const updatedTasks = prevState.tasks.map(task =>
+            task.workItemId === itemId ? { ...task, column: statusToColumnMap[newStatus] } : task
+          );
+  
+          return { ...prevState, workItems: updatedWorkItems, tasks: updatedTasks };
+        });
+    };
+  
+    const handleDateUpdate = (itemId: string, newDate: Date) => {
+        const formattedDate = format(newDate, 'yyyy-MM-dd');
+        const reminderDate = format(subDays(newDate, 1), 'yyyy-MM-dd');
+  
+        setAppState(prevState => {
+            const updatedWorkItems = prevState.workItems.map(item =>
+                item.id === itemId ? { ...item, deliveryDate: formattedDate } : item
+            );
+    
+            const updatedEvents = prevState.calendarEventsData.map(event =>
+                event.workItemId === itemId ? { ...event, start: reminderDate } : event
+            );
+            
+            return { ...prevState, workItems: updatedWorkItems, calendarEventsData: updatedEvents };
+        });
+    };
+
     const financialSummary = useMemo(() => {
         const totalNetCOP = appState.contributions.reduce((sum, c) => sum + c.netCOP, 0);
         const totalNetUSD = appState.contributions.reduce((sum, c) => sum + c.netUSD, 0);
@@ -321,7 +363,33 @@ const WorkTab = () => {
         { 
             accessorKey: 'deliveryDate', 
             header: 'Entrega',
-            cell: ({row}) => format(new Date(row.original.deliveryDate + 'T00:00:00'), "PPP", { locale: es })
+            cell: ({ row }) => {
+                const item = row.original;
+                const date = new Date(item.deliveryDate + 'T00:00:00');
+          
+                return (
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="ghost" className="w-full justify-start text-left font-normal p-0 h-auto">
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {format(date, "d 'de' MMMM, yyyy", { locale: es })}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={date}
+                        onSelect={(newDate) => {
+                          if (newDate) {
+                            handleDateUpdate(item.id, newDate);
+                          }
+                        }}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                );
+            }
         },
         { accessorKey: 'genre', header: 'Género' },
         {
@@ -349,8 +417,30 @@ const WorkTab = () => {
             accessorKey: 'deliveryStatus', 
             header: 'Estado',
             cell: ({ row }) => {
-                const status = row.getValue('deliveryStatus') as WorkItem['deliveryStatus'];
-                return <Badge className={statusColorMap[status]}>{status}</Badge>
+                const item = row.original;
+                const statusOptions: WorkItem['deliveryStatus'][] = ['Pending', 'In Transit', 'In Revision', 'Delivered', 'Returned'];
+          
+                return (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="p-0 h-auto">
+                        <Badge className={cn("cursor-pointer", statusColorMap[item.deliveryStatus])}>
+                          {item.deliveryStatus}
+                        </Badge>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      {statusOptions.map(status => (
+                        <DropdownMenuItem
+                          key={status}
+                          onSelect={() => handleStatusUpdate(item.id, status)}
+                        >
+                          {status}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                );
             }
         },
         {
@@ -369,7 +459,7 @@ const WorkTab = () => {
               </div>
             )
         },
-    ], [handleDeleteWorkItem]);
+    ], [handleDeleteWorkItem, handleDateUpdate, handleStatusUpdate]);
 
     const table = useReactTable({
         data: sortedWorkItems,
@@ -396,6 +486,10 @@ const WorkTab = () => {
                             Tunebat
                         </Button>
                     </a>
+                    <Button onClick={() => { playSound('genericClick'); setIsSettingsModalOpen(true); }}>
+                        <Wrench className="mr-2 h-4 w-4" />
+                        Configurar Paquetes
+                    </Button>
                     <Button onClick={handleOpenNewOrderModal}>
                         <DollarSign className="mr-2 h-4 w-4" />
                         Nueva Orden
@@ -609,7 +703,3 @@ const WorkTab = () => {
 };
 
 export default WorkTab;
-
-    
-
-    
