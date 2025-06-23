@@ -42,7 +42,7 @@ const IncomeTab = () => {
   const handleAddIncome = () => {
     if (!amount || !exchangeRate) return;
 
-    playSound('https://actions.google.com/sounds/v1/ui/ui_tap_positive.ogg');
+    playSound('https://storage.googleapis.com/hub-sounds/success.mp3');
     
     const numericAmount = parseFloat(amount);
     let newContribution;
@@ -65,7 +65,7 @@ const IncomeTab = () => {
   };
 
   const handleDeleteIncome = (id: string) => {
-    playSound('https://actions.google.com/sounds/v1/ui/ui_tap_negative.ogg');
+    playSound('https://storage.googleapis.com/hub-sounds/error.mp3');
     const updatedContributions = appState.contributions.filter(c => c.id !== id);
     setAppState({ contributions: updatedContributions });
   };

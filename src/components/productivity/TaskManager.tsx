@@ -26,14 +26,14 @@ const TaskManager = () => {
 
   const handleAddTask = () => {
     if (newTask.trim() === '') return;
-    playSound('https://actions.google.com/sounds/v1/ui/ui_tap_positive.ogg');
+    playSound('https://storage.googleapis.com/hub-sounds/success.mp3');
     const newId = Date.now();
     setTasks(prev => ({ ...prev, todo: [...prev.todo, { id: newId, text: newTask }] }));
     setNewTask('');
   };
   
   const handleDeleteTask = (id: number, status: Status) => {
-    playSound('https://actions.google.com/sounds/v1/ui/ui_tap_negative.ogg');
+    playSound('https://storage.googleapis.com/hub-sounds/error.mp3');
     setTasks(prev => ({
         ...prev,
         [status]: prev[status].filter(task => task.id !== id)
@@ -52,7 +52,7 @@ const TaskManager = () => {
 
       if (sourceStatus === targetStatus) return;
       
-      playSound('https://actions.google.com/sounds/v1/doors/door_close.ogg', 0.4);
+      playSound('https://storage.googleapis.com/hub-sounds/drop.mp3', 0.4);
 
       const taskToMove = tasks[sourceStatus].find(t => t.id === taskId);
       if (!taskToMove) return;

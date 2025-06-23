@@ -76,7 +76,7 @@ const CalendarTab = () => {
   const todaysEvents = appState.calendarEventsData.filter(event => event.start === todayStr);
 
   const handleNewActivity = () => {
-    playSound('https://actions.google.com/sounds/v1/ui/ui_tap_forward.ogg');
+    playSound('https://storage.googleapis.com/hub-sounds/click.mp3');
     setSelectedEvent(null); 
     setSelectedDate(todayStr); 
     setModalOpen(true);

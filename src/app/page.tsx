@@ -91,7 +91,7 @@ export default function Home() {
                   variant={activeTab === tab.id ? 'default' : 'ghost'}
                   onClick={() => {
                     setActiveTab(tab.id);
-                    playSound('https://actions.google.com/sounds/v1/ui/ui_tap_forward.ogg', 0.3);
+                    playSound('https://storage.googleapis.com/hub-sounds/click.mp3', 0.3);
                   }}
                   className={`transition-all duration-300 rounded-full px-3 py-1.5 h-auto text-xs sm:text-sm sm:px-4 ${activeTab === tab.id ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/30' : 'text-muted-foreground'}`}
                 >

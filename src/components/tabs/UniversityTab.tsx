@@ -24,7 +24,7 @@ const UniversityTab = () => {
   };
   
   const handleAddNew = () => {
-    playSound('https://actions.google.com/sounds/v1/ui/ui_tap_forward.ogg');
+    playSound('https://storage.googleapis.com/hub-sounds/click.mp3');
     setSelectedEvent(null);
     setModalOpen(true);
   };

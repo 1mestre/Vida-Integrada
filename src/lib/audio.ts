@@ -24,10 +24,10 @@ export const playSound = (url: string, volume: number = 0.5) => {
     // Ensure we handle the promise returned by play()
     const playPromise = audio.play();
     if (playPromise !== undefined) {
-      playPromise.catch(e => console.error("Error playing sound:", e));
+      playPromise.catch(e => console.error(`Error playing sound: ${url}`, e));
     }
 
   } catch (e) {
-      console.error("Could not play sound", e)
+      console.error(`Could not play sound: ${url}`, e)
   }
 };

@@ -68,12 +68,12 @@ const PomodoroTimer = () => {
   }, [durations, mode, isActive]);
 
   const toggleTimer = () => {
-      playSound('https://actions.google.com/sounds/v1/ui/ui_tap_forward.ogg');
+      playSound('https://storage.googleapis.com/hub-sounds/tick.mp3');
       setIsActive(!isActive)
   };
 
   const handleManualReset = () => {
-      playSound('https://actions.google.com/sounds/v1/ui/ui_tap_reverse.ogg');
+      playSound('https://storage.googleapis.com/hub-sounds/cancel.mp3');
       if (intervalRef.current) clearInterval(intervalRef.current);
       setIsActive(false);
       setMode('work');
@@ -82,7 +82,7 @@ const PomodoroTimer = () => {
   }
 
   const handleToggleSettings = () => {
-    playSound('https://actions.google.com/sounds/v1/ui/ui_tap_forward.ogg', 0.4);
+    playSound('https://storage.googleapis.com/hub-sounds/click.mp3', 0.4);
     setShowSettings(!showSettings);
   }
 

@@ -118,7 +118,7 @@ const AmbiancePlayer = () => {
             source.start();
             bufferSourceRef.current = source;
         } catch(e) {
-            console.error("Error playing audio file", e)
+            console.error(`Error playing audio file: ${url}`, e)
         }
     }, [stopSound]);
     
@@ -126,8 +126,8 @@ const AmbiancePlayer = () => {
         if(soundType === 'binaural') startBinaural();
         if(soundType === 'white') startNoise('white');
         if(soundType === 'brown') startNoise('brown');
-        if(soundType === 'rain') playAudioFile('https://actions.google.com/sounds/v1/weather/rain_heavy_loud.ogg');
-        if(soundType === 'ocean') playAudioFile('https://actions.google.com/sounds/v1/ambiences/seaside.ogg');
+        if(soundType === 'rain') playAudioFile('https://storage.googleapis.com/hub-sounds/rain.mp3');
+        if(soundType === 'ocean') playAudioFile('https://storage.googleapis.com/hub-sounds/ocean-waves.mp3');
     }, [soundType, startBinaural, startNoise, playAudioFile]);
 
     const togglePlay = () => {

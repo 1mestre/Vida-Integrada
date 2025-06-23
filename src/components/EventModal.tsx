@@ -46,7 +46,7 @@ const EventModal: React.FC<EventModalProps> = ({ isOpen, onClose, eventType, eve
   }, [eventData, selectedDate, eventType, isOpen, reset]);
   
   const onSubmit = (data: any) => {
-    playSound('https://actions.google.com/sounds/v1/ui/ui_tap_positive.ogg');
+    playSound('https://storage.googleapis.com/hub-sounds/success.mp3');
     if (eventType === 'calendar') {
         const calendarEvents = eventData
             ? appState.calendarEventsData.map(e => e.id === eventData.id ? { ...e, ...data } : e)
@@ -63,7 +63,7 @@ const EventModal: React.FC<EventModalProps> = ({ isOpen, onClose, eventType, eve
 
   const handleDelete = () => {
     if(!eventData) return;
-    playSound('https://actions.google.com/sounds/v1/ui/ui_tap_negative.ogg');
+    playSound('https://storage.googleapis.com/hub-sounds/error.mp3');
     if (eventType === 'calendar') {
         setAppState({ calendarEventsData: appState.calendarEventsData.filter(e => e.id !== eventData.id) });
     } else {
@@ -73,7 +73,7 @@ const EventModal: React.FC<EventModalProps> = ({ isOpen, onClose, eventType, eve
   };
 
   const handleCancel = () => {
-    playSound('https://actions.google.com/sounds/v1/ui/ui_tap_reverse.ogg');
+    playSound('https://storage.googleapis.com/hub-sounds/cancel.mp3');
     onClose();
   }
 
