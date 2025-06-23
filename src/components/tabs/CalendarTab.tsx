@@ -82,6 +82,13 @@ const CalendarTab = () => {
     return selectInfo.startStr >= todayStr;
   }, []);
 
+  const handleEventAllow = useCallback((dropInfo: any, draggedEvent: any) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Normalize to start of day
+    return dropInfo.start.getTime() >= today.getTime();
+  }, []);
+
+
   const todayStr = new Date().toISOString().split('T')[0];
   const todaysEvents = appState.calendarEventsData.filter(event => event.start === todayStr);
 
@@ -108,6 +115,7 @@ const CalendarTab = () => {
                 onDateSelect={handleDateSelect}
                 onEventDrop={handleEventDrop}
                 selectAllow={selectAllow}
+                eventAllow={handleEventAllow}
               />
             </CardContent>
           </Card>

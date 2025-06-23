@@ -14,9 +14,10 @@ interface FullCalendarProps {
     onDateSelect: (info: any) => void;
     onEventDrop?: (info: any) => void;
     selectAllow?: (info: any) => boolean;
+    eventAllow?: (dropInfo: any, draggedEvent: any) => boolean;
 }
 
-const FullCalendar: React.FC<FullCalendarProps> = ({ events, onEventClick, onDateSelect, onEventDrop, selectAllow }) => {
+const FullCalendar: React.FC<FullCalendarProps> = ({ events, onEventClick, onDateSelect, onEventDrop, selectAllow, eventAllow }) => {
     const calendarRef = useRef<HTMLDivElement>(null);
     const calendarInstanceRef = useRef<any>(null);
 
@@ -49,6 +50,7 @@ const FullCalendar: React.FC<FullCalendarProps> = ({ events, onEventClick, onDat
                 selectAllow: selectAllow ? (info: any) => selectAllow(info) : undefined,
                 eventClick: (info: any) => onEventClickRef.current(info),
                 eventDrop: (info: any) => onEventDropRef.current && onEventDropRef.current(info),
+                eventAllow: eventAllow ? (dropInfo: any, draggedEvent: any) => eventAllow(dropInfo, draggedEvent) : undefined,
                 height: 'auto',
                 contentHeight: 'auto',
                 aspectRatio: 1.5,
@@ -78,6 +80,13 @@ const FullCalendar: React.FC<FullCalendarProps> = ({ events, onEventClick, onDat
             calendarInstanceRef.current.setOption('selectAllow', selectAllow);
         }
     }, [selectAllow]);
+
+    useEffect(() => {
+        if(calendarInstanceRef.current) {
+            calendarInstanceRef.current.setOption('eventAllow', eventAllow);
+        }
+    }, [eventAllow]);
+
 
     return <div ref={calendarRef} />;
 };
