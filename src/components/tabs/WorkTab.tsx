@@ -53,7 +53,14 @@ const generateFileNames = (item: WorkItem) => {
 
 const FileNameToolsPopover = ({ item }: { item: WorkItem }) => {
     const [copySuccess, setCopySuccess] = React.useState('');
-    const filenames = generateFileNames(item); // Asume que la función generateFileNames ya existe en el archivo
+    const filenames = generateFileNames(item); // Asume que la función generateFileNames ya existe
+
+    // Mapa de etiquetas para mostrar en la UI
+    const labels: { [key: string]: string } = {
+        stems: 'STEMS',
+        wav: 'WAV',
+        project: 'FLP'
+    };
 
     const handleCopy = (text: string, type: string) => {
         navigator.clipboard.writeText(text).then(() => {
@@ -71,27 +78,31 @@ const FileNameToolsPopover = ({ item }: { item: WorkItem }) => {
                     <Wrench className="h-4 w-4 text-muted-foreground" />
                 </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-96">
+            <PopoverContent className="w-80"> {/* Ajustado el ancho para la nueva interfaz */}
                 <div className="grid gap-6">
-                    {/* Sección de Nombres de Archivo (ya existente) */}
+                    {/* SECCIÓN DE NOMBRES DE ARCHIVO MODIFICADA */}
                     <div className="space-y-2">
                         <h4 className="font-medium leading-none">Nombres de Archivo</h4>
                         <p className="text-sm text-muted-foreground">
-                            Copia los nombres estandarizados para tus archivos.
+                            Copia el nombre estandarizado para cada tipo de archivo.
                         </p>
                     </div>
-                    <div className="grid gap-2">
+                    <div className="grid gap-3">
                         {Object.entries(filenames).map(([key, value]) => (
-                            <div key={key} className="grid grid-cols-3 items-center gap-4">
-                                <span className="col-span-2 text-xs font-mono p-2 bg-muted rounded-md overflow-x-auto whitespace-nowrap">{value}</span>
-                                <Button size="sm" onClick={() => handleCopy(value, key)}>
+                            <div key={key} className="flex items-center justify-between">
+                                <span className="font-semibold text-sm">{labels[key] || key.toUpperCase()}</span>
+                                <Button
+                                    size="sm"
+                                    onClick={() => handleCopy(value, key)}
+                                    className="w-24" // Ancho fijo para los botones
+                                >
                                     {copySuccess === key ? '¡Copiado!' : 'Copiar'}
                                 </Button>
                             </div>
                         ))}
                     </div>
 
-                    {/* NUEVA SECCIÓN: Enlaces Rápidos */}
+                    {/* SECCIÓN DE ENLACES RÁPIDOS (existente) */}
                     <div className="space-y-2">
                         <h4 className="font-medium leading-none">Enlaces Rápidos</h4>
                         <p className="text-sm text-muted-foreground">
@@ -117,6 +128,7 @@ const FileNameToolsPopover = ({ item }: { item: WorkItem }) => {
         </Popover>
     );
 };
+
 
 const generateClientMessage = (item: WorkItem): string => {
   let message = `Heyyy ${item.clientName}! 👋👋\n\n`;
@@ -621,5 +633,7 @@ const WorkTab = () => {
 };
 
 export default WorkTab;
+
+    
 
     
