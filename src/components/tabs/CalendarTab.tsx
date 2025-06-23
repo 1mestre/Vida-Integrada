@@ -62,12 +62,13 @@ const CalendarTab = () => {
   }, [appState.calendarEventsData]);
   
   const handleEventClick = useCallback((clickInfo: any) => {
-    const event = appState.calendarEventsData.find(e => e.id === clickInfo.event.id);
+    const eventId = clickInfo.event.id;
+    // Prevent opening modal for events linked to work items or university tasks
+    if (eventId.startsWith('event-') || eventId.startsWith('uni-task-') || eventId.startsWith('cal-event-')) {
+      return;
+    }
+    const event = appState.calendarEventsData.find(e => e.id === eventId);
     if(event) {
-        // Prevent opening modal for events linked to work items
-        if (event.id.startsWith('event-')) {
-          return;
-        }
         setSelectedEvent(event);
         setSelectedDate(null);
         setModalOpen(true);
@@ -98,8 +99,8 @@ const CalendarTab = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0); // Normalize to start of day
     
-    // Prevent dragging events linked to WorkItems
-    if (draggedEvent.id.startsWith('event-')) {
+    // Prevent dragging events linked to WorkItems or university tasks
+    if (draggedEvent.id.startsWith('event-') || draggedEvent.id.startsWith('uni-task-') || draggedEvent.id.startsWith('cal-event-')) {
         return false;
     }
     

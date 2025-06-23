@@ -83,7 +83,7 @@ const generateClientMessage = (item: WorkItem): string => {
   } else if (item.packageType === "Exclusive") {
     message += `- Full WAV: Mixed, mastered, and READYYY to upload!! 🎯\n- Exclusive Rights Contract: 100% ownership, no sharing needed!! 📋\n- EXCLUSIVE GIFT: Custom vocal chain preset made for ${item.remakeType === "Multiple Remakes" ? `these ${item.genre} styles` : `this ${item.genre} style`} 🎤✨\n(Appreciate you being chill to work with, let's keep the collabs going!!) 🤝\n\n`;
   } else { // Amateurs
-    message += `- 60-sec MP3 demo: Just the vibe, raw and UNFILTEREDDD!! 🎵\n- Heads up: No exclusive rights or pro mixing included (this is just a taste!!) 👀👀\n\n🤔 BUT WAIT - If you're feeling this demo and want the full experience, just pay the difference:\n• Amateur ($10) → Pro ($15): +$5\n• Amateur ($10) → Exclusive ($30): +$20\n• Pro ($15) → Exclusive ($30): +$15\n\nAnd get:\n• The polished, final version(s) 🔥🔥\n• Exclusive license (100% yours) 📜\n• Professional mixing/mastering 🎛️🎛️\n• Full remake treatment 💯💯\n\nJust holla at me if you wanna upgrade! 🚀🚀\n\n`;
+    message += `- 60-sec MP3 demo: Just the vibe, raw and UNFILTEREDDD!! 🎵\n- Heads up: No exclusive rights or pro mixing included (this is just a taste!!) 👀👀\n\n🤔 BUT WAIT - If you're feeling this demo and want the full experience, just pay the difference:\n• Amateur ($10) → Pro ($15): +$5\n• Amateur ($10) → Exclusive ($30): +$20\n• Pro ($15) → Exclusive ($30): +$15\n\nAnd get:\n• The polished, final version(s) 🔥🔥\n• Exclusive license (100% yours) 📜\n• Professional mixing/mastering 🎛️🎚️\n• Full remake treatment 💯💯\n\nJust holla at me if you wanna upgrade! 🚀🚀\n\n`;
   }
 
   // Parte 4: Key y BPM
@@ -173,6 +173,15 @@ const WorkTab = () => {
         setIsAlertOpen(false);
     };
     
+    const handleDeleteWorkItem = (itemToDelete: WorkItem) => {
+        playSound('deleteItem');
+        setAppState({
+            workItems: appState.workItems.filter(item => item.id !== itemToDelete.id),
+            tasks: appState.tasks.filter(task => task.workItemId !== itemToDelete.id),
+            calendarEventsData: appState.calendarEventsData.filter(event => event.id !== `event-${itemToDelete.id}`)
+        });
+    };
+
     // --- Income Handlers ---
     const handleAddIncome = () => {
         if (!amount || !exchangeRate) return;
@@ -270,15 +279,20 @@ const WorkTab = () => {
         {
             id: 'edit',
             cell: ({ row }) => (
+              <div className="flex gap-1">
                 <Button variant="outline" size="sm" onClick={() => {
                     setSelectedItem(row.original);
                     setIsModalOpen(true);
                 }}>
                     Editar
                 </Button>
+                <Button variant="destructive" size="icon" className="h-8 w-8" onClick={() => handleDeleteWorkItem(row.original)}>
+                    <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
             )
         },
-    ], []);
+    ], [handleDeleteWorkItem]);
 
     const table = useReactTable({
         data: sortedWorkItems,

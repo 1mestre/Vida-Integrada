@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSound } from '@/context/SoundContext'; 
-import { useAppState, KanbanTask, WorkItem } from '@/context/AppStateContext';
+import { useAppState, KanbanTask, WorkItem, UniversityTask } from '@/context/AppStateContext';
 import StatusUpdateModal from '@/components/StatusUpdateModal';
 import { cn } from '@/lib/utils';
 
@@ -19,6 +19,12 @@ const columnConfig: { [key in ColumnId]: { title: string; icon: React.ReactNode;
   todo: { title: "Por Hacer", icon: <Hourglass className="h-4 w-4"/>, color: "text-ios-orange" },
   inprogress: { title: "En Progreso", icon: <Play className="h-4 w-4"/>, color: "text-ios-blue" },
   done: { title: "Completadas", icon: <CheckCircle className="h-4 w-4"/>, color: "text-ios-green" }
+};
+
+const columnToUniStatusMap: Record<ColumnId, UniversityTask['status']> = {
+    todo: 'pendiente',
+    inprogress: 'en progreso',
+    done: 'completado'
 };
 
 const TaskManager = () => {
@@ -42,14 +48,10 @@ const TaskManager = () => {
     setNewTaskText('');
   };
   
-  const handleDeleteTask = (taskToDelete: KanbanTask) => {
+  const handleDeleteTask = (taskId: string) => {
     playSound('deleteItem');
-    if(taskToDelete.workItemId) {
-        console.log("Cannot delete a task linked to a work item from here.");
-        return;
-    }
     setAppState({
-        tasks: appState.tasks.filter(task => task.id !== taskToDelete.id)
+        tasks: appState.tasks.filter(task => task.id !== taskId)
     });
   };
 
@@ -70,6 +72,15 @@ const TaskManager = () => {
         setTaskToUpdate(task);
         setTargetColumn(targetColumnId);
         setIsModalOpen(true);
+      } else if (task.universityTaskId) {
+        const newStatus = columnToUniStatusMap[targetColumnId];
+        const updatedTasks = appState.tasks.map(t => 
+            t.id === taskId ? { ...t, column: targetColumnId } : t
+        );
+        const updatedUniversityTasks = appState.universityTasks.map(ut => 
+            ut.id === task.universityTaskId ? { ...ut, status: newStatus } : ut
+        );
+        setAppState({ tasks: updatedTasks, universityTasks: updatedUniversityTasks });
       } else {
         const updatedTasks = appState.tasks.map(t => 
             t.id === taskId ? { ...t, column: targetColumnId } : t
@@ -136,11 +147,9 @@ const TaskManager = () => {
                         <span className="truncate">{task.content}</span>
                       </div>
 
-                      {task.column === 'done' && !task.workItemId && (
-                        <Button variant="ghost" size="icon" className="h-6 w-6 flex-shrink-0" onClick={() => handleDeleteTask(task)}>
-                            <X className="h-3 w-3" />
-                        </Button>
-                      )}
+                      <Button variant="ghost" size="icon" className="h-6 w-6 flex-shrink-0" onClick={() => handleDeleteTask(task.id)}>
+                          <X className="h-3 w-3" />
+                      </Button>
                   </motion.div>
               ))}
           </AnimatePresence>

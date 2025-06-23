@@ -38,6 +38,7 @@ export interface KanbanTask {
   content: string;
   column: 'todo' | 'inprogress' | 'done';
   workItemId?: string;
+  universityTaskId?: string;
   color?: string;
 }
 
@@ -55,6 +56,14 @@ export interface WorkItem {
   revisionsRemaining: number;
 }
 
+export interface UniversityTask {
+  id: string;
+  subject: string;
+  description: string;
+  dueDate: string; // Formato 'yyyy-MM-dd'
+  status: 'pendiente' | 'en progreso' | 'completado';
+}
+
 interface AppState {
   contributions: Contribution[];
   monthlyTargets: Record<string, number>;
@@ -63,6 +72,7 @@ interface AppState {
   calendarEventsData: CalendarEvent[];
   workItems: WorkItem[];
   tasks: KanbanTask[];
+  universityTasks: UniversityTask[];
 }
 
 interface AppStateContextType {
@@ -80,6 +90,7 @@ const initialAppState: AppState = {
   calendarEventsData: [],
   workItems: [],
   tasks: [],
+  universityTasks: [],
 };
 
 const AppStateContext = createContext<AppStateContextType | undefined>(undefined);
@@ -103,19 +114,10 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
         if (docSnap.exists()) {
           const data = docSnap.data() as AppState;
           // Default values for fields that might not exist in old data
-          if (!data.selectedInputCurrencyIngresos) {
-            data.selectedInputCurrencyIngresos = 'USD';
-          }
-          if (!data.workItems) {
-            data.workItems = [];
-          }
-          if (!data.tasks) {
-            data.tasks = [];
-          }
-           if (!data.calendarEventsData) {
-            data.calendarEventsData = [];
-          }
-          setAppState(data);
+          setAppState({
+            ...initialAppState,
+            ...data
+          });
         } else {
           // Document doesn't exist, create it with initial state
           setDoc(docRef, { ...initialAppState, lastUpdated: serverTimestamp() });
