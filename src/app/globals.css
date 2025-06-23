@@ -4,46 +4,35 @@
 
 @layer base {
   :root {
-    /* Colores iOS del modo oscuro */
-    --background: 0 0% 0%; /* #000000 */
-    --foreground: 0 0% 100%; /* #FFFFFF */
-    
-    --card: 240 4% 11%; /* #1C1C1E */
-    --card-foreground: 0 0% 100%;
-
-    --popover: 240 4% 11%;
-    --popover-foreground: 0 0% 100%;
-
-    --primary: 214 100% 50%; /* #007AFF */
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 240 4% 17%; /* #2C2C2E */
-    --secondary-foreground: 240 17% 95%; /* #EBEBF5 */
-
-    --muted: 240 4% 17%;
-    --muted-foreground: 240 2% 57%; /* #8E8E93 */
-
-    --accent: 214 100% 50%;
-    --accent-foreground: 0 0% 100%;
-
-    --destructive: 2 100% 59%; /* #FF3B30 */
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 240 2% 34%; /* rgba(84, 84, 88, 0.65) -> #545458 */
-    --input: 240 2% 34%;
+    --background: 0 0% 100%;
+    --foreground: 0 0% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 3.9%;
+    --primary: 214 100% 50%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+    --destructive: 2 100% 59%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
     --ring: 214 100% 50%;
+    --radius: 0.75rem;
 
-    --radius: 0.75rem; /* 12px */
-
-    /* Colores adicionales iOS */
+    /* Custom iOS Colors */
     --ios-blue: 214 100% 50%;
     --ios-red: 2 100% 59%;
-    --ios-green: 135 59% 49%;
+    --ios-green: 145 59% 49%;
     --ios-orange: 36 100% 50%;
   }
 
   .dark {
-    /* Forzar modo oscuro igual que :root */
     --background: 0 0% 0%;
     --foreground: 0 0% 100%;
     --card: 240 4% 11%;
@@ -52,9 +41,9 @@
     --popover-foreground: 0 0% 100%;
     --primary: 214 100% 50%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 240 4% 17%;
+    --secondary: 240 4% 11%;
     --secondary-foreground: 240 17% 95%;
-    --muted: 240 4% 17%;
+    --muted: 240 4% 11%;
     --muted-foreground: 240 2% 57%;
     --accent: 214 100% 50%;
     --accent-foreground: 0 0% 100%;
@@ -63,6 +52,12 @@
     --border: 240 2% 34%;
     --input: 240 2% 34%;
     --ring: 214 100% 50%;
+
+    /* Custom iOS Colors */
+    --ios-blue: 214 100% 50%;
+    --ios-red: 2 100% 59%;
+    --ios-green: 145 59% 49%;
+    --ios-orange: 36 100% 50%;
   }
 }
 
@@ -78,13 +73,13 @@
 @layer components {
   .glassmorphism-card {
     backdrop-filter: blur(20px) saturate(180%);
-    background-color: hsl(var(--card) / 0.75);
+    background-color: hsl(var(--card) / 0.8);
     @apply border shadow-lg;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
   }
   .glassmorphism-nav {
     backdrop-filter: blur(20px) saturate(180%);
-    background-color: hsl(var(--card) / 0.75);
+    background-color: hsl(var(--card) / 0.8);
     @apply border-b;
   }
 }
