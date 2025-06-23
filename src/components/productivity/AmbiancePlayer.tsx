@@ -125,8 +125,8 @@ const AmbiancePlayer = () => {
         if(soundType === 'binaural') startBinaural();
         if(soundType === 'white') startNoise('white');
         if(soundType === 'brown') startNoise('brown');
-        if(soundType === 'rain') playAudioFile('https://actions.google.com/sounds/v1/weather/rain_heavy_loud.ogg');
-        if(soundType === 'ocean') playAudioFile('https://actions.google.com/sounds/v1/weather/ocean_wave.ogg');
+        if(soundType === 'rain') playAudioFile('https://cdn.pixabay.com/audio/2022/11/17/audio_8858652eba.mp3');
+        if(soundType === 'ocean') playAudioFile('https://cdn.pixabay.com/audio/2023/09/10/audio_51abf64f06.mp3');
     }, [soundType, startBinaural, startNoise, playAudioFile]);
 
     const togglePlay = () => {
@@ -163,6 +163,9 @@ const AmbiancePlayer = () => {
         // Cleanup on unmount
         return () => {
             stopSound();
+            if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+                audioContextRef.current.close();
+            }
         }
     }, [stopSound]);
 
@@ -176,8 +179,11 @@ const AmbiancePlayer = () => {
                 {isPlaying ? 'Detener' : 'Iniciar'} Sonido
             </Button>
             <Select value={soundType} onValueChange={(v) => {
-                setIsPlaying(true); // Auto-play on change
                 setSoundType(v as SoundType)
+                if(isPlaying) {
+                    // If it was already playing, restart with new sound
+                    startSound();
+                }
             }}>
                 <SelectTrigger><SelectValue/></SelectTrigger>
                 <SelectContent>
@@ -200,14 +206,12 @@ const AmbiancePlayer = () => {
                     <div className="space-y-1">
                         <Label>Frecuencia Base (Hz): {binauralSettings.base}</Label>
                         <Slider value={[binauralSettings.base]} onValueChange={(v) => {
-                            setIsPlaying(true); // Auto-play on change
                             setBinauralSettings(s => ({...s, base: v[0]}))
                         }} min={100} max={1000} step={1}/>
                     </div>
                      <div className="space-y-1">
                         <Label>Frecuencia Pulso (Hz): {binauralSettings.beat}</Label>
                         <Slider value={[binauralSettings.beat]} onValueChange={(v) => {
-                             setIsPlaying(true); // Auto-play on change
                              setBinauralSettings(s => ({...s, beat: v[0]}))
                         }} min={1} max={30} step={0.5}/>
                     </div>
