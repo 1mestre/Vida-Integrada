@@ -135,9 +135,13 @@ const TaskManager = () => {
                       onDragStart={(e) => handleDragStart(e, task)}
                       className="bg-secondary p-2 rounded-md text-sm flex justify-between items-center cursor-grab active:cursor-grabbing"
                   >
-                      <span>{task.content}</span>
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        {task.color && <div className="w-1 h-4 rounded-full flex-shrink-0" style={{ backgroundColor: task.color }} />}
+                        <span className="truncate">{task.content}</span>
+                      </div>
+
                       {!task.workItemId && (
-                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleDeleteTask(task)}>
+                        <Button variant="ghost" size="icon" className="h-6 w-6 flex-shrink-0" onClick={() => handleDeleteTask(task)}>
                             <X className="h-3 w-3" />
                         </Button>
                       )}

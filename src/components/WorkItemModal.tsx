@@ -90,8 +90,9 @@ const WorkItemModal: React.FC<WorkItemModalProps> = ({ isOpen, onClose, item }) 
       const newKanbanTask: KanbanTask = {
         id: `task-${newWorkItem.id}`,
         workItemId: newWorkItem.id,
-        content: `Producir orden #${newWorkItem.orderNumber} para ${newWorkItem.clientName}`,
+        content: `Orden de ${newWorkItem.clientName}`,
         column: 'todo',
+        color: '#10B981',
       };
       updatedTasks.push(newKanbanTask);
     }

@@ -36,6 +36,7 @@ export interface KanbanTask {
   content: string;
   column: 'todo' | 'inprogress' | 'done';
   workItemId?: string;
+  color?: string;
 }
 
 export interface WorkItem {
@@ -99,8 +100,8 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
       (docSnap) => {
         if (docSnap.exists()) {
           const data = docSnap.data() as AppState;
-          if (!data.selectedInputCurrencyIngresos) {
-            data.selectedInputCurrencyIngresos = 'USD';
+          if (!data.selectedInputcurrencyIngresos) {
+            data.selectedInputcurrencyIngresos = 'USD';
           }
           if (!data.workItems) {
             data.workItems = [];
