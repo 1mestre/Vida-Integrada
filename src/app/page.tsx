@@ -20,14 +20,14 @@ const ProductivityTab = lazy(() => import('@/components/tabs/ProductivityTab'));
 type Tab = 'calendar' | 'income' | 'university' | 'productivity';
 
 const TABS: { id: Tab; label: string; icon: React.ElementType }[] = [
+  { id: 'productivity', label: 'Productividad', icon: Rocket },
   { id: 'calendar', label: 'Calendario', icon: Calendar },
   { id: 'income', label: 'Ingresos', icon: DollarSign },
   { id: 'university', label: 'Universidad', icon: University },
-  { id: 'productivity', label: 'Productividad', icon: Rocket },
 ];
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<Tab>('calendar');
+  const [activeTab, setActiveTab] = useState<Tab>('productivity');
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const { playSound } = useSound();
@@ -87,28 +87,34 @@ export default function Home() {
         <FloatingEmojis />
         <div className="absolute inset-0 z-10 bg-black/20 backdrop-blur-sm"></div>
         
-        <header className="sticky top-0 z-40 w-full glassmorphism-nav">
-          <div className="container mx-auto flex h-16 items-center justify-center px-4">
-            <nav className="flex items-center space-x-2 sm:space-x-4">
-              {TABS.map((tab) => (
-                <Button
-                  key={tab.id}
-                  variant={activeTab === tab.id ? 'default' : 'ghost'}
-                  onClick={() => {
-                    setActiveTab(tab.id);
-                    playSound('tabChange');
-                  }}
-                  className={`transition-all duration-300 rounded-full px-3 py-1.5 h-auto text-xs sm:text-sm sm:px-4 ${activeTab === tab.id ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/30' : 'text-muted-foreground'}`}
-                >
-                  <tab.icon className="mr-2 h-4 w-4" />
-                  {tab.label}
-                </Button>
-              ))}
-            </nav>
-          </div>
-        </header>
+        <nav className="fixed bottom-0 z-40 w-full border-t glassmorphism-nav md:sticky md:top-0 md:bottom-auto md:border-b md:border-t-0">
+            <div className="container mx-auto flex h-16 items-center justify-center px-0 md:px-4">
+                <div className="flex w-full items-center justify-around md:w-auto md:justify-center md:space-x-2 lg:space-x-4">
+                {TABS.map((tab) => (
+                    <button
+                    key={tab.id}
+                    onClick={() => {
+                        setActiveTab(tab.id);
+                        playSound('tabChange');
+                    }}
+                    className={`group flex h-full w-1/4 flex-col items-center justify-center rounded-none p-1 text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-background
+                                md:h-auto md:w-auto md:flex-row md:rounded-full md:px-4 md:py-1.5 md:text-sm md:font-medium md:space-x-2
+                                transition-all duration-300
+                                ${activeTab === tab.id
+                                    ? 'text-primary md:bg-primary md:text-primary-foreground md:shadow-lg md:shadow-primary/30'
+                                    : 'text-muted-foreground hover:text-primary md:hover:bg-accent md:hover:text-accent-foreground'
+                                }`
+                    }
+                    >
+                    <tab.icon className="h-5 w-5" />
+                    <span className="mt-1 text-[11px] leading-tight md:mt-0 md:text-sm">{tab.label}</span>
+                    </button>
+                ))}
+                </div>
+            </div>
+        </nav>
 
-        <div className="relative z-20 container mx-auto p-4 sm:p-6 lg:p-8">
+        <div className="relative z-20 container mx-auto p-4 pb-20 sm:p-6 lg:p-8 md:pb-6">
            <React.Suspense fallback={<div className="text-center p-8">Cargando...</div>}>
             <AnimatePresence mode="wait">
               <motion.div

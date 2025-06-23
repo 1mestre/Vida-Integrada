@@ -81,7 +81,6 @@
   .glassmorphism-nav {
     backdrop-filter: blur(20px) saturate(180%);
     background-color: hsl(var(--card) / 0.8);
-    @apply border-b;
   }
 }
 
