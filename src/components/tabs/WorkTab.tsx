@@ -2,8 +2,6 @@
 "use client";
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import * as ReactDOMClient from 'react-dom/client';
-import html2pdf from 'html2pdf.js';
 import {
   ColumnDef,
   flexRender,
@@ -321,6 +319,54 @@ const WorkTab = () => {
         return [...appState.workItems].sort((a, b) => new Date(a.deliveryDate).getTime() - new Date(b.deliveryDate).getTime());
     }, [appState.workItems]);
 
+    const handleGeneratePdf = useCallback((item: WorkItem) => {
+        playSound('genericClick');
+      
+        // Dynamically import libraries to ensure they only run on the client
+        Promise.all([
+          import('react-dom/client'),
+          import('html2pdf.js')
+        ]).then(([ReactDOMClient, html2pdfModule]) => {
+          const html2pdf = html2pdfModule.default;
+          
+          const formattedDate = format(new Date(), 'MMMM d, yyyy');
+      
+          const container = document.createElement('div');
+          // Hide the container instead of positioning it off-screen for robustness
+          container.style.visibility = 'hidden';
+          container.style.position = 'fixed';
+          document.body.appendChild(container);
+      
+          const root = ReactDOMClient.createRoot(container);
+          root.render(<AgreementTemplate 
+            clientName={item.clientName} 
+            date={formattedDate} 
+          />);
+      
+          // Give a moment for rendering and external resources (if any) to load
+          setTimeout(() => {
+            const options = {
+              margin: 0,
+              filename: `Rights Of Use - ${item.clientName} - #${item.orderNumber}.pdf`,
+              image: { type: 'jpeg', quality: 1.0 },
+              html2canvas: { scale: 2, useCORS: true, allowTaint: true },
+              jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+      
+            html2pdf().from(container).set(options).save().then(() => {
+              root.unmount();
+              document.body.removeChild(container);
+            });
+          }, 500); // 500ms provides a safe buffer
+        }).catch(error => {
+          console.error("Failed to load PDF generation libraries", error);
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "No se pudo generar el PDF. Por favor, inténtelo de nuevo.",
+          });
+        });
+    }, [playSound, toast]);
     
     const handleDeleteWorkItem = (itemToDelete: WorkItem) => {
         playSound('deleteItem');
@@ -493,40 +539,6 @@ const WorkTab = () => {
             return { ...prevState, workItems: updatedWorkItems };
         });
     }, [appState.workPackageTemplates, setAppState]);
-
-    const handleGeneratePdf = useCallback((item: WorkItem) => {
-      playSound('genericClick');
-    
-      // 1. Crear un div invisible y añadirlo al cuerpo del documento
-      const container = document.createElement('div');
-      container.style.position = 'absolute';
-      container.style.left = '-9999px'; // Lo mueve fuera de la pantalla
-      document.body.appendChild(container);
-    
-      // 2. Usar ReactDOM.createRoot para renderizar el componente en el div
-      const root = ReactDOMClient.createRoot(container);
-      root.render(<AgreementTemplate 
-        clientName={item.clientName} 
-        date={format(new Date(), 'MMMM d, yyyy')} 
-      />);
-    
-      // 3. Darle un respiro al navegador para que complete el renderizado
-      setTimeout(() => {
-        const options = {
-          margin: 0,
-          filename: `Rights Of Use - ${item.clientName} - #${item.orderNumber}.pdf`,
-          image: { type: 'jpeg', quality: 1.0 },
-          html2canvas: { scale: 2, useCORS: true, allowTaint: true },
-          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        };
-    
-        // 4. Generar el PDF desde el contenedor y luego limpiarlo
-        html2pdf().from(container).set(options).save().then(() => {
-          document.body.removeChild(container);
-          root.unmount();
-        });
-      }, 500);
-    }, [playSound]);
 
     const financialSummary = useMemo(() => {
         const incomeThisMonth = appState.contributions
