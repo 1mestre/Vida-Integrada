@@ -677,6 +677,23 @@ const WorkTab = () => {
                       Tunebat
                     </Button>
                   </a>
+                  <Button
+                    className="bg-orange-600 hover:bg-orange-700 text-white shadow-sm"
+                    onClick={async () => {
+                      try {
+                        await fetch('http://localhost:12345/open-template');
+                        playSound('genericClick');
+                      } catch (error) {
+                        toast({
+                          variant: "destructive",
+                          title: "Error de Conexión",
+                          description: "No se pudo conectar con el agente local. Asegúrate de que esté en ejecución.",
+                        });
+                      }
+                    }}
+                  >
+                    FL TEMPLATE🥭
+                  </Button>
                 </div>
               </div>
               <div className="flex items-center gap-4">
@@ -889,12 +906,3 @@ const WorkTab = () => {
 };
 
 export default WorkTab;
-
-    
-    
-
-    
-
-    
-
-    
