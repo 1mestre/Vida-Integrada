@@ -91,16 +91,35 @@ const IncomeTab = () => {
     let newContribution;
 
     if (appState.selectedInputCurrencyIngresos === 'USD') {
-      const fee = 3;
-      const percentageFee = 0.03;
-      if (numericAmount <= fee) return;
-      const netUSD = (numericAmount - fee) * (1 - percentageFee);
+      const grossAmount = numericAmount;
+      const fee = 3; // $3 flat fee
+      const percentageFee = 0.03; // 3% commission
+
+      if (grossAmount <= fee) return; // Cannot process if amount is less than flat fee
+
+      // Apply formula: (Gross - Flat Fee) * (1 - Percentage Fee)
+      const netUSD = (grossAmount - fee) * (1 - percentageFee);
       const netCOP = netUSD * exchangeRate;
-      newContribution = { id: new Date().toISOString(), date: new Date().toISOString(), netUSD, rate: exchangeRate, netCOP };
-    } else {
+      
+      newContribution = { 
+        id: new Date().toISOString(), 
+        date: new Date().toISOString(), 
+        netUSD, 
+        rate: exchangeRate, 
+        netCOP,
+        grossUSD: grossAmount // Store the original gross amount
+      };
+
+    } else { // Currency is COP
       const netCOP = numericAmount;
       const netUSD = netCOP / exchangeRate;
-      newContribution = { id: new Date().toISOString(), date: new Date().toISOString(), netUSD, rate: exchangeRate, netCOP };
+      newContribution = { 
+        id: new Date().toISOString(), 
+        date: new Date().toISOString(), 
+        netUSD, 
+        rate: exchangeRate, 
+        netCOP 
+      };
     }
     
     setAppState({ contributions: [newContribution, ...appState.contributions] });
@@ -260,5 +279,3 @@ const IncomeTab = () => {
 };
 
 export default IncomeTab;
-
-    

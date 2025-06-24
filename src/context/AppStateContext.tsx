@@ -13,6 +13,7 @@ interface Contribution {
   netUSD: number;
   rate: number;
   netCOP: number;
+  grossUSD?: number;
 }
 
 export interface TimetableEvent {
