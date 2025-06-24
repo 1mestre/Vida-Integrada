@@ -36,9 +36,10 @@ const UniversityTab = () => {
     return [...new Set(subjects)];
   }, [appState.timetableData]);
 
-  const handleSaveTask = (taskData: Omit<UniversityTask, 'id' | 'status'>) => {
+  const handleSaveTask = (taskData: Omit<UniversityTask, 'id' | 'status'> & { color: string }) => {
+    const { color, ...uniTaskData } = taskData;
     const newUniversityTask: UniversityTask = {
-      ...taskData,
+      ...uniTaskData,
       id: `uni-task-${uuidv4()}`,
       status: 'pendiente',
     };
@@ -48,7 +49,7 @@ const UniversityTab = () => {
       content: newUniversityTask.title,
       column: 'todo' as const,
       universityTaskId: newUniversityTask.id,
-      color: 'bg-purple-950 text-purple-200 border border-purple-800',
+      color: color,
     };
 
     const newCalendarEvent: CalendarEvent = {

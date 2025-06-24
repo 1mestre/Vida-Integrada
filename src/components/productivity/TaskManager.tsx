@@ -15,6 +15,15 @@ import { cn } from '@/lib/utils';
 
 type ColumnId = 'todo' | 'inprogress' | 'done';
 
+const colorPalette = {
+  'Teal Profundo': { bg: 'bg-teal-800', text: 'text-white' },
+  'Azul': { bg: 'bg-blue-600', text: 'text-white' },
+  'Rojo': { bg: 'bg-red-600', text: 'text-white' },
+  'Púrpura': { bg: 'bg-purple-600', text: 'text-white' },
+  'Dorado Arena': { bg: 'bg-yellow-700', text: 'text-white' },
+  'Blanco': { bg: 'bg-neutral-100', text: 'text-black' },
+};
+
 const columnConfig: { [key in ColumnId]: { title: string; icon: React.ReactNode; color: string; } } = {
   todo: { title: "Por Hacer", icon: <Hourglass className="h-4 w-4"/>, color: "text-ios-orange" },
   inprogress: { title: "En Progreso", icon: <Play className="h-4 w-4"/>, color: "text-ios-blue" },
@@ -158,29 +167,45 @@ const TaskManager = () => {
         </h3>
         <div className="space-y-2">
           <AnimatePresence>
-              {tasksInColumn.map(task => (
-                  <motion.div
-                      key={task.id}
-                      layout
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, x: -20 }}
-                      draggable
-                      onDragStart={(e) => handleDragStart(e, task)}
-                      className={cn(
-                        "p-3 rounded-md text-sm flex justify-between items-center cursor-grab active:cursor-grabbing",
-                        task.color ? task.color : "bg-secondary"
-                      )}
-                  >
-                      <div className="flex items-center gap-2 flex-1 min-w-0">
-                        <span className="truncate">{task.content}</span>
-                      </div>
+              {tasksInColumn.map(task => {
+                  const taskColor = task.color;
+                  let finalColorClasses = 'bg-secondary'; // default
+          
+                  if (taskColor) {
+                      if (colorPalette[taskColor as keyof typeof colorPalette]) {
+                          // It's a key from our new palette
+                          const styles = colorPalette[taskColor as keyof typeof colorPalette];
+                          finalColorClasses = `${styles.bg} ${styles.text}`;
+                      } else {
+                          // It's an old-style raw class string
+                          finalColorClasses = taskColor;
+                      }
+                  }
 
-                      <Button variant="ghost" size="icon" className="h-6 w-6 flex-shrink-0" onClick={() => handleDeleteTask(task.id)}>
-                          <X className="h-3 w-3" />
-                      </Button>
-                  </motion.div>
-              ))}
+                  return (
+                      <motion.div
+                          key={task.id}
+                          layout
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, x: -20 }}
+                          draggable
+                          onDragStart={(e) => handleDragStart(e, task)}
+                          className={cn(
+                            "p-3 rounded-md text-sm flex justify-between items-center cursor-grab active:cursor-grabbing",
+                            finalColorClasses
+                          )}
+                      >
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            <span className="truncate">{task.content}</span>
+                          </div>
+
+                          <Button variant="ghost" size="icon" className="h-6 w-6 flex-shrink-0" onClick={() => handleDeleteTask(task.id)}>
+                              <X className="h-3 w-3" />
+                          </Button>
+                      </motion.div>
+                  );
+              })}
           </AnimatePresence>
         </div>
       </div>
