@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useMemo, lazy } from 'react';
@@ -87,34 +88,53 @@ export default function Home() {
         <FloatingEmojis />
         <div className="absolute inset-0 z-10 bg-black/20 backdrop-blur-sm"></div>
         
-        <nav className="fixed bottom-0 z-40 w-full border-t glassmorphism-nav md:sticky md:top-0 md:bottom-auto md:border-b md:border-t-0">
-            <div className="container mx-auto flex h-16 items-center justify-center px-0 md:px-4">
-                <div className="flex w-full items-center justify-around md:w-auto md:justify-center md:space-x-2 lg:space-x-4">
-                {TABS.map((tab) => (
-                    <button
-                    key={tab.id}
-                    onClick={() => {
-                        setActiveTab(tab.id);
-                        playSound('tabChange');
-                    }}
-                    className={`group flex h-full w-1/4 flex-col items-center justify-center rounded-none p-1 text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-background
-                                md:h-auto md:w-auto md:flex-row md:rounded-full md:px-4 md:py-1.5 md:text-sm md:font-medium md:space-x-2
-                                transition-all duration-300
-                                ${activeTab === tab.id
-                                    ? 'text-primary md:bg-primary md:text-primary-foreground md:shadow-lg md:shadow-primary/30'
-                                    : 'text-muted-foreground hover:text-primary md:hover:bg-accent md:hover:text-accent-foreground'
-                                }`
-                    }
-                    >
-                    <tab.icon className="h-5 w-5" />
-                    <span className="mt-1 text-[11px] leading-tight md:mt-0 md:text-sm">{tab.label}</span>
-                    </button>
-                ))}
-                </div>
+        {/* Desktop Navigation: Sticky Top Bar */}
+        <nav className="hidden md:sticky md:top-0 z-40 w-full border-b bg-background/80 backdrop-blur-lg md:block">
+          <div className="container mx-auto flex h-16 items-center justify-center px-4">
+            <div className="flex items-center justify-center space-x-2 lg:space-x-4">
+              {TABS.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => {
+                    setActiveTab(tab.id);
+                    playSound('tabChange');
+                  }}
+                  className={`group flex flex-row items-center justify-center space-x-2 rounded-full px-4 py-1.5 text-sm font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                    activeTab === tab.id
+                      ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/30'
+                      : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                  }`}
+                >
+                  <tab.icon className="h-5 w-5" />
+                  <span>{tab.label}</span>
+                </button>
+              ))}
             </div>
+          </div>
         </nav>
 
-        <div className="relative z-20 container mx-auto p-4 pb-20 sm:p-6 lg:p-8 md:pb-6">
+        {/* Mobile Navigation: Fixed Bottom Bar */}
+        <nav className="fixed bottom-0 z-40 w-full border-t border-border/50 bg-background/80 backdrop-blur-lg md:hidden">
+          <div className="flex h-16 w-full items-center justify-around">
+            {TABS.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => {
+                  setActiveTab(tab.id);
+                  playSound('tabChange');
+                }}
+                className={`group flex h-full w-1/4 flex-col items-center justify-center p-1 text-center transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                  activeTab === tab.id ? 'text-primary' : 'text-muted-foreground hover:text-primary'
+                }`}
+              >
+                <tab.icon className="h-5 w-5" />
+                <span className="mt-1 text-[11px] leading-tight">{tab.label}</span>
+              </button>
+            ))}
+          </div>
+        </nav>
+
+        <div className="relative z-20 container mx-auto p-4 pb-24 sm:p-6 lg:p-8 md:pb-6">
            <React.Suspense fallback={<div className="text-center p-8">Cargando...</div>}>
             <AnimatePresence mode="wait">
               <motion.div

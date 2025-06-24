@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
@@ -134,7 +135,7 @@ const CalendarTab = () => {
 
   return (
     <>
-      <div className="grid gap-8 md:grid-cols-3">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <div className="md:col-span-2 space-y-8">
           <Card className="glassmorphism-card">
             <CardHeader>

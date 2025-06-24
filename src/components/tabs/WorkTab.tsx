@@ -37,7 +37,6 @@ import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuGroup } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import html2pdf from 'html2pdf.js';
 import { AgreementTemplate } from '@/components/pdf/AgreementTemplate';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -136,6 +135,39 @@ const generateClientMessage = (item: WorkItem, packageTemplates: WorkPackageTemp
     return message;
 };
 
+const handleGeneratePdf = (item: WorkItem, playSound: (soundName: string) => void) => {
+    playSound('genericClick');
+  
+    // 1. Crear un div invisible y añadirlo al cuerpo del documento
+    const container = document.createElement('div');
+    container.style.position = 'absolute';
+    container.style.left = '-9999px'; // Lo mueve fuera de la pantalla
+    document.body.appendChild(container);
+  
+    // 2. Usar ReactDOM.createRoot para renderizar el componente en el div
+    const root = ReactDOMClient.createRoot(container);
+    root.render(<AgreementTemplate 
+      clientName={item.clientName} 
+      date={format(new Date(), 'MMMM d, yyyy')} 
+    />);
+  
+    // 3. Darle un respiro al navegador para que complete el renderizado
+    setTimeout(() => {
+      const options = {
+        margin: 0,
+        filename: `Rights Of Use - ${item.clientName} - #${item.orderNumber}.pdf`,
+        image: { type: 'jpeg', quality: 1.0 },
+        html2canvas: { scale: 2, useCORS: true, allowTaint: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+  
+      // 4. Generar el PDF desde el contenedor y luego limpiarlo
+      html2pdf().from(container).set(options).save().then(() => {
+        document.body.removeChild(container);
+        root.unmount();
+      });
+    }, 500);
+};
 
 const FileNameToolsPopover = ({ item, toast, playSound }: { item: WorkItem; toast: (options: any) => void; playSound: (soundName: string) => void; }) => {
     const [copySuccess, setCopySuccess] = React.useState('');
@@ -191,7 +223,6 @@ const FileNameToolsPopover = ({ item, toast, playSound }: { item: WorkItem; toas
                       className="bg-orange-500 hover:bg-orange-600 text-white w-full mt-4"
                       onClick={async () => {
                         try {
-                          // Envía una señal simple a la ruta /open-fl
                           await fetch(`http://localhost:12345/open-fl`);
                           playSound('genericClick');
                         } catch (error) {
@@ -318,40 +349,6 @@ const WorkTab = () => {
             setRateLoading(false);
           });
     }, []);
-
-    const handleGeneratePdf = (item: WorkItem) => {
-        playSound('genericClick');
-        
-        // 1. Crear un div invisible y añadirlo al cuerpo del documento
-        const container = document.createElement('div');
-        container.style.position = 'absolute';
-        container.style.left = '-9999px';
-        document.body.appendChild(container);
-  
-        // 2. Usar ReactDOM.createRoot para renderizar el componente en el div
-        const root = ReactDOMClient.createRoot(container);
-        root.render(<AgreementTemplate 
-          clientName={item.clientName} 
-          date={format(new Date(), 'MMMM d, yyyy')} 
-        />);
-  
-        // 3. Darle un respiro al navegador para que complete el renderizado
-        setTimeout(() => {
-          const options = {
-            margin: 0,
-            filename: `Rights Of Use - ${item.clientName} - #${item.orderNumber}.pdf`,
-            image: { type: 'jpeg', quality: 1.0 },
-            html2canvas: { scale: 2, useCORS: true },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-          };
-  
-          // 4. Generar el PDF desde el contenedor y luego limpiarlo
-          html2pdf().from(container).set(options).save().then(() => {
-            document.body.removeChild(container);
-            root.unmount();
-          });
-        }, 500);
-      };
 
     const sortedWorkItems = useMemo(() => {
         return [...appState.workItems].sort((a, b) => new Date(a.deliveryDate).getTime() - new Date(b.deliveryDate).getTime());
@@ -756,13 +753,13 @@ const WorkTab = () => {
                  <Button variant="destructive" size="icon" className="h-8 w-8" onClick={() => handleDeleteWorkItem(row.original)}>
                     <Trash2 className="h-4 w-4" />
                 </Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleGeneratePdf(row.original)}>
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleGeneratePdf(row.original, playSound)}>
                     <FileDown className="h-4 w-4 text-green-500" />
                 </Button>
               </div>
             )
         },
-    ], [appState.workItems, appState.workPackageTemplates, handleDateUpdate, handleStatusUpdate, handlePackageUpdate, handleRevisionsUpdate, toast, playSound, handleGeneratePdf]);
+    ], [appState.workItems, appState.workPackageTemplates, handleDateUpdate, handleStatusUpdate, handlePackageUpdate, handleRevisionsUpdate, toast, playSound]);
 
     const table = useReactTable({
         data: sortedWorkItems,
@@ -772,10 +769,10 @@ const WorkTab = () => {
     
     return (
         <div className="space-y-8">
-            <div className="flex items-start justify-between mb-4">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-4">
               <div className="flex flex-col items-start">
-                <h1 className="text-3xl font-bold tracking-tight">FIVERR📀</h1>
-                <div className="flex items-center gap-2 mt-2">
+                <h1 className="text-2xl md:text-3xl font-bold tracking-tight">FIVERR📀</h1>
+                <div className="flex items-center flex-wrap gap-2 mt-2">
                   <a href="https://www.fiverr.com/seller_dashboard" target="_blank" rel="noopener noreferrer" onClick={() => playSound('genericClick')}>
                     <Button className="bg-green-600 hover:bg-green-700 text-white shadow-sm">
                       <Link className="mr-2 h-4 w-4" />
@@ -801,7 +798,7 @@ const WorkTab = () => {
                       <DropdownMenuGroup>
                         {appState.workItems.length > 0 ? (
                           appState.workItems.map((item) => (
-                            <DropdownMenuItem key={item.id} onSelect={() => handleGeneratePdf(item)}>
+                            <DropdownMenuItem key={item.id} onSelect={() => handleGeneratePdf(item, playSound)}>
                               <span>{item.clientName} - #{item.orderNumber}</span>
                             </DropdownMenuItem>
                           ))
@@ -813,12 +810,12 @@ const WorkTab = () => {
                   </DropdownMenu>
                 </div>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
                  <Button variant="outline" onClick={handleOpenPackageSettingsModal}>
                    <Settings className="mr-2 h-4 w-4" />
                    Set Packages
                  </Button>
-                 <Button onClick={handleOpenNewOrderModal} className="h-14 text-lg">
+                 <Button onClick={handleOpenNewOrderModal} className="h-12 md:h-14 text-base md:text-lg">
                    Nueva Orden🤑💵
                  </Button>
                </div>
@@ -826,13 +823,13 @@ const WorkTab = () => {
 
             <Card className="glassmorphism-card">
                 <CardContent className="pt-6">
-                    <div className="rounded-md border">
+                    <div className="rounded-md border overflow-x-auto">
                         <Table>
                             <TableHeader>
                                 {table.getHeaderGroups().map((headerGroup) => (
                                     <TableRow key={headerGroup.id}>
                                         {headerGroup.headers.map((header) => (
-                                            <TableHead key={header.id} className="text-center">
+                                            <TableHead key={header.id} className="text-center whitespace-nowrap">
                                                 {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                                             </TableHead>
                                         ))}
@@ -844,7 +841,7 @@ const WorkTab = () => {
                                     table.getRowModel().rows.map((row) => (
                                         <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
                                             {row.getVisibleCells().map((cell) => (
-                                                <TableCell key={cell.id}>
+                                                <TableCell key={cell.id} className="whitespace-nowrap">
                                                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                                 </TableCell>
                                             ))}
@@ -863,7 +860,7 @@ const WorkTab = () => {
                 </CardContent>
             </Card>
 
-            <div className="grid gap-8 lg:grid-cols-3">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <div className="lg:col-span-2 space-y-8">
                 <Card className="glassmorphism-card">
                   <CardHeader>
@@ -874,7 +871,7 @@ const WorkTab = () => {
                     <CardDescription>Establece y sigue tu objetivo de ingresos mensuales.</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-6">
-                    <div className="flex items-center gap-4">
+                    <div className="flex flex-col sm:flex-row items-center gap-4">
                       <Input
                         type="number"
                         placeholder="Meta en COP"
@@ -918,7 +915,7 @@ const WorkTab = () => {
                   </CardContent>
                 </Card>
                 
-                <div className="grid md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <Card className="glassmorphism-card">
                         <CardHeader><CardTitle>Historial de Ingresos</CardTitle></CardHeader>
                         <CardContent>
@@ -1023,9 +1020,3 @@ const WorkTab = () => {
 };
 
 export default WorkTab;
-
-    
-
-    
-
-
