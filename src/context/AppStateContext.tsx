@@ -53,6 +53,7 @@ export interface WorkPackageTemplate {
   revisions: number;
   songLength: number; // in seconds
   numberOfInstruments: number;
+  quantity?: number;
   separateFiles: boolean;
   masterAudio: boolean;
   projectFileDelivery: boolean;
@@ -71,6 +72,7 @@ export interface WorkItem {
   key: string;
   deliveryStatus: 'Pending' | 'In Transit' | 'In Revision' | 'Delivered' | 'Returned';
   remakeType: 'Single Remake' | 'Multiple Remakes' | 'Original' | 'Original Multiple Beats';
+  quantity?: number;
 
   // Snapshot fields from template
   packageName: string;
@@ -124,6 +126,7 @@ const initialAppState: AppState = {
       revisions: 1,
       songLength: 60,
       numberOfInstruments: 5,
+      quantity: 1,
       separateFiles: false,
       masterAudio: false,
       projectFileDelivery: false,
@@ -138,6 +141,7 @@ const initialAppState: AppState = {
       revisions: 2,
       songLength: 180,
       numberOfInstruments: 10,
+      quantity: 1,
       separateFiles: true,
       masterAudio: true,
       projectFileDelivery: false,
@@ -152,6 +156,7 @@ const initialAppState: AppState = {
       revisions: 3,
       songLength: 240,
       numberOfInstruments: 20,
+      quantity: 1,
       separateFiles: true,
       masterAudio: true,
       projectFileDelivery: true,
@@ -198,6 +203,7 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
               packageName: 'Amateurs', price: 0, revisionsRemaining: 0, songLength: 0,
               numberOfInstruments: 0, separateFiles: false, masterAudio: false, projectFileDelivery: false,
               exclusiveLicense: false, vocalProduction: false, vocalChainPreset: false,
+              quantity: 1,
             };
             return { ...defaults, ...item, id: item.id || uuidv4() };
           });
@@ -230,17 +236,20 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
                 name: 'Plantilla sin nombre', price: 0, revisions: 0, songLength: 0, numberOfInstruments: 0,
                 separateFiles: false, masterAudio: false, projectFileDelivery: false, exclusiveLicense: false,
                 vocalProduction: false, vocalChainPreset: false,
+                quantity: 1,
               };
               return { ...defaults, ...template, id: template.id || uuidv4() };
           });
 
-          const sanitizedState = {
-            ...initialAppState,
-            ...data,
-            workItems: sanitizedWorkItems,
-            universityTasks: sanitizedUniversityTasks,
+          const sanitizedState: AppState = {
+            contributions: data.contributions || initialAppState.contributions,
+            monthlyTargets: data.monthlyTargets || initialAppState.monthlyTargets,
+            selectedInputCurrencyIngresos: data.selectedInputCurrencyIngresos || initialAppState.selectedInputCurrencyIngresos,
+            timetableData: data.timetableData || initialAppState.timetableData,
             calendarEventsData: sanitizedCalendarEvents,
+            workItems: sanitizedWorkItems,
             tasks: sanitizedTasks,
+            universityTasks: sanitizedUniversityTasks,
             workPackageTemplates: sanitizedTemplates.length > 0 ? sanitizedTemplates : initialAppState.workPackageTemplates,
           };
           

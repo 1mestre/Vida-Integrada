@@ -110,12 +110,17 @@ const FileNameToolsPopover = ({ item }: { item: WorkItem }) => {
 
 
 const generateClientMessage = (item: WorkItem): string => {
+  const isMultiple = item.remakeType.includes('Multiple');
+  const quantity = item.quantity || 1;
+
   let message = `Heyyy ${item.clientName}! 👋👋\n\n`;
 
   // Bloque Principal: Elige la plantilla base según el nombre del paquete
   if (item.packageName === 'Masterpiece') {
     // --- Plantilla Masterpiece ---
-    message += `Yooo, your ${item.genre} masterpiece${item.remakeType === 'Multiple Remakes' ? 's are' : ' is'} officially done and it's straighttt fire fr!! ${item.remakeType === 'Multiple Remakes' ? '🔥🔥✨ Hahaha, we went CRAZY on these!!' : '🔥✨'}\n\n`;
+    message += isMultiple 
+      ? `Yooo, your ${quantity} ${item.genre} masterpiece remade beats are officially done and they're straight fire fr!! 🔥🔥✨ Hahaha, we went CRAZY on these!!\n\n`
+      : `Yooo, your ${item.genre} masterpiece is officially done and it's straighttt fire fr!! 🔥✨\n\n`;
     
     if (item.remakeType === 'Single Remake') {
       message += "🎛️🎛️ This remake got the FULL treatment - custom-built and clean as hell!! Readyyy for the big leagues!! 🏆🏆\n\n";
@@ -127,17 +132,18 @@ const generateClientMessage = (item: WorkItem): string => {
     if (item.separateFiles) message += "- Full WAV + STEMS: The WHOLE package, no bs!! 💎\n";
     if (item.projectFileDelivery) message += "- FLP Project File: Full creative control in your hands!! 🎚️🎚️\n";
     if (item.exclusiveLicense) message += "- Exclusive Rights Contract: It's 100000% yours, period!! 📜\n";
-    // MODIFICACIÓN: Se añade la producción vocal como un extra condicional
     if (item.vocalProduction) message += "- Vocal Production: Pro-level vocal mixing & tuning to make your voice SHINE!! ✨🎙️\n";
     
     if (item.vocalChainPreset) {
-      message += `\n🎁 EXCLUSIVE GIFT: Custom vocal chain preset made for ${item.remakeType === 'Multiple Remakes' ? `these ${item.genre} vibes` : `this ${item.genre} vibe`} 🎙️🎙️\n`;
+      message += `\n🎁 EXCLUSIVE GIFT: Custom vocal chain preset made for ${isMultiple ? `these ${item.genre} vibes` : `this ${item.genre} vibe`} 🎙️🎙️\n`;
       message += "(Appreciate you being chill to work with, let's keep the collabs going!!) 🤝🤝\n\n";
     }
 
   } else if (item.packageName === 'Exclusive') {
     // --- Plantilla Exclusive ---
-    message += `Your ${item.genre} ${item.remakeType === 'Multiple Remakes' ? 'beats are' : 'beat is'} readyyy to drop!! ${item.remakeType === 'Multiple Remakes' ? '💣💣 No cap, these ones hit DIFFERENT!! 💯🎵' : 'No cap, this one hits different 💯🎵'}\n\n`;
+    message += isMultiple
+      ? `Your ${quantity} ${item.genre} remade beats are readyyy to drop!! 💣💣 No cap, these ones hit DIFFERENT!! 💯🎵\n\n`
+      : `Your ${item.genre} beat is readyyy to drop!! No cap, this one hits different 💯🎵\n\n`;
 
     if (item.remakeType === 'Single Remake') {
       message += "🎛️ The remake is LOCKED and loaded!! 🔫 Custom-made just for you, readyyy for your vocals!! 🎤✨\n\n";
@@ -148,36 +154,38 @@ const generateClientMessage = (item: WorkItem): string => {
     message += "📎📎 WHAT YOU'RE GETTING:\n";
     if (item.masterAudio) message += "- Full WAV: Mixed, mastered, and READYYY to upload!! 🎯\n";
     if (item.exclusiveLicense) message += "- Exclusive Rights Contract: 100% ownership, no sharing needed!! 📋\n";
-    // MODIFICACIÓN: Se añade la producción vocal como un extra condicional
     if (item.vocalProduction) message += "- Vocal Production: Pro-level vocal mixing & tuning to make your voice SHINE!! ✨🎙️\n";
     
     if (item.vocalChainPreset) {
-      message += `\n🎁 EXCLUSIVE GIFT: Custom vocal chain preset made for ${item.remakeType === 'Multiple Remakes' ? `these ${item.genre} styles` : `this ${item.genre} style`} 🎤✨\n`;
+      message += `\n🎁 EXCLUSIVE GIFT: Custom vocal chain preset made for ${isMultiple ? `these ${item.genre} styles` : `this ${item.genre} style`} 🎤✨\n`;
       message += "(Appreciate you being chill to work with, let's keep the collabs going!!) 🤝\n\n";
     }
 
   } else { // Asumimos 'Amateurs' o cualquier otro
     // --- Plantilla Amateurs ---
-    message += `So here's that ${item.genre} demo you wanted!! Just a quick vibe check, nothing too wild yet 😎🎧\n\n`;
-    message += "🎛️ This is just the demo version of the remake - think of it as the rough draft with MADDD potential!! 🎨\n\n";
+     message += isMultiple
+      ? `So hereee are those ${quantity} ${item.genre} demos you wanted!! 🎉 Just some quick vibes, nothing too wild yet hehe 😎🎧\n\n`
+      : `So here's that ${item.genre} demo you wanted!! Just a quick vibe check, nothing too wild yet 😎🎧\n\n`;
+    message += `🎛️ This is just the demo version of the remake${isMultiple ? 's' : ''} - think of it as the rough draft with MADDD potential!! 🎨\n\n`;
     
     message += "📎📎 WHAT YOU'RE GETTING:\n";
     if (item.songLength > 0) message += `- ${item.songLength}-sec MP3 demo: Just the vibe, raw and UNFILTEREDDD!! 🎵\n`;
     message += "- Heads up: No exclusive rights or pro mixing included (this is just a taste!!) 👀👀\n\n";
-    // MODIFICACIÓN: Se añade la producción vocal como un extra condicional también aquí
     if (item.vocalProduction) message += "- Vocal Production Add-on: Available for this track!! 🎤 Ask me about it!\n\n";
 
     message += "🤔 BUT WAIT - If you're feeling this demo and want the full experience, just pay the difference:\n[Aquí puedes poner la lógica de precios de upgrade si la necesitas]\n\nJust holla at me if you wanna upgrade! 🚀🚀\n\n";
   }
 
-  // --- Secciones Finales (Sin Cambios) ---
-  message += `${item.remakeType === 'Multiple Remakes' ? 'Keys' : 'Key'}: ${item.key} | ${item.remakeType === 'Multiple Remakes' ? 'BPMs' : 'BPM'}: ${item.bpm}\n\n`;
+  // --- Secciones Finales ---
+  message += `${isMultiple ? 'Keys' : 'Key'}: ${item.key} | ${isMultiple ? 'BPMs' : 'BPM'}: ${item.bpm}\n\n`;
   message += `📦📦 Order #${item.orderNumber}\n\n`;
 
   if (item.packageName === 'Masterpiece') {
     message += `✅✅ This is built for the BIGGG stages - Spotify, radio, wherever you wanna take it!! 🌟🌟\n${item.revisionsRemaining} revisions remaining 🔧🔧\n\n🎁 PRO TIP: Drop a 5-star review and I'll hook you UPPP with $10 off your next order!! Helps me out FOR REALLL 🙏🙏\n\nNow go make some MAGIC happen!! ✨🎤`;
   } else if (item.packageName === 'Exclusive') {
-    message += `✅ ${item.revisionsRemaining} revisions remaining 🔧\n${item.remakeType === 'Multiple Remakes' ? "Time to make these BEATS slap!! 💥💥" : "Time to make some WAVES!! 🌊🌊"}\n\n🎁 PRO TIP: Leave me a 5-star review and I'll give you $10 off your next beat!! WIN-WIN SITUATION 😉💰💰\n\nLet's get this music out there!!! 🚀🚀`;
+    message += `✅ ${item.revisionsRemaining} revisions remaining 🔧\n`;
+    message += isMultiple ? "Time to make these BEATS slap!! 💥💥" : "Time to make some WAVES!! 🌊🌊";
+    message += `\n\n🎁 PRO TIP: Leave me a 5-star review and I'll give you $10 off your next ${isMultiple ? 'order' : 'beat'}!! WIN-WIN SITUATION 😉💰💰\n\nLet's get this music out there!!! 🚀🚀`;
   } else { // Amateurs
     message += "✅ Let me know what you think of the direction!! If you're vibing with it, we can ALWAYSSS take it to the next level!! 🎯🎯\n\n(No revisions on demos, but that's what upgrades are for!! 😉💡💡)";
   }
@@ -194,7 +202,7 @@ const statusColorMap: Record<WorkItem['deliveryStatus'], string> = {
   'Returned': 'bg-red-600 hover:bg-red-700 text-white'
 };
 
-const packageColorMap: Record<WorkItem['packageName'], string> = {
+const packageColorMap: Record<string, string> = {
   'Masterpiece': 'bg-purple-600 hover:bg-purple-700',
   'Exclusive': 'bg-sky-600 hover:bg-sky-700',
   'Amateurs': 'bg-teal-600 hover:bg-teal-700',
@@ -493,7 +501,8 @@ const WorkTab = () => {
                           key={status}
                           onSelect={() => handleStatusUpdate(item.id, status)}
                         >
-                          {status}
+                           <span className={cn('h-2 w-2 rounded-full mr-2', statusColorMap[status])} />
+                          <span>{status}</span>
                         </DropdownMenuItem>
                       ))}
                     </DropdownMenuContent>
@@ -527,7 +536,7 @@ const WorkTab = () => {
     
     return (
         <div className="space-y-8">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-start justify-between mb-4">
               <div className="flex flex-col items-start">
                 <h1 className="text-3xl font-bold tracking-tight">FIVERR📀</h1>
                 <div className="flex items-center gap-2 mt-2">
@@ -545,7 +554,7 @@ const WorkTab = () => {
                   </a>
                 </div>
               </div>
-              <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-4">
                  <Button variant="outline" onClick={handleOpenPackageSettingsModal}>
                    <Settings className="mr-2 h-4 w-4" />
                    Set Packages

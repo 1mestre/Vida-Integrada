@@ -19,6 +19,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { v4 as uuidv4 } from 'uuid';
 import { Switch } from './ui/switch';
 import { useSound } from '@/context/SoundContext';
+import { Slider } from './ui/slider';
 
 interface WorkItemModalProps {
   isOpen: boolean;
@@ -59,6 +60,9 @@ const WorkItemModal: React.FC<WorkItemModalProps> = ({ isOpen, onClose, item }) 
 
   const { control, handleSubmit, reset, watch, setValue } = form;
   const selectedTemplateId = watch('packageTemplateId');
+  const remakeType = watch('remakeType');
+  const isMultiple = remakeType?.includes('Multiple');
+
 
   useEffect(() => {
     if (isOpen) {
@@ -77,6 +81,7 @@ const WorkItemModal: React.FC<WorkItemModalProps> = ({ isOpen, onClose, item }) 
             key: keyOptions[0].value,
             deliveryStatus: 'Pending',
             remakeType: 'Single Remake',
+            quantity: 1,
             packageName: 'Custom',
             price: 0,
             revisionsRemaining: 0,
@@ -97,6 +102,7 @@ const WorkItemModal: React.FC<WorkItemModalProps> = ({ isOpen, onClose, item }) 
           newWorkItemData.revisionsRemaining = defaultTemplate.revisions;
           newWorkItemData.songLength = defaultTemplate.songLength;
           newWorkItemData.numberOfInstruments = defaultTemplate.numberOfInstruments;
+          newWorkItemData.quantity = defaultTemplate.quantity || 1;
           newWorkItemData.separateFiles = defaultTemplate.separateFiles;
           newWorkItemData.masterAudio = defaultTemplate.masterAudio;
           newWorkItemData.projectFileDelivery = defaultTemplate.projectFileDelivery;
@@ -120,6 +126,7 @@ const WorkItemModal: React.FC<WorkItemModalProps> = ({ isOpen, onClose, item }) 
       setValue('revisionsRemaining', template.revisions);
       setValue('songLength', template.songLength);
       setValue('numberOfInstruments', template.numberOfInstruments);
+      setValue('quantity', template.quantity || 1);
       setValue('separateFiles', template.separateFiles);
       setValue('masterAudio', template.masterAudio);
       setValue('projectFileDelivery', template.projectFileDelivery);
@@ -253,6 +260,26 @@ const WorkItemModal: React.FC<WorkItemModalProps> = ({ isOpen, onClose, item }) 
                     </Select>
                   )} />
                 </div>
+                {isMultiple && (
+                  <div className="space-y-2">
+                    <Label htmlFor="quantity">Cantidad de Entregables ({watch('quantity') || 1})</Label>
+                    <Controller
+                      name="quantity"
+                      control={control}
+                      defaultValue={1}
+                      render={({ field }) => (
+                        <Slider
+                          id="quantity"
+                          min={2}
+                          max={10}
+                          step={1}
+                          value={[field.value || 2]}
+                          onValueChange={(value) => field.onChange(value[0])}
+                        />
+                      )}
+                    />
+                  </div>
+                )}
                 <div>
                   <Label htmlFor="deliveryDate">Fecha de Entrega</Label>
                    <Controller
@@ -271,16 +298,16 @@ const WorkItemModal: React.FC<WorkItemModalProps> = ({ isOpen, onClose, item }) 
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                    <div>
-                      <Label htmlFor="genre">Género</Label>
+                      <Label htmlFor="genre">{isMultiple ? "Géneros (separados por coma)" : "Género"}</Label>
                       <Controller name="genre" control={control} render={({ field }) => <Input id="genre" {...field} />} />
                   </div>
                   <div>
-                    <Label htmlFor="bpm">BPM</Label>
+                    <Label htmlFor="bpm">{isMultiple ? "BPMs (separados por coma)" : "BPM"}</Label>
                     <Controller name="bpm" control={control} render={({ field }) => <Input id="bpm" {...field} />} />
                   </div>
                 </div>
                  <div>
-                  <Label htmlFor="key">Tonalidad (Key)</Label>
+                  <Label htmlFor="key">{isMultiple ? "Tonalidades" : "Tonalidad (Key)"}</Label>
                   <Controller name="key" control={control} render={({ field }) => (
                     <Select onValueChange={field.onChange} value={field.value}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
