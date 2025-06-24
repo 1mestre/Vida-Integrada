@@ -73,7 +73,7 @@ export const AgreementTemplate: React.FC<AgreementTemplateProps> = ({ clientName
         
         <div style={{ position: 'absolute', bottom: '30mm', left: '25mm', right: '25mm', display: 'flex', justifyContent: 'space-between', fontSize: '10pt' }}>
             <div>
-                <img src="https://i.ibb.co/6y40F22/firma.png" alt="Firma Danodals" style={{width: '150px'}}/>
+                <div style={{width: '150px', height: '50px'}}></div>
                 <hr style={{border: 'none', borderTop: '1px solid #333', marginTop: '5px'}}/>
                 <p>Danodals Beats</p>
             </div>
