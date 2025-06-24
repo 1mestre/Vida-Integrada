@@ -19,7 +19,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useAppState, WorkItem, WorkPackageTemplate, type Contribution } from '@/context/AppStateContext';
-import { TrendingUp, Settings, PlusCircle, FileText, FileDown, Wrench, Music, Link, MoreVertical, Edit, MessageSquare, Trash2 } from 'lucide-react';
+import { TrendingUp, Settings, PlusCircle, FileText, FileDown, Wrench, Music, Link, Edit, MessageSquare, Trash2 } from 'lucide-react';
 import WorkItemModal from '@/components/WorkItemModal';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
@@ -37,6 +37,9 @@ import { cn } from '@/lib/utils';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuGroup, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuPortal, DropdownMenuSubContent } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { v4 as uuidv4 } from 'uuid';
+import html2pdf from 'html2pdf.js';
+import ReactDOMClient from 'react-dom/client';
+import { AgreementTemplate } from '@/components/pdf/AgreementTemplate';
 
 
 const generateClientMessage = (item: WorkItem, packageTemplates: WorkPackageTemplate[]): string => {
@@ -250,48 +253,48 @@ const WorkTab = () => {
     const currentMonthKey = format(new Date(), 'yyyy-MM');
     const currentMonthTarget = appState.monthlyTargets[currentMonthKey] || 0;
 
-    const handleGeneratePdf = useCallback(async (item: WorkItem) => {
-        playSound('genericClick');
+    const handleGeneratePdf = (item: WorkItem) => {
+      playSound('genericClick');
+  
+      // 1. Crear un contenedor temporal y oculto
+      const container = document.createElement('div');
+      // No es necesario añadirlo al body visible, html2pdf lo puede manejar en memoria
+  
+      // 2. Usar createRoot para renderizar el componente de forma asíncrona
+      const root = ReactDOMClient.createRoot(container);
+      root.render(<AgreementTemplate 
+          clientName={item.clientName} 
+          date={format(new Date(), 'MMMM d, yyyy')} 
+      />);
+      
+      // 3. Pausa estratégica para permitir la carga de recursos externos (fuentes, logo)
+      setTimeout(() => {
+          const options = {
+              margin: 0,
+              filename: `Rights Of Use - ${item.clientName}.pdf`,
+              image: { type: 'jpeg', quality: 0.98 },
+              html2canvas: { scale: 2, useCORS: true }, // useCORS es clave para imágenes externas
+              jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+          };
+  
+          // 4. Generar el PDF desde el contenedor y luego limpiarlo
+          html2pdf().from(container).set(options).save().then(() => {
+            root.unmount();
+          });
+      }, 500); // 500ms es una pausa razonable
+    };
+    
+    const handleOpenEditModal = (item: WorkItem) => {
+      setSelectedItem(item);
+      setIsModalOpen(true);
+    };
 
-        // Dynamically import client-side libraries to avoid server-side errors
-        const html2pdf = (await import('html2pdf.js')).default;
-        const ReactDOMClient = (await import('react-dom/client'));
-        const { AgreementTemplate } = await import('@/components/pdf/AgreementTemplate');
-
-        // Create a hidden container for rendering the template
-        const container = document.createElement('div');
-        container.style.position = 'absolute';
-        container.style.left = '-9999px';
-        document.body.appendChild(container);
-
-        // Render the React component into the container
-        const root = ReactDOMClient.createRoot(container);
-        root.render(<AgreementTemplate 
-            clientName={item.clientName} 
-            date={format(new Date(), 'MMMM d, yyyy')} 
-        />);
-        
-        // Wait for fonts/images to load as requested
-        setTimeout(() => {
-            const options = {
-                margin: 0,
-                filename: `Rights Of Use - ${item.clientName}.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
-
-            // Generate PDF and clean up afterward
-            html2pdf().from(container).set(options).save().then(() => {
-                root.unmount();
-                document.body.removeChild(container);
-            }).catch(err => {
-                console.error("PDF generation failed:", err);
-                root.unmount();
-                document.body.removeChild(container);
-            });
-        }, 500);
-    }, [playSound]);
+    const handleCopyMessage = (item: WorkItem) => {
+      const message = generateClientMessage(item, appState.workPackageTemplates);
+      navigator.clipboard.writeText(message);
+      toast({ title: "¡Copiado!", description: "Mensaje para cliente copiado al portapapeles." });
+      playSound('genericClick');
+    };
 
     useEffect(() => {
         fetch('https://open.er-api.com/v6/latest/USD')
@@ -514,97 +517,61 @@ const WorkTab = () => {
 
     const columns: ColumnDef<WorkItem>[] = useMemo(() => [
         {
-          id: 'actions',
-          header: () => <div className="text-center">Acciones</div>,
+          id: 'tools',
+          header: 'Tools',
           cell: ({ row }) => {
             const item = row.original;
-            const generatedMessage = generateClientMessage(item, appState.workPackageTemplates);
-            const filenames = generateFileNames(item);
-
-            const copyToClipboard = (text: string, label: string) => {
-              navigator.clipboard.writeText(text);
-              toast({ title: "¡Copiado!", description: `${label} copiado al portapapeles.` });
-              playSound('genericClick');
-            };
-        
             return (
-              <div className="flex justify-center items-center">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="h-8 w-8 p-0">
-                      <span className="sr-only">Abrir menú</span>
-                      <MoreVertical className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuLabel>Acciones de la Orden</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onSelect={() => { setSelectedItem(item); setIsModalOpen(true); }}>
-                      <Edit className="mr-2 h-4 w-4" />
-                      <span>Editar / Ver Detalles</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onSelect={() => copyToClipboard(generatedMessage, 'Mensaje para cliente')}>
-                      <MessageSquare className="mr-2 h-4 w-4" />
-                      <span>Copiar Mensaje Cliente</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onSelect={() => handleGeneratePdf(item)}>
-                      <FileDown className="mr-2 h-4 w-4" />
-                      <span>Descargar Contrato PDF</span>
-                    </DropdownMenuItem>
-        
-                    <DropdownMenuSub>
-                      <DropdownMenuSubTrigger>
-                        <Wrench className="mr-2 h-4 w-4" />
-                        <span>Nombrar Archivos</span>
-                      </DropdownMenuSubTrigger>
-                      <DropdownMenuPortal>
-                        <DropdownMenuSubContent>
-                          <DropdownMenuItem onSelect={() => copyToClipboard(filenames.wav, 'Nombre de archivo WAV')}>
-                            <span>Copiar Nombre WAV</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onSelect={() => copyToClipboard(filenames.stems, 'Nombre de archivo STEMS')}>
-                            <span>Copiar Nombre STEMS</span>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onSelect={() => copyToClipboard(filenames.project, 'Nombre de archivo FLP')}>
-                            <span>Copiar Nombre FLP</span>
-                          </DropdownMenuItem>
-                        </DropdownMenuSubContent>
-                      </DropdownMenuPortal>
-                    </DropdownMenuSub>
-        
-                    <DropdownMenuSeparator />
-        
-                    <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                            <DropdownMenuItem
-                                onSelect={(e) => e.preventDefault()}
-                                className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 text-destructive focus:text-destructive"
-                            >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                <span>Eliminar Orden</span>
-                            </DropdownMenuItem>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                            <AlertDialogHeader>
-                                <AlertDialogTitle>¿Estás absolutamente seguro?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                    Esta acción no se puede deshacer. Esto eliminará permanentemente la orden de trabajo,
-                                    la tarea del kanban y el evento del calendario asociado.
-                                </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => handleDeleteWorkItem(item)}>
-                                    Sí, eliminar orden
-                                </AlertDialogAction>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialog>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <Wrench className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onSelect={() => handleCopyMessage(item)}>
+                    <MessageSquare className="mr-2 h-4 w-4" />
+                    <span>Copiar Mensaje Cliente</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => handleGeneratePdf(item)}>
+                    <FileDown className="mr-2 h-4 w-4" />
+                    <span>Descargar Contrato PDF</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>
+                      <Wrench className="mr-2 h-4 w-4" />
+                      <span>Nombrar Archivos</span>
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuPortal>
+                      <DropdownMenuSubContent>
+                        <DropdownMenuItem onSelect={() => {
+                          navigator.clipboard.writeText(generateFileNames(item).wav);
+                          toast({ title: "Copiado!" });
+                          playSound('genericClick');
+                        }}>
+                          Copiar Nombre WAV
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => {
+                          navigator.clipboard.writeText(generateFileNames(item).stems);
+                          toast({ title: "Copiado!" });
+                          playSound('genericClick');
+                        }}>
+                          Copiar Nombre STEMS
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => {
+                          navigator.clipboard.writeText(generateFileNames(item).project);
+                          toast({ title: "Copiado!" });
+                          playSound('genericClick');
+                        }}>
+                          Copiar Nombre FLP
+                        </DropdownMenuItem>
+                      </DropdownMenuSubContent>
+                    </DropdownMenuPortal>
+                  </DropdownMenuSub>
+                </DropdownMenuContent>
+              </DropdownMenu>
             );
-          }
+          },
         },
         { 
             accessorKey: 'clientName', 
@@ -749,7 +716,51 @@ const WorkTab = () => {
             header: () => <div className="text-center">Género</div>,
             cell: ({ row }) => <div className="text-center">{row.getValue('genre')}</div>
         },
-    ], [appState.workItems, appState.workPackageTemplates, handleDateUpdate, handleStatusUpdate, handlePackageUpdate, handleRevisionsUpdate, toast, playSound, handleGeneratePdf, setAppState, setIsModalOpen, setSelectedItem]);
+        {
+          id: 'actions',
+          header: () => <div className="text-right">Acciones</div>,
+          cell: ({ row }) => {
+            const item = row.original;
+            return (
+              <div className="flex items-center justify-end gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleOpenEditModal(item)}
+                >
+                  <Edit className="mr-2 h-4 w-4" />
+                  Editar
+                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>¿Estás absolutamente seguro?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                          Esta acción no se puede deshacer. Esto eliminará permanentemente la orden de trabajo,
+                          la tarea del kanban y el evento del calendario asociado.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => handleDeleteWorkItem(item)}>
+                          Sí, eliminar orden
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            );
+          },
+        }
+    ], [appState.workPackageTemplates, appState.contributions, handleDateUpdate, handleStatusUpdate, handlePackageUpdate, handleRevisionsUpdate, playSound, handleDeleteWorkItem, handleGeneratePdf, handleCopyMessage]);
 
     const table = useReactTable({
         data: sortedWorkItems,
@@ -1012,5 +1023,3 @@ const WorkTab = () => {
 export default WorkTab;
 
     
-
-
