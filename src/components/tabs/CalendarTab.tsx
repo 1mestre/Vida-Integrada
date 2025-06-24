@@ -63,6 +63,7 @@ const CalendarTab = () => {
       },
       backgroundColor: event.backgroundColor || event.color,
       borderColor: event.borderColor || (event.color === '#171717' ? 'hsl(var(--foreground))' : (event.backgroundColor || event.color)),
+      textColor: event.color === '#FFFFFF' ? '#000000' : '#FFFFFF',
     }));
   }, [appState.calendarEventsData]);
   

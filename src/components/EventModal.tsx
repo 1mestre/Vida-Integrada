@@ -23,7 +23,7 @@ const COLORS = [
     { name: 'Azul', value: '#0091FF' },
     { name: 'Rojo', value: '#FF4245' },
     { name: 'Púrpura', value: '#DB34F2' },
-    { name: 'Carbón', value: '#171717' },
+    { name: 'Blanco', value: '#FFFFFF' },
     { name: 'Teal Profundo', value: '#134E4A' },
     { name: 'Dorado Arena', value: '#AA824B' },
 ];

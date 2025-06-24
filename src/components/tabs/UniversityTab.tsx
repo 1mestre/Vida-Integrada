@@ -15,6 +15,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { cn } from '@/lib/utils';
 
 const DAYS = ['LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES'];
 const HOURS = Array.from({ length: 18 }, (_, i) => `${String(i + 5).padStart(2, '0')}:00`);
@@ -184,30 +185,33 @@ const UniversityTab = () => {
                 </div>
                 
                 <div className="absolute top-0 left-0 w-full h-full grid gap-px" style={gridStyle}>
-                  {appState.timetableData.map(event => (
-                    <motion.div
-                        key={event.id}
-                        className="p-2 rounded-lg text-white text-sm flex flex-col items-center justify-center text-center cursor-pointer overflow-hidden"
-                        style={{
-                          gridColumnStart: DAYS.indexOf(event.day.toUpperCase()) + 2,
-                          gridRowStart: HOURS.indexOf(event.startTime) + 2,
-                          gridRowEnd: HOURS.indexOf(event.endTime) + 2,
-                          backgroundColor: event.color || '#0091FF',
-                          border: event.color === '#171717' ? '1px solid hsl(var(--foreground))' : 'none'
-                        }}
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.3 }}
-                        whileHover={{ scale: 1.05, zIndex: 20 }}
-                        onClick={() => {
-                          setSelectedTimetableEvent(event);
-                          setIsTimetableModalOpen(true);
-                        }}
-                    >
-                        <p className="font-bold">{event.title}</p>
-                        <p className="text-xs">{event.teacher}</p>
-                    </motion.div>
-                  ))}
+                  {appState.timetableData.map(event => {
+                    const isWhiteBg = event.color === '#FFFFFF';
+                    return (
+                      <motion.div
+                          key={event.id}
+                          className={cn("p-2 rounded-lg text-sm flex flex-col items-center justify-center text-center cursor-pointer overflow-hidden", isWhiteBg ? 'text-black' : 'text-white')}
+                          style={{
+                            gridColumnStart: DAYS.indexOf(event.day.toUpperCase()) + 2,
+                            gridRowStart: HOURS.indexOf(event.startTime) + 2,
+                            gridRowEnd: HOURS.indexOf(event.endTime) + 2,
+                            backgroundColor: event.color || '#0091FF',
+                            border: isWhiteBg ? '1px solid #e5e7eb' : (event.color === '#171717' ? '1px solid hsl(var(--foreground))' : 'none')
+                          }}
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ duration: 0.3 }}
+                          whileHover={{ scale: 1.05, zIndex: 20 }}
+                          onClick={() => {
+                            setSelectedTimetableEvent(event);
+                            setIsTimetableModalOpen(true);
+                          }}
+                      >
+                          <p className="font-bold">{event.title}</p>
+                          <p className="text-xs">{event.teacher}</p>
+                      </motion.div>
+                    )
+                  })}
                 </div>
               </div>
             </div>
@@ -223,13 +227,15 @@ const UniversityTab = () => {
                               <AccordionTrigger>{day}</AccordionTrigger>
                               <AccordionContent>
                                   <div className="space-y-3">
-                                      {eventsOnDay.map(event => (
+                                      {eventsOnDay.map(event => {
+                                        const isWhiteBg = event.color === '#FFFFFF';
+                                        return (
                                           <motion.div 
                                               key={event.id} 
-                                              className="p-3 rounded-lg text-white cursor-pointer" 
+                                              className={cn("p-3 rounded-lg cursor-pointer", isWhiteBg ? 'text-black' : 'text-white')}
                                               style={{
                                                 backgroundColor: event.color,
-                                                border: event.color === '#171717' ? '1px solid hsl(var(--foreground))' : 'none'
+                                                border: isWhiteBg ? '1px solid #e5e7eb' : (event.color === '#171717' ? '1px solid hsl(var(--foreground))' : 'none')
                                               }}
                                               initial={{ opacity: 0, x: -20 }}
                                               animate={{ opacity: 1, x: 0 }}
@@ -243,7 +249,8 @@ const UniversityTab = () => {
                                               {event.teacher && <p className="text-sm opacity-90">{event.teacher}</p>}
                                               <p className="text-xs mt-1 font-mono">{event.startTime} - {event.endTime}</p>
                                           </motion.div>
-                                      ))}
+                                        )
+                                      })}
                                   </div>
                               </AccordionContent>
                           </AccordionItem>
