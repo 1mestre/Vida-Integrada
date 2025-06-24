@@ -38,8 +38,6 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { AgreementDocument } from '@/components/pdf/AgreementTemplate';
 import { v4 as uuidv4 } from 'uuid';
-import { pdf } from '@react-pdf/renderer';
-import { saveAs } from 'file-saver';
 
 // Pega esta función completa para reemplazar la versión anterior.
 const generateClientMessage = (item: WorkItem, packageTemplates: WorkPackageTemplate[]): string => {
@@ -305,6 +303,9 @@ const WorkTab = () => {
 
     const handleGeneratePdf = useCallback(async (item: WorkItem) => {
       playSound('genericClick');
+
+      const { pdf } = await import('@react-pdf/renderer');
+      const { default: saveAs } = await import('file-saver');
       
       const doc = <AgreementDocument 
         clientName={item.clientName} 
