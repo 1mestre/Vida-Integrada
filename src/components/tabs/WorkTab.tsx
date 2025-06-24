@@ -3,6 +3,7 @@
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import * as ReactDOMClient from 'react-dom/client';
+import html2pdf from 'html2pdf.js';
 import {
   ColumnDef,
   flexRender,
@@ -133,40 +134,6 @@ const generateClientMessage = (item: WorkItem, packageTemplates: WorkPackageTemp
     }
 
     return message;
-};
-
-const handleGeneratePdf = (item: WorkItem, playSound: (soundName: string) => void) => {
-    playSound('genericClick');
-  
-    // 1. Crear un div invisible y añadirlo al cuerpo del documento
-    const container = document.createElement('div');
-    container.style.position = 'absolute';
-    container.style.left = '-9999px'; // Lo mueve fuera de la pantalla
-    document.body.appendChild(container);
-  
-    // 2. Usar ReactDOM.createRoot para renderizar el componente en el div
-    const root = ReactDOMClient.createRoot(container);
-    root.render(<AgreementTemplate 
-      clientName={item.clientName} 
-      date={format(new Date(), 'MMMM d, yyyy')} 
-    />);
-  
-    // 3. Darle un respiro al navegador para que complete el renderizado
-    setTimeout(() => {
-      const options = {
-        margin: 0,
-        filename: `Rights Of Use - ${item.clientName} - #${item.orderNumber}.pdf`,
-        image: { type: 'jpeg', quality: 1.0 },
-        html2canvas: { scale: 2, useCORS: true, allowTaint: true },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-      };
-  
-      // 4. Generar el PDF desde el contenedor y luego limpiarlo
-      html2pdf().from(container).set(options).save().then(() => {
-        document.body.removeChild(container);
-        root.unmount();
-      });
-    }, 500);
 };
 
 const FileNameToolsPopover = ({ item, toast, playSound }: { item: WorkItem; toast: (options: any) => void; playSound: (soundName: string) => void; }) => {
@@ -527,6 +494,40 @@ const WorkTab = () => {
         });
     }, [appState.workPackageTemplates, setAppState]);
 
+    const handleGeneratePdf = useCallback((item: WorkItem) => {
+      playSound('genericClick');
+    
+      // 1. Crear un div invisible y añadirlo al cuerpo del documento
+      const container = document.createElement('div');
+      container.style.position = 'absolute';
+      container.style.left = '-9999px'; // Lo mueve fuera de la pantalla
+      document.body.appendChild(container);
+    
+      // 2. Usar ReactDOM.createRoot para renderizar el componente en el div
+      const root = ReactDOMClient.createRoot(container);
+      root.render(<AgreementTemplate 
+        clientName={item.clientName} 
+        date={format(new Date(), 'MMMM d, yyyy')} 
+      />);
+    
+      // 3. Darle un respiro al navegador para que complete el renderizado
+      setTimeout(() => {
+        const options = {
+          margin: 0,
+          filename: `Rights Of Use - ${item.clientName} - #${item.orderNumber}.pdf`,
+          image: { type: 'jpeg', quality: 1.0 },
+          html2canvas: { scale: 2, useCORS: true, allowTaint: true },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+    
+        // 4. Generar el PDF desde el contenedor y luego limpiarlo
+        html2pdf().from(container).set(options).save().then(() => {
+          document.body.removeChild(container);
+          root.unmount();
+        });
+      }, 500);
+    }, [playSound]);
+
     const financialSummary = useMemo(() => {
         const incomeThisMonth = appState.contributions
           .filter(c => c.date.startsWith(currentMonthKey))
@@ -753,13 +754,13 @@ const WorkTab = () => {
                  <Button variant="destructive" size="icon" className="h-8 w-8" onClick={() => handleDeleteWorkItem(row.original)}>
                     <Trash2 className="h-4 w-4" />
                 </Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleGeneratePdf(row.original, playSound)}>
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleGeneratePdf(row.original)}>
                     <FileDown className="h-4 w-4 text-green-500" />
                 </Button>
               </div>
             )
         },
-    ], [appState.workItems, appState.workPackageTemplates, handleDateUpdate, handleStatusUpdate, handlePackageUpdate, handleRevisionsUpdate, toast, playSound]);
+    ], [appState.workItems, appState.workPackageTemplates, handleDateUpdate, handleStatusUpdate, handlePackageUpdate, handleRevisionsUpdate, toast, playSound, handleGeneratePdf]);
 
     const table = useReactTable({
         data: sortedWorkItems,
@@ -798,7 +799,7 @@ const WorkTab = () => {
                       <DropdownMenuGroup>
                         {appState.workItems.length > 0 ? (
                           appState.workItems.map((item) => (
-                            <DropdownMenuItem key={item.id} onSelect={() => handleGeneratePdf(item, playSound)}>
+                            <DropdownMenuItem key={item.id} onSelect={() => handleGeneratePdf(item)}>
                               <span>{item.clientName} - #{item.orderNumber}</span>
                             </DropdownMenuItem>
                           ))
