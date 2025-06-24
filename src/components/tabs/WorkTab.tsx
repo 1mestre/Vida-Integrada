@@ -457,7 +457,7 @@ const WorkTab = () => {
                     <MessageSquare className="h-4 w-4 text-primary" />
                   </Button>
                 </AlertDialogTrigger>
-                <AlertDialogContent>
+                <AlertDialogContent className="max-w-3xl">
                   <AlertDialogHeader>
                     <AlertDialogTitle>Mensaje Personalizado para {item.clientName}</AlertDialogTitle>
                     <AlertDialogDescription>
@@ -891,6 +891,8 @@ const WorkTab = () => {
 export default WorkTab;
 
     
+    
+
     
 
     
