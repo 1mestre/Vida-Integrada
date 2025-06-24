@@ -76,9 +76,18 @@ const generateClientMessage = (item: WorkItem): string => {
         message += `🎁 EXCLUSIVE GIFT: Custom vocal chain preset made for ${isMultiple ? `these ${item.genre} vibes` : `this ${item.genre} vibe`} 🎙️🎙️\n(Appreciate you being chill to work with, let's keep the collabs going!!) 🤝🤝\n\n`;
     }
 
-    // === Bloque 3: Oferta de "Upsell" (Inteligente: solo para Amateurs sin licencia exclusiva) ===
-    if (item.packageName === 'Amateurs' && !item.exclusiveLicense) {
-        message += "🤔 BUT WAIT - If you're feeling this demo and want the full experience, just pay the difference:\n• Amateur ($10) → Pro ($15): +$5\n• Amateur ($10) → Exclusive ($30): +$20\n• Pro ($15) → Exclusive ($30): +$15\n\nAnd get:\n• The polished, final version(s) 🔥🔥\n• Exclusive license (100% yours) 📜\n• Professional mixing/mastering 🎛️🎚️\n• Full remake treatment 💯💯\n\nJust holla at me if you wanna upgrade! 🚀🚀\n\n";
+    // === Bloque 3: Oferta de "Upsell" (Inteligente y Dinámica) ===
+    if (item.packageName === 'Amateurs') {
+        const upsellOptions: string[] = [];
+        // Revisa qué le falta al cliente para ofrecerlo.
+        if (!item.exclusiveLicense) upsellOptions.push("• Exclusive license (100% yours) 📜");
+        if (!item.masterAudio) upsellOptions.push("• Professional mixing/mastering 🎛️🎚️");
+        if (!item.separateFiles) upsellOptions.push("• Full remake treatment 💯💯");
+
+        // Solo muestra la sección de upsell si hay algo que ofrecer.
+        if (upsellOptions.length > 0) {
+            message += "🤔 BUT WAIT - If you're feeling this demo and want the full experience, just pay the difference:\n• Amateur ($10) → Pro ($15): +$5\n• Amateur ($10) → Exclusive ($30): +$20\n• Pro ($15) → Exclusive ($30): +$15\n\nAnd get:\n" + upsellOptions.join('\n') + "\n\nJust holla at me if you wanna upgrade! 🚀🚀\n\n";
+        }
     }
 
     // === Bloque 4: Secciones Finales ===
