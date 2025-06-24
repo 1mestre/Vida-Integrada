@@ -9,6 +9,9 @@ import ProductivityHeader from '@/components/productivity/ProductivityHeader';
 import { useAppState, KanbanTask } from '@/context/AppStateContext';
 import { useSound } from '@/context/SoundContext';
 import { v4 as uuidv4 } from 'uuid';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuGroup, DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { BrainCircuit, Sparkles, Bot, MessageCircle } from 'lucide-react';
 
 const ProductivityTab = () => {
   const { appState, setAppState } = useAppState();
@@ -60,6 +63,41 @@ const ProductivityTab = () => {
   return (
     <div className="space-y-8">
       <ProductivityHeader />
+
+      <div className="flex justify-end mb-4">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline">
+              <BrainCircuit className="mr-2 h-4 w-4" />
+              <span>AI Tools</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-56">
+            <DropdownMenuLabel>Asistentes de IA</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup>
+              <a href="https://gemini.google.com/app?hl=es" target="_blank" rel="noopener noreferrer">
+                <DropdownMenuItem className="cursor-pointer">
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  <span>Gemini</span>
+                </DropdownMenuItem>
+              </a>
+              <a href="https://chatgpt.com/" target="_blank" rel="noopener noreferrer">
+                <DropdownMenuItem className="cursor-pointer">
+                  <Bot className="mr-2 h-4 w-4" />
+                  <span>ChatGPT</span>
+                </DropdownMenuItem>
+              </a>
+              <a href="https://x.ai/grok" target="_blank" rel="noopener noreferrer">
+                <DropdownMenuItem className="cursor-pointer">
+                  <MessageCircle className="mr-2 h-4 w-4" />
+                  <span>Grok</span>
+                </DropdownMenuItem>
+              </a>
+            </DropdownMenuGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
       
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="lg:col-span-1">

@@ -5,7 +5,7 @@ import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAppState, UniversityTask, KanbanTask, CalendarEvent, TimetableEvent } from '@/context/AppStateContext';
 import { Button } from '@/components/ui/button';
-import { ClipboardList, PlusCircle, School, Trash2 } from 'lucide-react';
+import { ClipboardList, PlusCircle, School, Trash2, Link, UserSquare2, Mail } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useSound } from '@/context/SoundContext';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -148,6 +148,32 @@ const UniversityTab = () => {
   return (
     <>
       <div className="space-y-8">
+        <div className="mb-8">
+          <h3 className="text-lg font-semibold mb-3 flex items-center">
+            <Link className="mr-2 h-5 w-5" />
+            Recursos Rápidos
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <a href="https://micampus.unal.edu.co/" target="_blank" rel="noopener noreferrer">
+              <Button variant="outline" className="w-full">
+                <School className="mr-2 h-4 w-4" />
+                Mi Campus
+              </Button>
+            </a>
+            <a href="https://sia.unal.edu.co/ServiciosApp/" target="_blank" rel="noopener noreferrer">
+              <Button variant="outline" className="w-full">
+                <UserSquare2 className="mr-2 h-4 w-4" />
+                SIA
+              </Button>
+            </a>
+            <a href="https://mail.google.com/a/unal.edu.co" target="_blank" rel="noopener noreferrer">
+              <Button variant="outline" className="w-full">
+                <Mail className="mr-2 h-4 w-4" />
+                Correo UNAL
+              </Button>
+            </a>
+          </div>
+        </div>
         <Card className="glassmorphism-card">
             <CardHeader>
                 <CardTitle className="flex justify-between items-center">
