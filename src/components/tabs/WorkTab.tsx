@@ -36,7 +36,6 @@ import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuGroup } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { AgreementDocument } from '@/components/pdf/AgreementTemplate';
 import { v4 as uuidv4 } from 'uuid';
 
 // Pega esta función completa para reemplazar la versión anterior.
@@ -302,19 +301,21 @@ const WorkTab = () => {
     const currentMonthTarget = appState.monthlyTargets[currentMonthKey] || 0;
 
     const handleGeneratePdf = useCallback(async (item: WorkItem) => {
-      playSound('genericClick');
-
-      const { pdf } = await import('@react-pdf/renderer');
-      const { default: saveAs } = await import('file-saver');
-      
-      const doc = <AgreementDocument 
-        clientName={item.clientName} 
-        date={format(new Date(), 'MMMM d, yyyy')} 
-      />;
-      
-      const blob = await pdf(doc).toBlob();
-      
-      saveAs(blob, `Rights Of Use - ${item.clientName} - #${item.orderNumber}.pdf`);
+        playSound('genericClick');
+    
+        // Dynamically import client-side libraries
+        const { pdf } = await import('@react-pdf/renderer');
+        const { default: saveAs } = await import('file-saver');
+        const { AgreementDocument } = await import('@/components/pdf/AgreementTemplate');
+        
+        const doc = <AgreementDocument 
+          clientName={item.clientName} 
+          date={format(new Date(), 'MMMM d, yyyy')} 
+        />;
+        
+        const blob = await pdf(doc).toBlob();
+        
+        saveAs(blob, `Rights Of Use - ${item.clientName} - #${item.orderNumber}.pdf`);
     }, [playSound]);
 
     useEffect(() => {
@@ -1009,3 +1010,5 @@ const WorkTab = () => {
 };
 
 export default WorkTab;
+
+    
