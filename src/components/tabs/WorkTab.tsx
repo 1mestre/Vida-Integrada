@@ -38,6 +38,8 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { AgreementTemplate } from '@/components/pdf/AgreementTemplate';
 import { v4 as uuidv4 } from 'uuid';
+import html2pdf from 'html2pdf.js';
+import * as ReactDOMClient from 'react-dom/client';
 
 
 // Pega esta función completa para reemplazar la versión anterior.
@@ -315,58 +317,36 @@ const WorkTab = () => {
           });
     }, []);
 
+    const handleGeneratePdf = useCallback((item: WorkItem) => {
+      playSound('genericClick');
+      
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+
+      const root = ReactDOMClient.createRoot(container);
+      root.render(<AgreementTemplate 
+        clientName={item.clientName} 
+        date={format(new Date(), 'MMMM d, yyyy')} 
+      />);
+
+      setTimeout(() => {
+        const options = {
+          margin: 0,
+          filename: `Rights Of Use - ${item.clientName} - #${item.orderNumber}.pdf`,
+          image: { type: 'jpeg', quality: 1.0 },
+          html2canvas: { scale: 2, useCORS: true, allowTaint: true, },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+        html2pdf().from(container).set(options).save().then(() => {
+          document.body.removeChild(container);
+          root.unmount();
+        });
+      }, 500);
+    }, [playSound]);
+    
     const sortedWorkItems = useMemo(() => {
         return [...appState.workItems].sort((a, b) => new Date(a.deliveryDate).getTime() - new Date(b.deliveryDate).getTime());
     }, [appState.workItems]);
-
-    const handleGeneratePdf = useCallback((item: WorkItem) => {
-        playSound('genericClick');
-      
-        // Dynamically import libraries to ensure they only run on the client
-        Promise.all([
-          import('react-dom/client'),
-          import('html2pdf.js')
-        ]).then(([ReactDOMClient, html2pdfModule]) => {
-          const html2pdf = html2pdfModule.default;
-          
-          const formattedDate = format(new Date(), 'MMMM d, yyyy');
-      
-          const container = document.createElement('div');
-          // Hide the container instead of positioning it off-screen for robustness
-          container.style.visibility = 'hidden';
-          container.style.position = 'fixed';
-          document.body.appendChild(container);
-      
-          const root = ReactDOMClient.createRoot(container);
-          root.render(<AgreementTemplate 
-            clientName={item.clientName} 
-            date={formattedDate} 
-          />);
-      
-          // Give a moment for rendering and external resources (if any) to load
-          setTimeout(() => {
-            const options = {
-              margin: 0,
-              filename: `Rights Of Use - ${item.clientName} - #${item.orderNumber}.pdf`,
-              image: { type: 'jpeg', quality: 1.0 },
-              html2canvas: { scale: 2, useCORS: true, allowTaint: true },
-              jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
-      
-            html2pdf().from(container).set(options).save().then(() => {
-              root.unmount();
-              document.body.removeChild(container);
-            });
-          }, 500); // 500ms provides a safe buffer
-        }).catch(error => {
-          console.error("Failed to load PDF generation libraries", error);
-          toast({
-            variant: "destructive",
-            title: "Error",
-            description: "No se pudo generar el PDF. Por favor, inténtelo de nuevo.",
-          });
-        });
-    }, [playSound, toast]);
     
     const handleDeleteWorkItem = (itemToDelete: WorkItem) => {
         playSound('deleteItem');
@@ -415,6 +395,15 @@ const WorkTab = () => {
     
         if (appState.selectedInputCurrencyIngresos === 'USD') {
           const grossAmount = rawAmount;
+          if (grossAmount <= 3) {
+            toast({
+              variant: "destructive",
+              title: "Monto Demasiado Bajo",
+              description: "El monto en USD debe ser mayor a $3 para cubrir las comisiones.",
+            });
+            setRateLoading(false);
+            return;
+          }
           netUSD = (grossAmount - 3) * 0.97;
           netCOP = netUSD * currentRate;
         } else {
@@ -422,12 +411,13 @@ const WorkTab = () => {
           netUSD = netCOP / currentRate;
         }
     
-        if (isNaN(netUSD) || isNaN(netCOP)) {
+        if (isNaN(netUSD) || isNaN(netCOP) || netUSD < 0) {
           toast({
             variant: "destructive",
             title: "Error de Cálculo",
-            description: "No se pudo procesar el ingreso. El resultado era inválido.",
+            description: "No se pudo procesar el ingreso. El resultado era inválido o negativo.",
           });
+          setRateLoading(false);
           return;
         }
     
