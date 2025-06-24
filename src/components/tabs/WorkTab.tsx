@@ -35,7 +35,7 @@ import { Progress } from "@/components/ui/progress";
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { format, differenceInCalendarDays } from 'date-fns';
+import { format, differenceInCalendarDays, startOfDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useSound } from '@/context/SoundContext';
 import PackageSettingsModal from '@/components/PackageSettingsModal';
@@ -207,6 +207,55 @@ const revisionColorMap: { [key: number]: string } = {
 
 const formatCOP = (value: number) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(value);
 const formatUSD = (value: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
+
+
+// Componente especializado para la celda de fecha editable
+const EditableDateCell = ({
+  row: { original: item },
+  updateDate,
+}: {
+  row: any;
+  updateDate: (itemId: string, newDate: Date) => void;
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const date = new Date(item.deliveryDate + 'T00:00:00');
+  const today = startOfDay(new Date());
+  const daysDiff = differenceInCalendarDays(date, today);
+
+  let colorClass = 'text-muted-foreground';
+  if (daysDiff <= 1) colorClass = 'text-red-500 font-bold';
+  else if (daysDiff <= 3) colorClass = 'text-yellow-500 font-semibold';
+  else if (daysDiff >= 4) colorClass = 'text-green-600';
+
+  const handleSelectDate = (newDate: Date | undefined) => {
+    if (newDate) {
+      updateDate(item.id, newDate);
+    }
+    setIsOpen(false);
+  };
+
+  return (
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <PopoverTrigger asChild>
+        <div
+          onDoubleClick={() => setIsOpen(true)}
+          className={cn('text-center font-medium cursor-pointer p-2 rounded-md hover:bg-muted', colorClass)}
+        >
+          {format(date, "d 'de' MMMM, yyyy", { locale: es })}
+        </div>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-0" align="start">
+        <Calendar
+          mode="single"
+          selected={date}
+          onSelect={handleSelectDate}
+          disabled={(date) => date < startOfDay(new Date())}
+          initialFocus
+        />
+      </PopoverContent>
+    </Popover>
+  );
+};
 
 
 const WorkTab = () => {
@@ -453,26 +502,7 @@ const WorkTab = () => {
         {
             accessorKey: 'deliveryDate',
             header: () => <div className="text-center">Entrega</div>,
-            cell: ({ row }) => {
-              const date = new Date(row.original.deliveryDate + 'T00:00:00');
-              const today = new Date();
-              const daysDiff = differenceInCalendarDays(date, today);
-          
-              let colorClass = 'text-muted-foreground';
-              if (daysDiff <= 1) {
-                colorClass = 'text-red-500 font-bold';
-              } else if (daysDiff <= 3) {
-                colorClass = 'text-yellow-500 font-semibold';
-              } else if (daysDiff >= 4) {
-                colorClass = 'text-green-600';
-              }
-          
-              return (
-                <div className={cn('text-center font-medium', colorClass)}>
-                  {format(date, "d 'de' MMMM, yyyy", { locale: es })}
-                </div>
-              );
-            },
+            cell: (props) => <EditableDateCell {...props} updateDate={handleDateUpdate} />,
         },
         {
           accessorKey: 'key',
