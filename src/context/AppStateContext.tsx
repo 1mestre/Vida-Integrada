@@ -60,6 +60,7 @@ export interface WorkPackageTemplate {
   exclusiveLicense: boolean;
   vocalProduction: boolean;
   vocalChainPreset: boolean;
+  colorClassName: string;
 }
 
 export interface WorkItem {
@@ -133,6 +134,7 @@ const initialAppState: AppState = {
       exclusiveLicense: false,
       vocalProduction: false,
       vocalChainPreset: false,
+      colorClassName: 'bg-teal-600 hover:bg-teal-700',
     },
     {
       id: uuidv4(),
@@ -148,6 +150,7 @@ const initialAppState: AppState = {
       exclusiveLicense: true,
       vocalProduction: false,
       vocalChainPreset: false,
+      colorClassName: 'bg-sky-600 hover:bg-sky-700',
     },
     {
       id: uuidv4(),
@@ -163,6 +166,7 @@ const initialAppState: AppState = {
       exclusiveLicense: true,
       vocalProduction: false,
       vocalChainPreset: false,
+      colorClassName: 'bg-purple-600 hover:bg-purple-700',
     }
   ],
 };
@@ -232,13 +236,13 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
           });
           
           const sanitizedTemplates = (data.workPackageTemplates || initialAppState.workPackageTemplates).map((template: Partial<WorkPackageTemplate>): WorkPackageTemplate => {
-              const defaults: Omit<WorkPackageTemplate, 'id'> = {
+              const defaults: Omit<WorkPackageTemplate, 'id' | 'colorClassName'> = {
                 name: 'Plantilla sin nombre', price: 0, revisions: 0, songLength: 0, numberOfInstruments: 0,
                 separateFiles: false, masterAudio: false, projectFileDelivery: false, exclusiveLicense: false,
                 vocalProduction: false, vocalChainPreset: false,
                 quantity: 1,
               };
-              return { ...defaults, ...template, id: template.id || uuidv4() };
+              return { ...defaults, ...template, id: template.id || uuidv4(), colorClassName: template.colorClassName || 'bg-gray-500' };
           });
 
           const sanitizedState: AppState = {

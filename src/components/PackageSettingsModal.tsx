@@ -15,11 +15,32 @@ import { Card, CardContent, CardHeader } from './ui/card';
 import { Trash2, Edit, PlusCircle } from 'lucide-react';
 import { Separator } from './ui/separator';
 import { cn } from '@/lib/utils';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 
 interface PackageSettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
+
+const COLOR_PALETTE = [
+  { name: 'Gris', className: 'bg-gray-500 hover:bg-gray-600' },
+  { name: 'Rojo', className: 'bg-red-600 hover:bg-red-700' },
+  { name: 'Naranja', className: 'bg-orange-500 hover:bg-orange-600' },
+  { name: 'Ámbar', className: 'bg-amber-500 hover:bg-amber-600' },
+  { name: 'Amarillo', className: 'bg-yellow-500 hover:bg-yellow-600' },
+  { name: 'Lima', className: 'bg-lime-500 hover:bg-lime-600' },
+  { name: 'Verde', className: 'bg-green-600 hover:bg-green-700' },
+  { name: 'Esmeralda', className: 'bg-emerald-600 hover:bg-emerald-700' },
+  { name: 'Teal', className: 'bg-teal-600 hover:bg-teal-700' },
+  { name: 'Cian', className: 'bg-cyan-600 hover:bg-cyan-700' },
+  { name: 'Celeste', className: 'bg-sky-600 hover:bg-sky-700' },
+  { name: 'Azul', className: 'bg-blue-600 hover:bg-blue-700' },
+  { name: 'Índigo', className: 'bg-indigo-600 hover:bg-indigo-700' },
+  { name: 'Violeta', className: 'bg-violet-600 hover:bg-violet-700' },
+  { name: 'Púrpura', className: 'bg-purple-600 hover:bg-purple-700' },
+  { name: 'Fucsia', className: 'bg-fuchsia-600 hover:bg-fuchsia-700' },
+  { name: 'Rosa', className: 'bg-pink-600 hover:bg-pink-700' },
+];
 
 const defaultTemplateValues: Omit<WorkPackageTemplate, 'id' | 'name'> = {
   price: 0,
@@ -32,6 +53,7 @@ const defaultTemplateValues: Omit<WorkPackageTemplate, 'id' | 'name'> = {
   exclusiveLicense: false,
   vocalProduction: false,
   vocalChainPreset: false,
+  colorClassName: COLOR_PALETTE[0].className,
 };
 
 const PackageSettingsModal: React.FC<PackageSettingsModalProps> = ({ isOpen, onClose }) => {
@@ -42,7 +64,7 @@ const PackageSettingsModal: React.FC<PackageSettingsModalProps> = ({ isOpen, onC
     defaultValues: { templates: appState.workPackageTemplates }
   });
 
-  const { fields, append, remove, update } = useFieldArray({
+  const { fields, append, remove } = useFieldArray({
     control,
     name: "templates"
   });
@@ -147,6 +169,31 @@ const PackageSettingsModal: React.FC<PackageSettingsModalProps> = ({ isOpen, onC
                                     <div>
                                         <Label htmlFor={`templates.${editingTemplateIndex}.name`}>Nombre del Paquete</Label>
                                         <Input id={`templates.${editingTemplateIndex}.name`} {...register(`templates.${editingTemplateIndex}.name`)} />
+                                    </div>
+
+                                    <div>
+                                      <Label>Color del Paquete</Label>
+                                      <Controller
+                                        name={`templates.${editingTemplateIndex}.colorClassName`}
+                                        control={control}
+                                        render={({ field }) => (
+                                          <Select onValueChange={field.onChange} value={field.value}>
+                                            <SelectTrigger>
+                                              <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              {COLOR_PALETTE.map(color => (
+                                                <SelectItem key={color.className} value={color.className}>
+                                                  <div className="flex items-center gap-2">
+                                                    <div className={cn("h-4 w-4 rounded-full", color.className.split(' ')[0])}></div>
+                                                    {color.name}
+                                                  </div>
+                                                </SelectItem>
+                                              ))}
+                                            </SelectContent>
+                                          </Select>
+                                        )}
+                                      />
                                     </div>
                                     
                                     <Separator />

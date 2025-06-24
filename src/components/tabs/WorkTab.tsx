@@ -27,7 +27,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useAppState, WorkItem, WorkPackageTemplate } from '@/context/AppStateContext';
-import { MessageSquare, Clipboard, TrendingUp, Trash2, Wrench, Link, Music, Settings, PlusCircle, CalendarIcon, Flame } from 'lucide-react';
+import { MessageSquare, Clipboard, TrendingUp, Trash2, Wrench, Link, Music, Settings, PlusCircle, CalendarIcon } from 'lucide-react';
 import WorkItemModal from '@/components/WorkItemModal';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
@@ -44,7 +44,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 
-// Pega esta función completa para reemplazar la versión anterior.
+
 const generateClientMessage = (item: WorkItem, packageTemplates: WorkPackageTemplate[]): string => {
     const isMultiple = item.remakeType.includes('Multiple');
     let message = `Heyyy ${item.clientName}! 👋👋\n\n`;
@@ -56,7 +56,7 @@ const generateClientMessage = (item: WorkItem, packageTemplates: WorkPackageTemp
     } else if (item.packageName === 'Exclusive') {
         message += isMultiple ? `Your ${item.genre} remaked beats are readyyy to drop!! 💣💣 No cap, these ones hit DIFFERENT!! 💯🎵\n\n` : `Your ${item.genre} beat is readyyy to drop!! No cap, this one hits different 💯🎵\n\n`;
         message += isMultiple ? "🎛️ All these remakes are LOCKED IN!! 🔒 Multiple vibes, same CRAZY energy!! 💪💪 Hahaha let's gooo!\n\n" : "🎛️ The remake is LOCKED and loaded!! 🔫 Custom-made just for you, readyyy for your vocals!! 🎤✨\n\n";
-    } else { // Amateurs or any other lower-tier package
+    } else { // Amateurs or any other
         message += isMultiple ? `So hereee are those ${item.genre} demos you wanted!! 🎉 Just some quick vibes, nothing too wild yet hehe 😎🎧\n\n` : `So here's that ${item.genre} demo you wanted!! Just a quick vibe check, nothing too wild yet 😎🎧\n\n`;
         message += isMultiple ? "🎛️ These are just demo ideas for the remakes - the foundation's there, just needs the FULLLL glow-up!! 🏗️🏗️\n\n" : "🎛️ This is just the demo version of the remake - think of it as the rough draft with MADDD potential!! 🎨\n\n";
     }
@@ -77,25 +77,39 @@ const generateClientMessage = (item: WorkItem, packageTemplates: WorkPackageTemp
         message += `🎁 EXCLUSIVE GIFT: Custom vocal chain preset made for ${isMultiple ? `these ${item.genre} vibes` : `this ${item.genre} vibe`} 🎙️🎙️\n(Appreciate you being chill to work with, let's keep the collabs going!!) 🤝🤝\n\n`;
     }
     
-    // === Bloque 3: Oferta de "Upsell" (Totalmente Dinámica y Robusta) ===
-    const currentPkg = packageTemplates.find(p => p.name === item.packageName);
-    if (currentPkg && !item.exclusiveLicense) {
-        const potentialUpgrades = packageTemplates
-            .filter(p => p.price > currentPkg.price)
-            .sort((a, b) => a.price - b.price);
-        
-        if (potentialUpgrades.length > 0) {
-            let upsellText = "🤔 BUT WAIT - If you're feeling this demo and want the full experience, just pay the difference:\n";
-            
-            potentialUpgrades.forEach(upgradePkg => {
-                const diff = upgradePkg.price - currentPkg.price;
-                upsellText += `• ${currentPkg.name} ($${currentPkg.price}) → ${upgradePkg.name} ($${upgradePkg.price}): +$${diff}\n`;
-            });
-            
-            message += upsellText + "\nAnd get:\n• The polished, final version(s) 🔥🔥\n• Exclusive license (100% yours) 📜\n• Professional mixing/mastering 🎛️🎚️\n• Full remake treatment 💯💯\n\nJust holla at me if you wanna upgrade! 🚀🚀\n\n";
-        }
-    }
+    // === Bloque 3: Oferta de "Upsell" (Totalmente Dinámica) ===
+    const currentPackage = packageTemplates.find(p => p.name === item.packageName);
+    const potentialUpgrades = packageTemplates
+        .filter(p => p.price > (currentPackage?.price || 0))
+        .sort((a, b) => a.price - b.price);
 
+    if (currentPackage && !item.exclusiveLicense && potentialUpgrades.length > 0) {
+        let upsellText = "🤔 BUT WAIT - If you're feeling this demo and want the full experience, just pay the difference:\n";
+        
+        potentialUpgrades.forEach(upgradePkg => {
+            const diff = upgradePkg.price - currentPackage.price;
+            if (diff > 0) {
+                upsellText += `• ${currentPackage.name} ($${currentPackage.price}) → ${upgradePkg.name} ($${upgradePkg.price}): +$${diff}\n`;
+            }
+        });
+
+        // Ensure we offer upgrades from intermediate packages too
+        const exclusivePkg = potentialUpgrades.find(p => p.name.toLowerCase().includes('exclusive'));
+        if(exclusivePkg) {
+            const upgradesFromExclusive = packageTemplates
+                .filter(p => p.price > exclusivePkg.price)
+                .sort((a,b) => a.price - b.price);
+
+            upgradesFromExclusive.forEach(upgradePkg => {
+                 const diff = upgradePkg.price - exclusivePkg.price;
+                 if (diff > 0 && !upsellText.includes(`→ ${upgradePkg.name}`)) {
+                     upsellText += `• ${exclusivePkg.name} ($${exclusivePkg.price}) → ${upgradePkg.name} ($${upgradePkg.price}): +$${diff}\n`;
+                 }
+            });
+        }
+        
+        message += upsellText + "\nAnd get:\n• The polished, final version(s) 🔥🔥\n• Exclusive license (100% yours) 📜\n• Professional mixing/mastering 🎛️🎚️\n• Full remake treatment 💯💯\n\nJust holla at me if you wanna upgrade! 🚀🚀\n\n";
+    }
 
     // === Bloque 4: Secciones Finales (sin cambios) ===
     message += `${isMultiple ? 'Keys' : 'Key'}: ${item.key} | ${isMultiple ? 'BPMs' : 'BPM'}: ${item.bpm}\n\n`;
@@ -185,12 +199,6 @@ const statusColorMap: Record<WorkItem['deliveryStatus'], string> = {
   'Returned': 'bg-red-600 hover:bg-red-700 text-white'
 };
 
-const packageColorMap: Record<string, string> = {
-  'Masterpiece': 'bg-purple-600 hover:bg-purple-700',
-  'Exclusive': 'bg-sky-600 hover:bg-sky-700',
-  'Amateurs': 'bg-teal-600 hover:bg-teal-700',
-};
-
 const revisionColorMap: { [key: number]: string } = {
   4: 'text-green-400 font-bold',
   3: 'text-lime-400',
@@ -268,21 +276,6 @@ const WorkTab = () => {
   
     const currentMonthKey = format(new Date(), 'yyyy-MM');
     const currentMonthTarget = appState.monthlyTargets[currentMonthKey] || 0;
-
-    const keyOptions = [
-      { value: 'C / Am', label: 'C Maj / A min' },
-      { value: 'G / Em', label: 'G Maj / E min' },
-      { value: 'D / Bm', label: 'D Maj / B min' },
-      { value: 'A / F#m', label: 'A Maj / F# min' },
-      { value: 'E / C#m', label: 'E Maj / C# min' },
-      { value: 'B / G#m', label: 'B Maj / G# min' },
-      { value: 'F# / D#m', label: 'F# Maj / D# min' },
-      { value: 'Db / Bbm', label: 'Db Maj / Bb min' },
-      { value: 'Ab / Fm', label: 'Ab Maj / F min' },
-      { value: 'Eb / Cm', label: 'Eb Maj / C min' },
-      { value: 'Bb / Gm', label: 'Bb Maj / G min' },
-      { value: 'F / Dm', label: 'F Maj / D min' }
-    ];
 
     useEffect(() => {
         fetch('https://open.er-api.com/v6/latest/USD')
@@ -407,15 +400,6 @@ const WorkTab = () => {
             
             return { ...prevState, workItems: updatedWorkItems, calendarEventsData: updatedEvents };
         });
-    }, [setAppState]);
-
-    const handleKeyUpdate = useCallback((itemId: string, newKey: string) => {
-      setAppState(prevState => ({
-        ...prevState,
-        workItems: prevState.workItems.map(item =>
-          item.id === itemId ? { ...item, key: newKey } : item
-        ),
-      }));
     }, [setAppState]);
     
     const handlePackageUpdate = useCallback((itemId: string, newPackageName: string) => {
@@ -587,12 +571,15 @@ const WorkTab = () => {
             header: () => <div className="text-center">Paquete</div>,
             cell: ({ row }) => {
                 const item = row.original;
+                const currentPackage = appState.workPackageTemplates.find(p => p.name === item.packageName);
+                const colorClass = currentPackage ? currentPackage.colorClassName : 'bg-gray-500';
+
                 return (
                     <div className="text-center">
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                             <Button variant="ghost" className="p-0 h-auto">
-                                <Badge className={cn("cursor-pointer", packageColorMap[item.packageName])}>
+                                <Badge className={cn("cursor-pointer", colorClass)}>
                                 {item.packageName}
                                 </Badge>
                             </Button>
@@ -603,7 +590,7 @@ const WorkTab = () => {
                                 key={pkg.id}
                                 onSelect={() => handlePackageUpdate(item.id, pkg.name)}
                                 >
-                                <span className={cn('h-2 w-2 rounded-full mr-2', packageColorMap[pkg.name])} />
+                                <span className={cn('h-2 w-2 rounded-full mr-2', pkg.colorClassName)} />
                                 <span>{pkg.name}</span>
                                 </DropdownMenuItem>
                             ))}
@@ -645,7 +632,7 @@ const WorkTab = () => {
               </div>
             )
         },
-    ], [appState.workItems, appState.workPackageTemplates, handleDateUpdate, handleStatusUpdate, handleKeyUpdate, handlePackageUpdate, keyOptions, handleRevisionsUpdate]);
+    ], [appState.workItems, appState.workPackageTemplates, handleDateUpdate, handleStatusUpdate, handlePackageUpdate, handleRevisionsUpdate]);
 
     const table = useReactTable({
         data: sortedWorkItems,
