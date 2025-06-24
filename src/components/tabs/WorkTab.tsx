@@ -35,8 +35,10 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 
+// Pega esta función completa para reemplazar la versión anterior.
 const generateClientMessage = (item: WorkItem, packageTemplates: WorkPackageTemplate[]): string => {
     const isMultiple = item.remakeType.includes('Multiple');
     let message = `Heyyy ${item.clientName}! 👋👋\n\n`;
@@ -69,86 +71,57 @@ const generateClientMessage = (item: WorkItem, packageTemplates: WorkPackageTemp
         message += `🎁 EXCLUSIVE GIFT: Custom vocal chain preset made for ${isMultiple ? `these ${item.genre} vibes` : `this ${item.genre} vibe`} 🎙️🎙️\n(Appreciate you being chill to work with, let's keep the collabs going!!) 🤝🤝\n\n`;
     }
 
-    // === Bloque 3: Oferta de "Upsell" (Inteligente, Diferencial y Completa) ===
-    const sortedPkgsUpsell = [...packageTemplates].sort((a, b) => a.price - b.price);
-    const cheapestPkgUpsell = sortedPkgsUpsell[0];
-    const middlePkgUpsell = sortedPkgsUpsell.length > 1 ? sortedPkgsUpsell[1] : null;
-    const highestPkgUpsell = sortedPkgsUpsell.length > 2 ? sortedPkgsUpsell[2] : middlePkgUpsell;
+    // === Bloque 3: Oferta de "Upsell" (Inteligente, Diferencial y a Prueba de Fallos) ===
+    const sortedPkgs = [...packageTemplates].sort((a, b) => a.price - b.price);
+    const currentPackageTemplate = sortedPkgs.find(p => p.name === item.packageName);
+    const highestPackageTemplate = sortedPkgs[sortedPkgs.length - 1];
 
-    let upsellSection = "";
+    // Solo mostrar la oferta si el cliente NO tiene el paquete más alto
+    if (currentPackageTemplate && highestPackageTemplate && currentPackageTemplate.id !== highestPackageTemplate.id) {
+        // Identificar cuál es el siguiente nivel de paquete
+        const currentIndex = sortedPkgs.findIndex(p => p.id === currentPackageTemplate.id);
+        const nextPackageTemplate = sortedPkgs[currentIndex + 1];
 
-    const getDifferentialFeatures = (higherPkg: WorkPackageTemplate, lowerPkg: WorkPackageTemplate): string[] => {
-        const features: string[] = [];
-        if (higherPkg.masterAudio && !lowerPkg.masterAudio) features.push("• Professional mixing/mastering 🎛️🎚️");
-        if (higherPkg.separateFiles && !lowerPkg.separateFiles) features.push("• Full STEMS 💎");
-        if (higherPkg.projectFileDelivery && !lowerPkg.projectFileDelivery) features.push("• FLP Project File 🎚️🎚️");
-        if (higherPkg.exclusiveLicense && !lowerPkg.exclusiveLicense) features.push("• Exclusive license (100% yours) 📜");
-        if (higherPkg.vocalProduction && !lowerPkg.vocalProduction) features.push("• Vocal Production ✨🎙️");
-        return features;
-    };
-    
-    if (highestPkgUpsell && !(item.exclusiveLicense && item.projectFileDelivery && item.separateFiles)) {
-        let upsellOffers: string[] = [];
-        
-        if (item.packageName === cheapestPkgUpsell?.name) {
-            if (middlePkgUpsell) {
-                const diff = middlePkgUpsell.price - cheapestPkgUpsell.price;
-                if (diff > 0) {
-                    let offer = `• ${cheapestPkgUpsell.name} ($${cheapestPkgUpsell.price}) → ${middlePkgUpsell.name} ($${middlePkgUpsell.price}): +$${diff}\n`;
-                    const features = getDifferentialFeatures(middlePkgUpsell, cheapestPkgUpsell);
-                    if (features.length > 0) offer += `  And get:\n  ${features.join('\n  ')}\n`;
-                    upsellOffers.push(offer);
-                }
+        if (nextPackageTemplate) {
+            let upsellText = `🤔 BUT WAIT - If you're feeling this and want the full experience, just pay the difference:\n`;
+            const priceDiff = nextPackageTemplate.price - currentPackageTemplate.price;
+
+            if (priceDiff > 0) {
+                upsellText += `• ${currentPackageTemplate.name} ($${currentPackageTemplate.price}) → ${nextPackageTemplate.name} ($${nextPackageTemplate.price}): +$${priceDiff}\n\n`;
             }
-            if (highestPkgUpsell && (!middlePkgUpsell || highestPkgUpsell.id !== middlePkgUpsell.id)) {
-                const diff = highestPkgUpsell.price - cheapestPkgUpsell.price;
-                if (diff > 0) {
-                    let offer = `• ${cheapestPkgUpsell.name} ($${cheapestPkgUpsell.price}) → ${highestPkgUpsell.name} ($${highestPkgUpsell.price}): +$${diff}\n`;
-                    const features = getDifferentialFeatures(highestPkgUpsell, cheapestPkgUpsell);
-                    if (features.length > 0) offer += `  And get:\n  ${features.join('\n  ')}\n`;
-                    upsellOffers.push(offer);
-                }
-            }
-        }
-        else if (item.packageName === middlePkgUpsell?.name) {
-             if (highestPkgUpsell && middlePkgUpsell.id !== highestPkgUpsell.id) {
-                const diff = highestPkgUpsell.price - middlePkgUpsell.price;
-                if (diff > 0) {
-                    let offer = `• ${middlePkgUpsell.name} ($${middlePkgUpsell.price}) → ${highestPkgUpsell.name} ($${highestPkgUpsell.price}): +$${diff}\n`;
-                    const features = getDifferentialFeatures(highestPkgUpsell, middlePkgUpsell);
-                    if (features.length > 0) offer += `  And get:\n  ${features.join('\n  ')}\n`;
-                    upsellOffers.push(offer);
-                }
-             }
-        }
 
-        if (upsellOffers.length > 0) {
-            upsellSection = "🤔 BUT WAIT - If you're feeling this and want the full experience, just pay the difference:\n" + upsellOffers.join('\n') + "\nJust holla at me if you wanna upgrade! 🚀🚀\n\n";
+            // Calcular los beneficios diferenciales
+            const differentialFeatures: string[] = [];
+            if (nextPackageTemplate.masterAudio && !item.masterAudio) differentialFeatures.push("• Professional mixing/mastering 🎛️🎚️");
+            if (nextPackageTemplate.separateFiles && !item.separateFiles) differentialFeatures.push("• Full STEMS 💎");
+            if (nextPackageTemplate.projectFileDelivery && !item.projectFileDelivery) differentialFeatures.push("• FLP Project File 🎚️🎚️");
+            if (nextPackageTemplate.exclusiveLicense && !item.exclusiveLicense) differentialFeatures.push("• Exclusive license (100% yours) 📜");
+            if (nextPackageTemplate.vocalProduction && !item.vocalProduction) differentialFeatures.push("• Vocal Production ✨🎙️");
+            
+            // Solo mostrar la sección "And get:" si hay beneficios reales que ofrecer
+            if (differentialFeatures.length > 0) {
+                upsellText += "And get:\n" + differentialFeatures.join('\n') + "\n\n";
+            }
+
+            message += upsellText + "Just holla at me if you wanna upgrade! 🚀🚀\n\n";
         }
     }
     
-    message += upsellSection;
-
     // === Bloque 4: Secciones Finales (CON LÓGICA DE REVISIONES CORREGIDA) ===
     message += `${isMultiple ? 'Keys' : 'Key'}: ${item.key} | ${isMultiple ? 'BPMs' : 'BPM'}: ${item.bpm}\n\n`;
     message += `📦📦 Order #${item.orderNumber}\n\n`;
     
-    const sortedPkgs = [...packageTemplates].sort((a, b) => a.price - b.price);
-    const cheapestPkgName = sortedPkgs[0]?.name;
-    const middlePkgName = sortedPkgs[1]?.name;
-    const highestPkgName = sortedPkgs[2]?.name;
-
-    if (item.packageName === highestPkgName) {
+    if (item.packageName === 'Masterpiece') {
         message += `✅✅ This is built for the BIGGG stages - Spotify, radio, wherever you wanna take it!! 🌟🌟\n${item.revisionsRemaining} revisions remaining 🔧🔧\n\n🎁 PRO TIP: Drop a 5-star review and I'll hook you UPPP with $10 off your next order!! Helps me out FOR REALLL 🙏🙏\n\nNow go make some MAGIC happen!! ✨🎤`;
-    } else if (item.packageName === middlePkgName) {
+    } else if (item.packageName === 'Exclusive') {
         message += `✅ ${item.revisionsRemaining} revisions remaining 🔧\n${isMultiple ? "Time to make these BEATS slap!! 💥💥" : "Time to make some WAVES!! 🌊🌊"}\n\n🎁 PRO TIP: Leave me a 5-star review and I'll give you $10 off your next beat!! WIN-WIN SITUATION 😉💰💰\n\nLet's get this music out there!!! 🚀🚀`;
-    } else { // Paquete más barato (Amateur/Basic)
+    } else { // Amateurs
         message += "✅ Let me know what you think of the direction!! If you're vibing with it, we can ALWAYSSS take it to the next level!! 🎯🎯\n\n";
-        // Lógica de revisiones corregida:
+        // Lógica dinámica para las revisiones en el paquete Amateurs
         if (item.revisionsRemaining > 0) {
-            message += `(${item.revisionsRemaining} revisions included for this custom order! 😉💡💡)`;
+            message += `(${item.revisionsRemaining} custom revision(s) included in this deal! 😉💡💡)`;
         } else {
-            message += "(No revisions on standard demos, but that's what upgrades are for!! 😉💡💡)";
+            message += "(No revisions on demos, but that's what upgrades are for!! 😉💡💡)";
         }
     }
 
@@ -471,40 +444,44 @@ const WorkTab = () => {
 
     const columns: ColumnDef<WorkItem>[] = useMemo(() => [
         {
-            id: 'actions',
-            header: () => <div className="text-center">Mensaje</div>,
-            cell: ({ row }) => {
-              const item = row.original;
-              
-              return (
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="ghost" size="icon">
-                      <MessageSquare className="h-4 w-4 text-primary" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-96">
-                    <div className="space-y-4">
-                      <h4 className="font-medium">Mensaje Personalizado</h4>
-                      <pre className="text-xs whitespace-pre-wrap font-mono p-4 bg-muted rounded-md max-h-[50vh] overflow-y-auto">
-                        {generateClientMessage(item, appState.workPackageTemplates)}
-                      </pre>
-                      <Button 
-                        size="sm" 
-                        className="w-full"
-                        onClick={() => {
-                          navigator.clipboard.writeText(generateClientMessage(item, appState.workPackageTemplates));
-                          toast({ title: "Copiado", description: "Mensaje copiado al portapapeles." });
-                        }}
-                      >
-                        <Clipboard className="mr-2" />
-                        Copiar Mensaje
-                      </Button>
-                    </div>
-                  </PopoverContent>
-                </Popover>
-              );
-            },
+          id: 'message',
+          header: () => <div className="text-center">Mensaje</div>,
+          cell: ({ row }) => {
+            const item = row.original;
+            const generatedMessage = generateClientMessage(item, appState.workPackageTemplates);
+        
+            return (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <MessageSquare className="h-4 w-4 text-primary" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Mensaje Personalizado para {item.clientName}</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Este es el mensaje generado basado en los detalles actuales de la orden.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <div className="max-h-[60vh] overflow-y-auto p-4 bg-muted rounded-md">
+                    <pre className="text-xs whitespace-pre-wrap font-mono">
+                      {generatedMessage}
+                    </pre>
+                  </div>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cerrar</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => {
+                        navigator.clipboard.writeText(generatedMessage);
+                        toast({ title: "Copiado", description: "Mensaje copiado al portapapeles." });
+                      }}>
+                      Copiar Mensaje
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            );
+          },
         },
         {
           id: 'tools',
@@ -914,6 +891,8 @@ const WorkTab = () => {
 export default WorkTab;
 
     
+    
+
     
 
     
