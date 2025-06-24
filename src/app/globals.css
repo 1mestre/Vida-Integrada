@@ -183,13 +183,6 @@
   color: hsl(var(--muted-foreground));
 }
 
-.fc .fc-day-today {
-  box-shadow: 0 0 12px hsl(var(--primary) / 0.5);
-  border-radius: var(--radius);
-  position: relative;
-  z-index: 1;
-}
-
 /* --- INICIO: Código para Brillo Estático y Suave --- */
 .text-glow-yellow-soft {
   color: #FBBF24; /* Color base amarillo */
@@ -203,10 +196,10 @@
   text-shadow: 0 0 8px rgba(52, 211, 153, 0.5);
 }
 /* --- FIN: Código para Brillo Estático y Suave --- */
-/* --- INICIO: Estilo personalizado para el día de hoy en el calendario --- */
+/* --- INICIO: Estilo sutil para el día de hoy en el calendario --- */
 .fc .fc-day-today {
-  background-color: transparent !important; /* Elimina el fondo azul */
-  border: 2px solid hsl(var(--card-foreground)) !important; /* Añade un borde blanco/del tema */
-  border-radius: 0.5rem; /* Opcional: para que el borde sea redondeado */
+  background-color: transparent !important; /* Mantiene el fondo transparente */
+  border: 1px solid hsl(var(--border)) !important; /* Borde más delgado y gris (color del tema) */
+  border-radius: 0.75rem !important; /* Bordes redondeados */
 }
 /* --- FIN: Estilo personalizado --- */
