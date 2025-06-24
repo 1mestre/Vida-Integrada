@@ -71,21 +71,24 @@ const IncomeTab = () => {
     setAppState({ contributions: updatedContributions });
   };
   
-  const financialSummary = useMemo(() => {
-    const totalNetCOP = appState.contributions.reduce((sum, c) => sum + c.netCOP, 0);
-    const totalNetUSD = appState.contributions.reduce((sum, c) => sum + c.netUSD, 0);
-    const incomeThisMonth = appState.contributions
+  const { monthlyTotals, accumulatedTotals, progress } = useMemo(() => {
+    const accumulatedCOP = appState.contributions.reduce((sum, c) => sum + c.netCOP, 0);
+    const accumulatedUSD = appState.contributions.reduce((sum, c) => sum + c.netUSD, 0);
+
+    const monthlyCOP = appState.contributions
       .filter(c => c.date.startsWith(currentMonthKey))
       .reduce((sum, c) => sum + c.netCOP, 0);
-    const progress = currentMonthTarget > 0 ? (incomeThisMonth / currentMonthTarget) * 100 : 0;
     
-    return { totalNetCOP, totalNetUSD, incomeThisMonth, progress };
-  }, [appState.contributions, currentMonthTarget, currentMonthKey]);
+    const monthlyUSD = exchangeRate ? monthlyCOP / exchangeRate : 0;
 
-  const incomeThisMonthInUSD = useMemo(() => {
-    if (!financialSummary.incomeThisMonth || !exchangeRate) return 0;
-    return financialSummary.incomeThisMonth / exchangeRate;
-  }, [financialSummary.incomeThisMonth, exchangeRate]);
+    const monthlyProgress = currentMonthTarget > 0 ? (monthlyCOP / currentMonthTarget) * 100 : 0;
+
+    return {
+        monthlyTotals: { cop: monthlyCOP, usd: monthlyUSD },
+        accumulatedTotals: { cop: accumulatedCOP, usd: accumulatedUSD },
+        progress: monthlyProgress
+    };
+  }, [appState.contributions, currentMonthKey, currentMonthTarget, exchangeRate]);
 
   const monthTimeProgress = useMemo(() => {
     const today = new Date();
@@ -114,13 +117,13 @@ const IncomeTab = () => {
                 className="bg-background/50 border-border"
               />
               <span className="text-sm text-muted-foreground whitespace-nowrap">
-                Progreso: {formatCOP(financialSummary.incomeThisMonth)} / {formatCOP(currentMonthTarget)}
+                Progreso: {formatCOP(monthlyTotals.cop)} / {formatCOP(currentMonthTarget)}
               </span>
             </div>
             
             <div className="space-y-2">
-                <p className="text-sm font-medium">Progreso Meta del Mes ({financialSummary.progress.toFixed(1)}%)</p>
-                <Progress value={financialSummary.progress} className="h-4 shimmer [&>div]:bg-ios-green"/>
+                <p className="text-sm font-medium">Progreso Meta del Mes ({progress.toFixed(1)}%)</p>
+                <Progress value={progress} className="h-4 shimmer [&>div]:bg-ios-green"/>
             </div>
 
             <div className="space-y-2">
@@ -206,28 +209,30 @@ const IncomeTab = () => {
         </div>
       </div>
       <div className="flex flex-col items-center gap-4">
-        <div className="flex flex-col items-center gap-4">
-          <Card className="w-full max-w-md glassmorphism-card">
-            <CardHeader>
-              <CardTitle className="text-center text-lg font-semibold">
-                Ingresos Este Mes
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center text-4xl font-bold tracking-tighter">
-                <span className="text-yellow-400">{formatCOP(financialSummary.incomeThisMonth)}</span>
-                <span className="text-muted-foreground mx-2">/</span>
-                <span className="text-green-400">{formatUSD(incomeThisMonthInUSD)}</span>
-              </div>
-            </CardContent>
-          </Card>
-          <div className="text-center">
-            <p className="text-sm text-muted-foreground">
-              Ingresos Acumulados: {formatCOP(financialSummary.totalNetCOP)} / {formatUSD(financialSummary.totalNetUSD)}
-            </p>
-          </div>
+        <Card className="w-full max-w-md glassmorphism-card">
+          <CardHeader>
+            <CardTitle className="text-center text-sm font-medium text-muted-foreground">
+              Ingresos Este Mes
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex justify-center items-baseline text-2xl font-bold tracking-tight">
+              <span className="text-yellow-400">{monthlyTotals.cop.toLocaleString('es-CO')}</span>
+              <span className="text-xs font-medium text-muted-foreground ml-1.5">(COP)</span>
+              
+              <span className="text-muted-foreground mx-3">/</span>
+
+              <span className="text-green-400">${monthlyTotals.usd.toFixed(2)}</span>
+              <span className="text-xs font-medium text-muted-foreground ml-1.5">(USD)</span>
+            </div>
+          </CardContent>
+        </Card>
+        <div className="text-center">
+          <p className="text-sm text-muted-foreground">
+            Ingresos Acumulados: {formatCOP(accumulatedTotals.cop)} / {formatUSD(accumulatedTotals.usd)}
+          </p>
         </div>
-        {financialSummary.progress >= 100 && (
+        {progress >= 100 && (
             <Card className="glassmorphism-card bg-ios-green/20 border-ios-green p-4 text-center">
                 <p className="font-bold text-ios-green animate-pulse">🎉✨ ¡FELICITACIONES! ¡META ALCANZADA! ✨🎉</p>
             </Card>
