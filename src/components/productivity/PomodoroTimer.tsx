@@ -2,11 +2,11 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import ProductivityCard from './ProductivityCard';
-import { Hourglass, Play, Pause, RotateCcw, Settings, AlertTriangle } from 'lucide-react';
+import { Hourglass, Play, Pause, RotateCcw, Settings, AlertTriangle, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useSound } from '@/context/SoundContext'; // Importa useSound
+import { useSound } from '@/context/SoundContext';
 
 const PomodoroTimer = () => {
   const [durations, setDurations] = useState({ work: 25, shortBreak: 5, longBreak: 15 });
@@ -17,7 +17,7 @@ const PomodoroTimer = () => {
   const [showSettings, setShowSettings] = useState(false);
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const { playSound } = useSound(); // Utiliza el hook useSound
+  const { playSound } = useSound();
 
   const resetTimer = useCallback(() => {
     if (intervalRef.current) clearInterval(intervalRef.current);
@@ -88,9 +88,24 @@ const PomodoroTimer = () => {
   return (
     <ProductivityCard title="Temporizador Pomodoro" icon={<Hourglass className="text-primary"/>}>
       <div className="flex flex-col items-center space-y-6">
-        <div className="relative h-48 w-48">
-            <svg className="h-full w-full" viewBox="0 0 100 100">
-                <circle className="text-muted" strokeWidth="7" stroke="currentColor" fill="transparent" r="45" cx="50" cy="50" />
+        <div className="relative h-48 w-48 md:h-64 md:w-64">
+            {/* Capa 1: El icono del reloj de fondo (sutil) */}
+            <Clock 
+                className="absolute w-full h-full text-muted-foreground opacity-10" 
+                strokeWidth={1.5} 
+            />
+
+            {/* Capa 2: El círculo de progreso SVG */}
+            <svg className="absolute h-full w-full" viewBox="0 0 100 100">
+                <circle 
+                    className="text-muted/30"
+                    strokeWidth="7" 
+                    stroke="currentColor" 
+                    fill="transparent" 
+                    r="45" 
+                    cx="50" 
+                    cy="50" 
+                />
                 <circle
                     className="text-primary"
                     strokeWidth="7"
@@ -105,11 +120,14 @@ const PomodoroTimer = () => {
                     style={{ transform: 'rotate(-90deg)', transformOrigin: 'center' }}
                 />
             </svg>
+
+            {/* Capa 3: El texto del tiempo */}
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-4xl font-bold font-mono">{String(Math.floor(timeLeft / 60)).padStart(2, '0')}:{String(timeLeft % 60).padStart(2, '0')}</span>
+                <span className="text-4xl md:text-5xl font-bold font-mono">{String(Math.floor(timeLeft / 60)).padStart(2, '0')}:{String(timeLeft % 60).padStart(2, '0')}</span>
                 <span className="text-sm uppercase tracking-wider text-muted-foreground">{mode === 'work' ? 'Trabajo' : 'Descanso'}</span>
             </div>
         </div>
+        
         <div className="flex space-x-2">
             {Array(4).fill(0).map((_, i) => (
                 <div key={i} className={`h-2 w-8 rounded-full ${i < cycle % 4 ? 'bg-primary' : 'bg-muted'}`}></div>
