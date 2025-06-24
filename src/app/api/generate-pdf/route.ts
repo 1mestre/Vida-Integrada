@@ -61,7 +61,7 @@ export async function POST(request: Request) {
 
     const html = getContractHtml(clientName, date);
     
-    const apiUrl = 'https://api.apiflash.com/v1/htmltopdf';
+    const apiUrl = 'https://api.apiflash.com/v1/urltoimage';
 
     const apiResponse = await fetch(apiUrl, {
       method: 'POST',
