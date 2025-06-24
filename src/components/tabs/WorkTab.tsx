@@ -19,7 +19,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useAppState, WorkItem, WorkPackageTemplate } from '@/context/AppStateContext';
-import { MessageSquare, Clipboard, TrendingUp, Trash2, Wrench, Link, Music, Settings, PlusCircle, CalendarIcon } from 'lucide-react';
+import { MessageSquare, Clipboard, TrendingUp, Trash2, Wrench, Link, Music, Settings, PlusCircle, CalendarIcon, FolderPlus } from 'lucide-react';
 import WorkItemModal from '@/components/WorkItemModal';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
@@ -129,7 +129,7 @@ const generateClientMessage = (item: WorkItem, packageTemplates: WorkPackageTemp
 };
 
 
-const FileNameToolsPopover = ({ item }: { item: WorkItem }) => {
+const FileNameToolsPopover = ({ item, toast, playSound }: { item: WorkItem; toast: (options: any) => void; playSound: (soundName: string) => void; }) => {
     const [copySuccess, setCopySuccess] = React.useState('');
     const filenames = generateFileNames(item);
 
@@ -142,9 +142,11 @@ const FileNameToolsPopover = ({ item }: { item: WorkItem }) => {
     const handleCopy = (text: string, type: string) => {
         navigator.clipboard.writeText(text).then(() => {
             setCopySuccess(type);
+            toast({ title: "¡Copiado!", description: `Nombre de archivo para ${labels[type]} copiado.` });
             setTimeout(() => setCopySuccess(''), 2000);
         }, (err) => {
             console.error('No se pudo copiar el texto: ', err);
+            toast({ variant: "destructive", title: "Error", description: "No se pudo copiar el nombre del archivo." });
         });
     };
 
@@ -156,11 +158,11 @@ const FileNameToolsPopover = ({ item }: { item: WorkItem }) => {
                 </Button>
             </PopoverTrigger>
             <PopoverContent className="w-80">
-                <div className="grid gap-6">
+                <div className="grid gap-4">
                     <div className="space-y-2">
-                        <h4 className="font-medium leading-none">Nombres de Archivo</h4>
+                        <h4 className="font-medium leading-none">Herramientas de Proyecto</h4>
                         <p className="text-sm text-muted-foreground">
-                            Copia el nombre estandarizado para cada tipo de archivo.
+                           Automatiza tareas de creación y nombrado de archivos.
                         </p>
                     </div>
                     <div className="grid gap-3">
@@ -177,6 +179,34 @@ const FileNameToolsPopover = ({ item }: { item: WorkItem }) => {
                             </div>
                         ))}
                     </div>
+                    <Button
+                        className="bg-orange-500 hover:bg-orange-600 text-white w-full"
+                        onClick={async () => {
+                            try {
+                              const params = new URLSearchParams({
+                                clientName: item.clientName,
+                                genre: item.genre,
+                                bpm: item.bpm,
+                                key: item.key,
+                              });
+                              await fetch(`http://localhost:12345/create-project?${params.toString()}`);
+                              playSound('genericClick');
+                              toast({
+                                title: "Proyecto Creado",
+                                description: "La automatización para crear el proyecto ha sido iniciada.",
+                              });
+                            } catch (error) {
+                              toast({
+                                variant: "destructive",
+                                title: "Error de Conexión",
+                                description: "No se pudo conectar con el agente local.",
+                              });
+                            }
+                        }}
+                    >
+                        <FolderPlus className="mr-2 h-4 w-4" />
+                        Crear Proyecto FLP
+                    </Button>
                 </div>
             </PopoverContent>
         </Popover>
@@ -488,7 +518,7 @@ const WorkTab = () => {
           header: () => <div className="text-center">Tools</div>,
           cell: ({ row }) => {
             const item = row.original;
-            return <div className="text-center"><FileNameToolsPopover item={item} /></div>;
+            return <div className="text-center"><FileNameToolsPopover item={item} toast={toast} playSound={playSound} /></div>;
           },
         },
         { 
@@ -651,7 +681,7 @@ const WorkTab = () => {
               </div>
             )
         },
-    ], [appState.workItems, appState.workPackageTemplates, handleDateUpdate, handleStatusUpdate, handlePackageUpdate, handleRevisionsUpdate, toast]);
+    ], [appState.workItems, appState.workPackageTemplates, handleDateUpdate, handleStatusUpdate, handlePackageUpdate, handleRevisionsUpdate, toast, playSound]);
 
     const table = useReactTable({
         data: sortedWorkItems,
@@ -906,3 +936,5 @@ const WorkTab = () => {
 };
 
 export default WorkTab;
+
+    
