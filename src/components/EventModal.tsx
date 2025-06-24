@@ -10,6 +10,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useForm, Controller } from "react-hook-form";
 import { useAppState, CalendarEvent, TimetableEvent } from '@/context/AppStateContext';
 import { useSound } from '@/context/SoundContext';
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from '@/components/ui/calendar';
+import { CalendarIcon } from 'lucide-react';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 
 interface EventModalProps {
   isOpen: boolean;
@@ -188,8 +194,41 @@ const EventModal: React.FC<EventModalProps> = ({ isOpen, onClose, eventType, eve
 
              {eventType === 'calendar' && (
                 <div>
-                    <Label htmlFor="start">Fecha</Label>
-                    <Controller name="start" control={control} rules={{ required: true }} render={({ field }) => <Input id="start" type="date" {...field} className="bg-background/30"/>} />
+                  <Label htmlFor="start">Fecha</Label>
+                  <Controller
+                    name="start"
+                    control={control}
+                    rules={{ required: true }}
+                    render={({ field }) => (
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full justify-start text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {field.value ? format(new Date(field.value + 'T00:00:00'), "PPP", { locale: es }) : <span>Elige una fecha</span>}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                          <Calendar
+                            mode="single"
+                            selected={field.value ? new Date(field.value + 'T00:00:00') : undefined}
+                            onSelect={(date) => {
+                              if (date) {
+                                field.onChange(format(date, 'yyyy-MM-dd'));
+                              }
+                            }}
+                            disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    )}
+                  />
                 </div>
             )}
 

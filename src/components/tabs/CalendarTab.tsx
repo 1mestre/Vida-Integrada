@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
@@ -11,7 +10,9 @@ import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useSound } from '@/context/SoundContext';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, startOfDay } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
+
 
 const ProgressBar = ({ label, value, textColorClass, barClassName }: { label: string; value: number; textColorClass: string; barClassName: string; }) => (
   <div className="space-y-2">
@@ -146,8 +147,18 @@ const CalendarTab = () => {
                 onEventClick={handleEventClick}
                 onDateSelect={handleDateSelect}
                 onEventDrop={handleEventDrop}
-                eventConstraint={{ start: new Date() }}
-                selectConstraint={{ start: new Date() }}
+                selectable={true}
+                editable={true}
+                selectAllow={(selectInfo) => {
+                  const timeZone = 'America/Bogota';
+                  const today = startOfDay(toZonedTime(new Date(), timeZone));
+                  return selectInfo.start >= today;
+                }}
+                eventAllow={(dropInfo, draggedEvent) => {
+                  const timeZone = 'America/Bogota';
+                  const today = startOfDay(toZonedTime(new Date(), timeZone));
+                  return dropInfo.start >= today;
+                }}
               />
             </CardContent>
           </Card>
