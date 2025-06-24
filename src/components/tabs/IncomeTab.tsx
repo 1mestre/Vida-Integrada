@@ -206,27 +206,26 @@ const IncomeTab = () => {
         </div>
       </div>
       <div className="flex flex-col items-center gap-4">
-        {/* Tarjeta Principal: Ingresos del Mes */}
-        <Card className="w-full max-w-md glassmorphism-card">
-          <CardHeader>
-            <CardTitle className="text-center text-lg font-semibold">
-              Ingresos Este Mes
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center text-4xl font-bold tracking-tighter">
-              <span className="text-yellow-400">{formatCOP(financialSummary.incomeThisMonth)}</span>
-              <span className="text-muted-foreground mx-2">/</span>
-              <span className="text-green-400">{formatUSD(incomeThisMonthInUSD)}</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Texto Secundario: Ingresos Acumulados */}
-        <div className="text-center">
-          <p className="text-sm text-muted-foreground">
-            Ingresos Acumulados: {formatCOP(financialSummary.totalNetCOP)} / {formatUSD(financialSummary.totalNetUSD)}
-          </p>
+        <div className="flex flex-col items-center gap-4">
+          <Card className="w-full max-w-md glassmorphism-card">
+            <CardHeader>
+              <CardTitle className="text-center text-lg font-semibold">
+                Ingresos Este Mes
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center text-4xl font-bold tracking-tighter">
+                <span className="text-yellow-400">{formatCOP(financialSummary.incomeThisMonth)}</span>
+                <span className="text-muted-foreground mx-2">/</span>
+                <span className="text-green-400">{formatUSD(incomeThisMonthInUSD)}</span>
+              </div>
+            </CardContent>
+          </Card>
+          <div className="text-center">
+            <p className="text-sm text-muted-foreground">
+              Ingresos Acumulados: {formatCOP(financialSummary.totalNetCOP)} / {formatUSD(financialSummary.totalNetUSD)}
+            </p>
+          </div>
         </div>
         {financialSummary.progress >= 100 && (
             <Card className="glassmorphism-card bg-ios-green/20 border-ios-green p-4 text-center">
@@ -239,3 +238,5 @@ const IncomeTab = () => {
 };
 
 export default IncomeTab;
+
+    

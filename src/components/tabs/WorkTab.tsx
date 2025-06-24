@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import {
   ColumnDef,
   flexRender,
@@ -298,7 +298,7 @@ const WorkTab = () => {
         setAppState({ contributions: updatedContributions });
     };
 
-    const handleStatusUpdate = (itemId: string, newStatus: WorkItem['deliveryStatus']) => {
+    const handleStatusUpdate = useCallback((itemId: string, newStatus: WorkItem['deliveryStatus']) => {
       setAppState(prevState => {
         const statusToColumnMap: Record<WorkItem['deliveryStatus'], 'todo' | 'inprogress' | 'done'> = {
           'Pending': 'todo',
@@ -318,9 +318,9 @@ const WorkTab = () => {
 
         return { ...prevState, workItems: updatedWorkItems, tasks: updatedTasks };
       });
-    };
+    }, [setAppState]);
 
-    const handleDateUpdate = (itemId: string, newDate: Date) => {
+    const handleDateUpdate = useCallback((itemId: string, newDate: Date) => {
         const formattedDate = format(newDate, 'yyyy-MM-dd');
   
         setAppState(prevState => {
@@ -334,16 +334,16 @@ const WorkTab = () => {
             
             return { ...prevState, workItems: updatedWorkItems, calendarEventsData: updatedEvents };
         });
-    };
+    }, [setAppState]);
 
-    const handleKeyUpdate = (itemId: string, newKey: string) => {
+    const handleKeyUpdate = useCallback((itemId: string, newKey: string) => {
       setAppState(prevState => ({
         ...prevState,
         workItems: prevState.workItems.map(item =>
           item.id === itemId ? { ...item, key: newKey } : item
         ),
       }));
-    };
+    }, [setAppState]);
 
     const financialSummary = useMemo(() => {
         const totalNetCOP = appState.contributions.reduce((sum, c) => sum + c.netCOP, 0);
@@ -517,8 +517,7 @@ const WorkTab = () => {
     
     return (
         <div className="space-y-8">
-            <div className="flex items-center justify-between mb-6">
-              
+            <div className="flex items-center justify-between mb-4">
               <div className="flex flex-col items-start">
                 <h1 className="text-3xl font-bold tracking-tight">FIVERR📀</h1>
                 <div className="flex items-center gap-2 mt-2">
@@ -536,16 +535,15 @@ const WorkTab = () => {
                   </a>
                 </div>
               </div>
-
-              <div className="flex items-center gap-2">
-                <Button variant="outline" onClick={handleOpenPackageSettingsModal}>
-                  <Settings className="mr-2 h-4 w-4" />
-                  Set Packages
-                </Button>
-                <Button onClick={handleOpenNewOrderModal} className="h-14 text-lg">
-                  Nueva Orden🤑💵
-                </Button>
-              </div>
+              <div className="flex flex-col gap-2">
+                 <Button variant="outline" onClick={handleOpenPackageSettingsModal}>
+                   <Settings className="mr-2 h-4 w-4" />
+                   Set Packages
+                 </Button>
+                 <Button onClick={handleOpenNewOrderModal} className="h-14 text-lg">
+                   Nueva Orden🤑💵
+                 </Button>
+               </div>
             </div>
 
             <Card className="glassmorphism-card">
@@ -699,24 +697,27 @@ const WorkTab = () => {
                 </div>
               </div>
               <div className="space-y-6">
-                <Card className="glassmorphism-card">
-                  <CardHeader>
-                    <CardTitle className="text-center text-sm font-medium text-muted-foreground">
-                      Ingresos Totales
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-center text-4xl font-bold tracking-tighter">
-                      <span className="text-glow-yellow-soft">{formatCOP(financialSummary.totalNetCOP)}</span>
-                      <span className="text-muted-foreground mx-2">/</span>
-                      <span className="text-glow-green-soft">{formatUSD(financialSummary.totalNetUSD)}</span>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card className="glassmorphism-card text-center p-6">
-                    <p className="text-sm text-muted-foreground">Ingresos Este Mes</p>
-                    <p className="text-3xl font-semibold">{formatCOP(financialSummary.incomeThisMonth)}</p>
-                </Card>
+                <div className="flex flex-col items-center gap-4">
+                  <Card className="w-full max-w-md glassmorphism-card">
+                    <CardHeader>
+                      <CardTitle className="text-center text-lg font-semibold">
+                        Ingresos Este Mes
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-center text-4xl font-bold tracking-tighter">
+                        <span className="text-yellow-400">{formatCOP(financialSummary.incomeThisMonth)}</span>
+                        <span className="text-muted-foreground mx-2">/</span>
+                        <span className="text-green-400">{formatUSD(financialSummary.incomeThisMonth / (exchangeRate || 4000))}</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <div className="text-center">
+                    <p className="text-sm text-muted-foreground">
+                      Ingresos Acumulados: {formatCOP(financialSummary.totalNetCOP)} / {formatUSD(financialSummary.totalNetUSD)}
+                    </p>
+                  </div>
+                </div>
                 {financialSummary.progress >= 100 && (
                     <Card className="glassmorphism-card bg-ios-green/20 border-ios-green p-4 text-center">
                         <p className="font-bold text-ios-green animate-pulse">🎉✨ ¡FELICITACIONES! ¡META ALCANZADA! ✨🎉</p>
@@ -760,5 +761,7 @@ const WorkTab = () => {
 };
 
 export default WorkTab;
+
+    
 
     
