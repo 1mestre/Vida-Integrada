@@ -38,6 +38,8 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { v4 as uuidv4 } from 'uuid';
 import { AgreementTemplate } from '@/components/pdf/AgreementTemplate';
+import html2pdf from 'html2pdf.js';
+import ReactDOMClient from 'react-dom/client';
 
 
 const generateClientMessage = (item: WorkItem, packageTemplates: WorkPackageTemplate[]): string => {
@@ -248,13 +250,8 @@ const WorkTab = () => {
     const currentMonthKey = format(new Date(), 'yyyy-MM');
     const currentMonthTarget = appState.monthlyTargets[currentMonthKey] || 0;
 
-    const handleGeneratePdf = useCallback(async (item: WorkItem) => {
+    const handleGeneratePdf = (item: WorkItem) => {
         playSound('genericClick');
-        
-        // Dynamically import libraries only on the client
-        const ReactDOMClient = (await import('react-dom/client')).default;
-        const html2pdf = (await import('html2pdf.js')).default;
-
         const container = document.createElement('div');
         document.body.appendChild(container);
     
@@ -277,18 +274,11 @@ const WorkTab = () => {
                 root.unmount();
             });
         }, 500); 
-    }, [playSound]);
+    };
     
     const handleOpenEditModal = (item: WorkItem) => {
       setSelectedItem(item);
       setIsModalOpen(true);
-    };
-
-    const handleCopyMessage = (item: WorkItem) => {
-      const message = generateClientMessage(item, appState.workPackageTemplates);
-      navigator.clipboard.writeText(message);
-      toast({ title: "¡Copiado!", description: "Mensaje para cliente copiado al portapapeles." });
-      playSound('genericClick');
     };
 
     useEffect(() => {
@@ -524,10 +514,37 @@ const WorkTab = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onSelect={() => handleCopyMessage(item)}>
-                    <MessageSquare className="mr-2 h-4 w-4" />
-                    <span>Copiar Mensaje Cliente</span>
-                  </DropdownMenuItem>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                        <MessageSquare className="mr-2 h-4 w-4" />
+                        <span>Mensaje Cliente</span>
+                      </DropdownMenuItem>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent className="max-w-3xl">
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Mensaje Personalizado para {item.clientName}</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Revisa el mensaje generado. Puedes copiarlo al portapapeles.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <div className="max-h-[60vh] overflow-y-auto p-4 bg-muted rounded-md border">
+                        <pre className="text-xs whitespace-pre-wrap font-mono">
+                          {generateClientMessage(item, appState.workPackageTemplates)}
+                        </pre>
+                      </div>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cerrar</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => {
+                          navigator.clipboard.writeText(generateClientMessage(item, appState.workPackageTemplates));
+                          toast({ title: "¡Copiado!", description: "Mensaje para cliente copiado al portapapeles." });
+                          playSound('genericClick');
+                        }}>
+                          Copiar Mensaje
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                   <DropdownMenuItem onSelect={() => handleGeneratePdf(item)}>
                     <FileDown className="mr-2 h-4 w-4" />
                     <span>Descargar Contrato PDF</span>
@@ -589,7 +606,7 @@ const WorkTab = () => {
                 <span className="font-semibold text-orange-500">{parts[0]}</span>
                 {parts[1] && (
                   <>
-                    <span className="text-muted-foreground"> / </span>
+                    <span className="text-muted-foreground"> / </span> 
                     <span className="font-semibold text-sky-700">{parts[1]}</span>
                   </>
                 )}
@@ -755,7 +772,7 @@ const WorkTab = () => {
             );
           },
         }
-    ], [appState.workPackageTemplates, appState.contributions, handleDateUpdate, handleStatusUpdate, handlePackageUpdate, handleRevisionsUpdate, playSound, handleDeleteWorkItem, handleGeneratePdf, handleCopyMessage, toast]);
+    ], [appState.workPackageTemplates, appState.contributions, handleDateUpdate, handleStatusUpdate, handlePackageUpdate, handleRevisionsUpdate, playSound, handleDeleteWorkItem, handleGeneratePdf, handleOpenEditModal, toast]);
 
     const table = useReactTable({
         data: sortedWorkItems,
