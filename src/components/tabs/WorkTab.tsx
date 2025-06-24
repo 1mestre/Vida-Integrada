@@ -112,7 +112,7 @@ const generateClientMessage = (item: WorkItem): string => {
     const isMultiple = item.remakeType.includes('Multiple');
     let message = `Heyyy ${item.clientName}! 👋👋\n\n`;
 
-    // Saludo
+    // Parte 1: Saludo y Tono (basado en el paquete)
     if (item.packageName === 'Masterpiece') {
         message += isMultiple ? `Yoooo, your ${item.genre} masterpiece remaked beats are officially done and they're straight fire fr!! 🔥🔥✨ Hahaha, we went CRAZY on these!!\n\n` : `Yooo, your ${item.genre} masterpiece is officially done and it's straighttt fire fr!! 🔥✨\n\n`;
     } else if (item.packageName === 'Exclusive') {
@@ -121,27 +121,23 @@ const generateClientMessage = (item: WorkItem): string => {
         message += isMultiple ? `So hereee are those ${item.genre} demos you wanted!! 🎉 Just some quick vibes, nothing too wild yet hehe 😎🎧\n\n` : `So here's that ${item.genre} demo you wanted!! Just a quick vibe check, nothing too wild yet 😎🎧\n\n`;
     }
     
-    // Detalles del Remake
-    if (item.remakeType === 'Single Remake') {
-        if (item.packageName === 'Masterpiece') message += "🎛️🎛️ This remake got the FULL treatment - custom-built and clean as hell!! Readyyy for the big leagues!! 🏆🏆\n\n";
-        else if (item.packageName === 'Exclusive') message += "🎛️ The remake is LOCKED and loaded!! 🔫 Custom-made just for you, readyyy for your vocals!! 🎤✨\n\n";
-        else message += "🎛️ This is just the demo version of the remake - think of it as the rough draft with MADDD potential!! 🎨\n\n";
-    } else if (isMultiple) {
-        if (item.packageName === 'Masterpiece') message += "🎛️🎛️ These remakes are CLEANNN as hell and ready to make some NOISEEE!! Each one hits different!! 🚀🚀\n\n";
-        else if (item.packageName === 'Exclusive') message += "🎛️ All these remakes are LOCKED IN!! 🔒 Multiple vibes, same CRAZY energy!! 💪💪 Hahaha let's gooo!\n\n";
-        else message += "🎛️ These are just demo ideas for the remakes - the foundation's there, just needs the FULLLL glow-up!! 🏗️🏗️\n\n";
+    // Parte 2: Entregables (100% dinámico basado en los toggles/checkboxes)
+    const deliverables: string[] = [];
+    if (item.masterAudio) deliverables.push("- Full WAV: Mixed, mastered, and READYYY to upload!! 🎯");
+    if (item.separateFiles) deliverables.push("- Full WAV + STEMS: The WHOLE package, no bs!! 💎");
+    if (item.projectFileDelivery) deliverables.push("- FLP Project File: Full creative control in your hands!! 🎚️🎚️");
+    if (item.exclusiveLicense) deliverables.push("- Exclusive Rights Contract: 100% ownership, no sharing needed!! 📋");
+    if (item.vocalProduction) deliverables.push("- Vocal Production Add-on: Pro-level vocal mixing & tuning to make your voice SHINE!! ✨🎙️");
+    
+    // Solo añade la sección si hay al menos un entregable
+    if (deliverables.length > 0) {
+        message += "📎📎 WHAT YOU're GETTING:\n" + deliverables.join('\n') + '\n\n';
     }
 
-    // Entregables
-    message += "📎📎 WHAT YOU'RE GETTING:\n";
-    if (item.packageName === 'Masterpiece') {
-        message += `- Full WAV + STEMS: The WHOLE package, no bs!! 💎\n- FLP Project File: Full creative control in your hands!! 🎚️🎚️\n- Exclusive Rights Contract: It's 100000% yours, period!! 📜\n- EXCLUSIVE GIFT: Custom vocal chain preset made for ${isMultiple ? `these ${item.genre} vibes` : `this ${item.genre} vibe`} 🎙️🎙️\n(Appreciate you being chill to work with, let's keep the collabs going!!) 🤝🤝\n\n`;
-    } else if (item.packageName === 'Exclusive') {
-        message += `- Full WAV: Mixed, mastered, and READYYY to upload!! 🎯\n- Exclusive Rights Contract: 100% ownership, no sharing needed!! 📋\n- EXCLUSIVE GIFT: Custom vocal chain preset made for ${isMultiple ? `these ${item.genre} styles` : `this ${item.genre} style`} 🎤✨\n(Appreciate you being chill to work with, let's keep the collabs going!!) 🤝\n\n`;
-    } else { // Amateurs
-        message += `- 60-sec MP3 demo: Just the vibe, raw and UNFILTEREDDD!! 🎵\n- Heads up: No exclusive rights or pro mixing included (this is just a taste!!) 👀👀\n\n🤔 BUT WAIT - If you're feeling this demo and want the full experience, just pay the difference:\n• Amateur ($10) → Pro ($15): +$5\n• Amateur ($10) → Exclusive ($30): +$20\n• Pro ($15) → Exclusive ($30): +$15\n\nAnd get:\n• The polished, final version(s) 🔥🔥\n• Exclusive license (100% yours) 📜\n• Professional mixing/mastering 🎛️🎛️\n• Full remake treatment 💯💯\n\nJust holla at me if you wanna upgrade! 🚀🚀\n\n`;
+    if (item.vocalChainPreset) {
+        message += `🎁 EXCLUSIVE GIFT: Custom vocal chain preset made for this vibe! 🎤✨\n(Appreciate you being chill to work with, let's keep the collabs going!!) 🤝\n\n`;
     }
-
+    
     // Secciones Finales
     message += `${isMultiple ? 'Keys' : 'Key'}: ${item.key} | ${isMultiple ? 'BPMs' : 'BPM'}: ${item.bpm}\n\n`;
     message += `📦📦 Order #${item.orderNumber}\n\n`;
@@ -153,7 +149,7 @@ const generateClientMessage = (item: WorkItem): string => {
     } else { // Amateurs
         message += "✅ Let me know what you think of the direction!! If you're vibing with it, we can ALWAYSSS take it to the next level!! 🎯🎯\n\n(No revisions on demos, but that's what upgrades are for!! 😉💡💡)";
     }
-
+    
     return message;
 };
 
@@ -852,5 +848,3 @@ const WorkTab = () => {
 };
 
 export default WorkTab;
-
-    

@@ -198,12 +198,23 @@
 }
 /* --- FIN: Código para Brillo Estático y Suave --- */
 
-/* --- INICIO: Estilo final para el día de hoy en el calendario --- */
+/* --- INICIO: Diseño final y corregido para el día de hoy en el calendario --- */
 .fc .fc-day-today {
   background-color: transparent !important;
-  border: 1.5px solid #1E3A8A !important; /* Borde azul oscuro */
-  border-radius: 0.5rem !important; 
+  border: none !important;
+  position: relative; /* Necesario para posicionar el pseudo-elemento */
 }
+
+/* Usamos ::after para dibujar un borde que no se colapsa */
+.fc .fc-day-today::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  border: 1.5px solid #1E40AF; /* Azul oscuro */
+  border-radius: 0.5rem;
+  pointer-events: none; /* Permite hacer clic a través de él */
+}
+
 .fc .fc-day-today .fc-daygrid-day-number {
   background-color: hsl(var(--card-foreground)) !important;
   color: hsl(var(--background)) !important;
@@ -218,6 +229,4 @@
   top: 4px;
   left: 4px;
 }
-/* --- FIN: Estilo personalizado --- */
-
-    
+/* --- FIN: Diseño final y corregido --- */

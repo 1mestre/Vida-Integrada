@@ -33,7 +33,7 @@ const IncomeDisplay = ({ monthlyTotals, accumulatedTotals, progress }: {
                 <CardContent>
                     <div className="flex justify-center items-center gap-6 text-center">
                         <div className="flex flex-col items-center">
-                            <p className="text-3xl font-bold tracking-tighter text-orange-600">
+                            <p className="text-3xl font-bold tracking-tighter text-yellow-600" style={{ textShadow: '-1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff' }}>
                                 ${monthlyTotals.cop.toLocaleString('es-CO')}
                             </p>
                             <p className="text-xs font-medium text-muted-foreground">
@@ -43,7 +43,7 @@ const IncomeDisplay = ({ monthlyTotals, accumulatedTotals, progress }: {
                         <div className="h-10 w-px bg-border"></div>
                         <div className="flex flex-col items-center">
                             <p className="text-3xl font-bold tracking-tighter text-green-700">
-                                ${monthlyTotals.usd.toFixed(2)}
+                                $ {monthlyTotals.usd.toFixed(2)}
                             </p>
                             <p className="text-xs font-medium text-muted-foreground">
                                 USD
@@ -268,5 +268,3 @@ const IncomeTab = () => {
 };
 
 export default IncomeTab;
-
-    
