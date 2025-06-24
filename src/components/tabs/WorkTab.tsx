@@ -77,38 +77,45 @@ const generateClientMessage = (item: WorkItem, packageTemplates: WorkPackageTemp
         message += `🎁 EXCLUSIVE GIFT: Custom vocal chain preset made for ${isMultiple ? `these ${item.genre} vibes` : `this ${item.genre} vibe`} 🎙️🎙️\n(Appreciate you being chill to work with, let's keep the collabs going!!) 🤝🤝\n\n`;
     }
     
-    // === Bloque 3: Oferta de "Upsell" (Totalmente Dinámica) ===
-    const currentPackage = packageTemplates.find(p => p.name === item.packageName);
-    const potentialUpgrades = packageTemplates
-        .filter(p => p.price > (currentPackage?.price || 0))
-        .sort((a, b) => a.price - b.price);
+    // === Bloque 3: Oferta de "Upsell" (Inteligente y Diferencial) ===
+    // 1. Ordenar plantillas por precio para identificar roles
+    const sortedPkgs = [...packageTemplates].sort((a, b) => a.price - b.price);
+    const cheapestPkg = sortedPkgs[0];
+    const middlePkg = sortedPkgs[1];
+    const highestPkg = sortedPkgs[2];
 
-    if (currentPackage && !item.exclusiveLicense && potentialUpgrades.length > 0) {
-        let upsellText = "🤔 BUT WAIT - If you're feeling this demo and want the full experience, just pay the difference:\n";
+    const currentPackage = sortedPkgs.find(p => p.name === item.packageName);
+
+    // 2. Lógica de Upsell
+    if (currentPackage && highestPkg && currentPackage.name !== highestPkg.name) {
+        message += "🤔 BUT WAIT - If you're feeling this and want the full experience, just pay the difference:\n";
         
-        potentialUpgrades.forEach(upgradePkg => {
-            const diff = upgradePkg.price - currentPackage.price;
-            if (diff > 0) {
-                upsellText += `• ${currentPackage.name} ($${currentPackage.price}) → ${upgradePkg.name} ($${upgradePkg.price}): +$${diff}\n`;
+        // CASO A: El paquete actual es el más barato
+        if (cheapestPkg && item.packageName === cheapestPkg.name) {
+            if (middlePkg) {
+                const diff = middlePkg.price - cheapestPkg.price;
+                if (diff > 0) message += `• ${cheapestPkg.name} ($${cheapestPkg.price}) → ${middlePkg.name} ($${middlePkg.price}): +$${diff}\n`;
             }
-        });
+            const diffToMasterpiece = highestPkg.price - cheapestPkg.price;
+            if (diffToMasterpiece > 0) message += `• ${cheapestPkg.name} ($${cheapestPkg.price}) → ${highestPkg.name} ($${highestPkg.price}): +$${diffToMasterpiece}\n`;
+        }
 
-        // Ensure we offer upgrades from intermediate packages too
-        const exclusivePkg = potentialUpgrades.find(p => p.name.toLowerCase().includes('exclusive'));
-        if(exclusivePkg) {
-            const upgradesFromExclusive = packageTemplates
-                .filter(p => p.price > exclusivePkg.price)
-                .sort((a,b) => a.price - b.price);
+        // CASO B: El paquete actual es el intermedio
+        if (middlePkg && item.packageName === middlePkg.name) {
+             const diff = highestPkg.price - middlePkg.price;
+             if (diff > 0) message += `• ${middlePkg.name} ($${middlePkg.price}) → ${highestPkg.name} ($${highestPkg.price}): +$${diff}\n`;
+        }
 
-            upgradesFromExclusive.forEach(upgradePkg => {
-                 const diff = upgradePkg.price - exclusivePkg.price;
-                 if (diff > 0 && !upsellText.includes(`→ ${upgradePkg.name}`)) {
-                     upsellText += `• ${exclusivePkg.name} ($${exclusivePkg.price}) → ${upgradePkg.name} ($${upgradePkg.price}): +$${diff}\n`;
-                 }
-            });
+        // Construcción dinámica de los beneficios extra del paquete más alto vs el intermedio
+        const differentialFeatures: string[] = [];
+        if (highestPkg && middlePkg) {
+             if (highestPkg.projectFileDelivery && !middlePkg.projectFileDelivery) differentialFeatures.push("• FLP Project File 🎚️🎚️");
+             if (highestPkg.separateFiles && !middlePkg.separateFiles) differentialFeatures.push("• Full STEMS 💎");
+             if (highestPkg.vocalProduction && !middlePkg.vocalProduction) differentialFeatures.push("• Vocal Production ✨🎙️");
+             // Añade aquí más comparaciones si tienes más toggles
         }
         
-        message += upsellText + "\nAnd get:\n• The polished, final version(s) 🔥🔥\n• Exclusive license (100% yours) 📜\n• Professional mixing/mastering 🎛️🎚️\n• Full remake treatment 💯💯\n\nJust holla at me if you wanna upgrade! 🚀🚀\n\n";
+        message += "\nAnd get:\n" + (differentialFeatures.length > 0 ? differentialFeatures.join('\n') : "• The full masterpiece treatment! 🏆") + "\n\nJust holla at me if you wanna upgrade! 🚀🚀\n\n";
     }
 
     // === Bloque 4: Secciones Finales (sin cambios) ===
