@@ -31,10 +31,16 @@ const IncomeDisplay = ({ monthlyTotals, accumulatedTotals, progress }: {
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="flex justify-center items-baseline text-2xl font-bold tracking-tighter">
-                        <span className="text-yellow-500">${monthlyTotals.cop.toLocaleString('es-CO')}</span>
-                        <span className="text-muted-foreground mx-3">/</span>
-                        <span className="text-green-500">$ {monthlyTotals.usd.toFixed(2)}</span>
+                    <div className="flex justify-center items-baseline gap-4">
+                        <div className="text-center">
+                            <p className="text-2xl font-bold tracking-tighter text-yellow-500">${monthlyTotals.cop.toLocaleString('es-CO')}</p>
+                            <p className="text-xs font-medium text-muted-foreground">(COP)</p>
+                        </div>
+                        <div className="text-2xl font-bold text-muted-foreground">/</div>
+                        <div className="text-center">
+                            <p className="text-2xl font-bold tracking-tighter text-green-500">$ {monthlyTotals.usd.toFixed(2)}</p>
+                            <p className="text-xs font-medium text-muted-foreground">(USD)</p>
+                        </div>
                     </div>
                 </CardContent>
             </Card>
