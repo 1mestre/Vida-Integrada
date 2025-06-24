@@ -56,12 +56,12 @@ const generateClientMessage = (item: WorkItem, packageTemplates: WorkPackageTemp
     } else if (item.packageName === 'Exclusive') {
         message += isMultiple ? `Your ${item.genre} remaked beats are readyyy to drop!! 💣💣 No cap, these ones hit DIFFERENT!! 💯🎵\n\n` : `Your ${item.genre} beat is readyyy to drop!! No cap, this one hits different 💯🎵\n\n`;
         message += isMultiple ? "🎛️ All these remakes are LOCKED IN!! 🔒 Multiple vibes, same CRAZY energy!! 💪💪 Hahaha let's gooo!\n\n" : "🎛️ The remake is LOCKED and loaded!! 🔫 Custom-made just for you, readyyy for your vocals!! 🎤✨\n\n";
-    } else { // Amateurs or any other
+    } else { // Amateurs
         message += isMultiple ? `So hereee are those ${item.genre} demos you wanted!! 🎉 Just some quick vibes, nothing too wild yet hehe 😎🎧\n\n` : `So here's that ${item.genre} demo you wanted!! Just a quick vibe check, nothing too wild yet 😎🎧\n\n`;
         message += isMultiple ? "🎛️ These are just demo ideas for the remakes - the foundation's there, just needs the FULLLL glow-up!! 🏗️🏗️\n\n" : "🎛️ This is just the demo version of the remake - think of it as the rough draft with MADDD potential!! 🎨\n\n";
     }
 
-    // === Bloque 2: Entregables (100% dinámico basado en los toggles/checkboxes) ===
+    // === Bloque 2: Entregables (100% dinámico - Lo que el cliente YA TIENE) ===
     const deliverables: string[] = [];
     if (item.masterAudio) deliverables.push("- Full WAV: Mixed, mastered, and READYYY to upload!! 🎯");
     if (item.separateFiles) deliverables.push("- Full WAV + STEMS: The WHOLE package, no bs!! 💎");
@@ -72,52 +72,46 @@ const generateClientMessage = (item: WorkItem, packageTemplates: WorkPackageTemp
     if (deliverables.length > 0) {
         message += "📎📎 WHAT YOU'RE GETTING:\n" + deliverables.join('\n') + '\n\n';
     }
-
     if (item.vocalChainPreset) {
         message += `🎁 EXCLUSIVE GIFT: Custom vocal chain preset made for ${isMultiple ? `these ${item.genre} vibes` : `this ${item.genre} vibe`} 🎙️🎙️\n(Appreciate you being chill to work with, let's keep the collabs going!!) 🤝🤝\n\n`;
     }
-    
-    // === Bloque 3: Oferta de "Upsell" (Inteligente y Diferencial) ===
-    // 1. Ordenar plantillas por precio para identificar roles
+
+    // === Bloque 3: Oferta de "Upsell" (Inteligente, Diferencial y a Prueba de Fallos) ===
     const sortedPkgs = [...packageTemplates].sort((a, b) => a.price - b.price);
-    const cheapestPkg = sortedPkgs[0];
-    const middlePkg = sortedPkgs[1];
-    const highestPkg = sortedPkgs[2];
+    const currentPackageTemplate = sortedPkgs.find(p => p.name === item.packageName);
+    const highestPackageTemplate = sortedPkgs[sortedPkgs.length - 1];
 
-    const currentPackage = sortedPkgs.find(p => p.name === item.packageName);
+    // Solo mostrar la oferta si el cliente NO tiene el paquete más alto
+    if (currentPackageTemplate && highestPackageTemplate && currentPackageTemplate.id !== highestPackageTemplate.id) {
+        // Identificar cuál es el siguiente nivel de paquete
+        const currentIndex = sortedPkgs.findIndex(p => p.id === currentPackageTemplate.id);
+        const nextPackageTemplate = sortedPkgs[currentIndex + 1];
 
-    // 2. Lógica de Upsell
-    if (currentPackage && highestPkg && currentPackage.name !== highestPkg.name) {
-        message += "🤔 BUT WAIT - If you're feeling this and want the full experience, just pay the difference:\n";
-        
-        // CASO A: El paquete actual es el más barato
-        if (cheapestPkg && item.packageName === cheapestPkg.name) {
-            if (middlePkg) {
-                const diff = middlePkg.price - cheapestPkg.price;
-                if (diff > 0) message += `• ${cheapestPkg.name} ($${cheapestPkg.price}) → ${middlePkg.name} ($${middlePkg.price}): +$${diff}\n`;
+        if (nextPackageTemplate) {
+            let upsellText = `🤔 BUT WAIT - If you're feeling this and want the full experience, just pay the difference:\n`;
+            const priceDiff = nextPackageTemplate.price - currentPackageTemplate.price;
+
+            if (priceDiff > 0) {
+                upsellText += `• ${currentPackageTemplate.name} ($${currentPackageTemplate.price}) → ${nextPackageTemplate.name} ($${nextPackageTemplate.price}): +$${priceDiff}\n\n`;
             }
-            const diffToMasterpiece = highestPkg.price - cheapestPkg.price;
-            if (diffToMasterpiece > 0) message += `• ${cheapestPkg.name} ($${cheapestPkg.price}) → ${highestPkg.name} ($${highestPkg.price}): +$${diffToMasterpiece}\n`;
-        }
 
-        // CASO B: El paquete actual es el intermedio
-        if (middlePkg && item.packageName === middlePkg.name) {
-             const diff = highestPkg.price - middlePkg.price;
-             if (diff > 0) message += `• ${middlePkg.name} ($${middlePkg.price}) → ${highestPkg.name} ($${highestPkg.price}): +$${diff}\n`;
-        }
+            // Calcular los beneficios diferenciales
+            const differentialFeatures: string[] = [];
+            if (nextPackageTemplate.masterAudio && !item.masterAudio) differentialFeatures.push("• Professional mixing/mastering 🎛️🎚️");
+            if (nextPackageTemplate.separateFiles && !item.separateFiles) differentialFeatures.push("• Full STEMS 💎");
+            if (nextPackageTemplate.projectFileDelivery && !item.projectFileDelivery) differentialFeatures.push("• FLP Project File 🎚️🎚️");
+            if (nextPackageTemplate.exclusiveLicense && !item.exclusiveLicense) differentialFeatures.push("• Exclusive license (100% yours) 📜");
+            if (nextPackageTemplate.vocalProduction && !item.vocalProduction) differentialFeatures.push("• Vocal Production ✨🎙️");
+            
+            // Solo mostrar la sección "And get:" si hay beneficios reales que ofrecer
+            if (differentialFeatures.length > 0) {
+                upsellText += "And get:\n" + differentialFeatures.join('\n') + "\n\n";
+            }
 
-        // Construcción dinámica de los beneficios extra del paquete más alto vs el intermedio
-        const differentialFeatures: string[] = [];
-        if (highestPkg && middlePkg) {
-             if (highestPkg.projectFileDelivery && !middlePkg.projectFileDelivery) differentialFeatures.push("• FLP Project File 🎚️🎚️");
-             if (highestPkg.separateFiles && !middlePkg.separateFiles) differentialFeatures.push("• Full STEMS 💎");
-             if (highestPkg.vocalProduction && !middlePkg.vocalProduction) differentialFeatures.push("• Vocal Production ✨🎙️");
-             // Añade aquí más comparaciones si tienes más toggles
+            message += upsellText + "Just holla at me if you wanna upgrade! 🚀🚀\n\n";
         }
-        
-        message += "\nAnd get:\n" + (differentialFeatures.length > 0 ? differentialFeatures.join('\n') : "• The full masterpiece treatment! 🏆") + "\n\nJust holla at me if you wanna upgrade! 🚀🚀\n\n";
     }
-
+    
     // === Bloque 4: Secciones Finales (sin cambios) ===
     message += `${isMultiple ? 'Keys' : 'Key'}: ${item.key} | ${isMultiple ? 'BPMs' : 'BPM'}: ${item.bpm}\n\n`;
     message += `📦📦 Order #${item.orderNumber}\n\n`;
@@ -345,11 +339,11 @@ const WorkTab = () => {
             if (numericAmount <= fee) return;
             const netUSD = (numericAmount - fee) * (1 - percentageFee);
             const netCOP = netUSD * exchangeRate;
-            newContribution = { id: new Date().toISOString(), date: new Date().toISOString(), netUSD, rate: exchangeRate, netCOP };
+            newContribution = { id: new Date().toISOString(), date: new Date().toISOString(), netUSDValue: netUSD, netCOPValue: netCOP };
         } else {
             const netCOP = numericAmount;
             const netUSD = netCOP / exchangeRate;
-            newContribution = { id: new Date().toISOString(), date: new Date().toISOString(), netUSD, rate: exchangeRate, netCOP };
+            newContribution = { id: new Date().toISOString(), date: new Date().toISOString(), netUSDValue: netUSD, netCOPValue: netCOP };
         }
         
         setAppState({ contributions: [newContribution, ...appState.contributions] });
@@ -439,11 +433,13 @@ const WorkTab = () => {
     }, [appState.workPackageTemplates, setAppState]);
 
     const financialSummary = useMemo(() => {
-        const totalNetCOP = appState.contributions.reduce((sum, c) => sum + c.netCOP, 0);
-        const totalNetUSD = appState.contributions.reduce((sum, c) => sum + c.netUSD, 0);
         const incomeThisMonth = appState.contributions
           .filter(c => c.date.startsWith(currentMonthKey))
-          .reduce((sum, c) => sum + c.netCOP, 0);
+          .reduce((sum, c) => sum + c.netCOPValue, 0);
+        
+        const totalNetCOP = appState.contributions.reduce((sum, c) => sum + c.netCOPValue, 0);
+        const totalNetUSD = appState.contributions.reduce((sum, c) => sum + c.netUSDValue, 0);
+        
         const progress = currentMonthTarget > 0 ? (incomeThisMonth / currentMonthTarget) * 100 : 0;
         
         return { totalNetCOP, totalNetUSD, incomeThisMonth, progress };
@@ -781,9 +777,9 @@ const WorkTab = () => {
                                     {appState.contributions.map(c => (
                                         <li key={c.id} className="flex items-center justify-between text-sm border-b border-border/50 pb-2">
                                             <div>
-                                                <div className="font-medium text-ios-green">{formatCOP(c.netCOP)}</div>
+                                                <div className="font-medium text-ios-green">{formatCOP(c.netCOPValue)}</div>
                                                 <div className="text-xs text-muted-foreground">
-                                                    {format(new Date(c.date), 'dd MMM yyyy', { locale: es })} - {formatUSD(c.netUSD)}
+                                                    {format(new Date(c.date), 'dd MMM yyyy', { locale: es })} - {formatUSD(c.netUSDValue)}
                                                 </div>
                                             </div>
                                             <Button 
@@ -808,7 +804,7 @@ const WorkTab = () => {
                                     {Object.entries(appState.monthlyTargets).reverse().map(([key, target]) => {
                                         const monthIncome = appState.contributions
                                             .filter(c => c.date.startsWith(key))
-                                            .reduce((sum, c) => sum + c.netCOP, 0);
+                                            .reduce((sum, c) => sum + c.netCOPValue, 0);
                                         const achieved = monthIncome >= target;
                                         return (
                                             <li key={key} className="text-sm border-b border-border/50 pb-2">
@@ -897,3 +893,5 @@ const WorkTab = () => {
 };
 
 export default WorkTab;
+
+    
