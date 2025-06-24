@@ -76,9 +76,9 @@ const generateClientMessage = (item: WorkItem): string => {
         message += `🎁 EXCLUSIVE GIFT: Custom vocal chain preset made for ${isMultiple ? `these ${item.genre} vibes` : `this ${item.genre} vibe`} 🎙️🎙️\n(Appreciate you being chill to work with, let's keep the collabs going!!) 🤝🤝\n\n`;
     }
 
-    // === Bloque 3: Oferta de "Upsell" (Inteligente: solo para Amateurs sin licencia) ===
+    // === Bloque 3: Oferta de "Upsell" (Inteligente: solo para Amateurs sin licencia exclusiva) ===
     if (item.packageName === 'Amateurs' && !item.exclusiveLicense) {
-        message += "🤔 BUT WAIT - If you're feeling this demo and want the full experience, just pay the difference:\n• Amateur ($10) → Pro ($15): +$5\n• Amateur ($10) → Exclusive ($30): +$20\n• Pro ($15) → Exclusive ($30): +$15\n\nAnd get:\n• The polished, final version(s) 🔥🔥\n• Exclusive license (100% yours) 📜\n• Professional mixing/mastering 🎛️🎛️\n• Full remake treatment 💯💯\n\nJust holla at me if you wanna upgrade! 🚀🚀\n\n";
+        message += "🤔 BUT WAIT - If you're feeling this demo and want the full experience, just pay the difference:\n• Amateur ($10) → Pro ($15): +$5\n• Amateur ($10) → Exclusive ($30): +$20\n• Pro ($15) → Exclusive ($30): +$15\n\nAnd get:\n• The polished, final version(s) 🔥🔥\n• Exclusive license (100% yours) 📜\n• Professional mixing/mastering 🎛️🎚️\n• Full remake treatment 💯💯\n\nJust holla at me if you wanna upgrade! 🚀🚀\n\n";
     }
 
     // === Bloque 4: Secciones Finales ===
@@ -88,7 +88,7 @@ const generateClientMessage = (item: WorkItem): string => {
     if (item.packageName === 'Masterpiece') {
         message += `✅✅ This is built for the BIGGG stages - Spotify, radio, wherever you wanna take it!! 🌟🌟\n${item.revisionsRemaining} revisions remaining 🔧🔧\n\n🎁 PRO TIP: Drop a 5-star review and I'll hook you UPPP with $10 off your next order!! Helps me out FOR REALLL 🙏🙏\n\nNow go make some MAGIC happen!! ✨🎤`;
     } else if (item.packageName === 'Exclusive') {
-        message += `✅ ${item.revisionsRemaining} revisions remaining 🔧\n${isMultiple ? "Time to make these BEATS slap!! 💥💥" : "Time to make some WAVES!! 🌊🌊"}\n\n🎁 PRO TIP: Leave me a 5-star review and I'll give you $10 off your next order!! WIN-WIN SITUATION 😉💰💰\n\nLet's get this music out there!!! 🚀🚀`;
+        message += `✅ ${item.revisionsRemaining} revisions remaining 🔧\n${isMultiple ? "Time to make these BEATS slap!! 💥💥\n\n🎁 PRO TIP: Leave me a 5-star review and I'll give you $10 off your next order!! WIN-WIN SITUATION 😉💰💰\n\nLet's get this music out there!!! 🚀🚀" : "Time to make some WAVES!! 🌊🌊\n\n🎁 PRO TIP: Leave me a 5-star review and I'll give you $10 off your next beat!! WIN-WIN SITUATION 😉💰💰\n\nLet's get this music out there!!! 🚀🚀"}`;
     } else { // Amateurs
         message += "✅ Let me know what you think of the direction!! If you're vibing with it, we can ALWAYSSS take it to the next level!! 🎯🎯\n\n(No revisions on demos, but that's what upgrades are for!! 😉💡💡)";
     }
@@ -428,29 +428,29 @@ const WorkTab = () => {
             header: () => <div className="text-center">Cliente</div>,
             cell: ({ row }) => <div className="text-center">{row.getValue('clientName')}</div>
         },
-        { 
-            accessorKey: 'deliveryDate', 
+        {
+            accessorKey: 'deliveryDate',
             header: () => <div className="text-center">Entrega</div>,
             cell: ({ row }) => {
-                const date = new Date(row.original.deliveryDate + 'T00:00:00');
-                const today = new Date();
-                const daysDiff = differenceInCalendarDays(date, today);
-            
-                let colorClass = 'text-muted-foreground';
-                if (daysDiff <= 1) {
-                  colorClass = 'text-red-500 font-bold';
-                } else if (daysDiff <= 3) {
-                  colorClass = 'text-yellow-500 font-semibold';
-                } else if (daysDiff >= 4) {
-                  colorClass = 'text-green-600';
-                }
-            
-                return (
-                  <div className={cn('text-center font-medium', colorClass)}>
-                    {format(date, "d 'de' MMMM, yyyy", { locale: es })}
-                  </div>
-                );
-            }
+              const date = new Date(row.original.deliveryDate + 'T00:00:00');
+              const today = new Date();
+              const daysDiff = differenceInCalendarDays(date, today);
+          
+              let colorClass = 'text-muted-foreground';
+              if (daysDiff <= 1) {
+                colorClass = 'text-red-500 font-bold';
+              } else if (daysDiff <= 3) {
+                colorClass = 'text-yellow-500 font-semibold';
+              } else if (daysDiff >= 4) {
+                colorClass = 'text-green-600';
+              }
+          
+              return (
+                <div className={cn('text-center font-medium', colorClass)}>
+                  {format(date, "d 'de' MMMM, yyyy", { locale: es })}
+                </div>
+              );
+            },
         },
         {
           accessorKey: 'key',
@@ -648,7 +648,7 @@ const WorkTab = () => {
                                 {table.getHeaderGroups().map((headerGroup) => (
                                     <TableRow key={headerGroup.id}>
                                         {headerGroup.headers.map((header) => (
-                                            <TableHead key={header.id}>
+                                            <TableHead key={header.id} className="text-center">
                                                 {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                                             </TableHead>
                                         ))}
@@ -793,7 +793,7 @@ const WorkTab = () => {
               <div className="space-y-6">
                  <Card className="w-full max-w-md glassmorphism-card">
                     <CardHeader>
-                        <CardTitle className="text-center text-sm font-medium text-muted-foreground">
+                        <CardTitle className="text-center">
                             Ingresos Este Mes
                         </CardTitle>
                     </CardHeader>
@@ -801,12 +801,12 @@ const WorkTab = () => {
                         <div className="flex justify-center items-baseline gap-4">
                             <div className="text-center">
                                 <p className="text-2xl font-bold tracking-tighter text-yellow-500">{formatCOP(financialSummary.incomeThisMonth)}</p>
-                                <p className="text-xs font-medium text-muted-foreground">(COP)</p>
+                                <p className="text-xs font-medium text-yellow-500">(COP)</p>
                             </div>
                             <div className="text-2xl font-bold text-muted-foreground">/</div>
                             <div className="text-center">
                                 <p className="text-2xl font-bold tracking-tighter text-green-500">{formatUSD(financialSummary.incomeThisMonth / (exchangeRate || 4000))}</p>
-                                <p className="text-xs font-medium text-muted-foreground">(USD)</p>
+                                <p className="text-xs font-medium text-green-500">(USD)</p>
                             </div>
                         </div>
                     </CardContent>
@@ -860,4 +860,5 @@ const WorkTab = () => {
 
 export default WorkTab;
 
+    
     
