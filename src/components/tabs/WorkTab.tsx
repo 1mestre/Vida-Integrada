@@ -415,7 +415,6 @@ const WorkTab = () => {
           },
         },
         { accessorKey: 'clientName', header: 'Cliente' },
-        { accessorKey: 'orderNumber', header: 'Orden #' },
         { 
             accessorKey: 'deliveryDate', 
             header: 'Entrega',
@@ -427,7 +426,6 @@ const WorkTab = () => {
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button variant="ghost" className="w-full justify-start text-left font-normal">
-                        <CalendarIcon className="mr-2 h-4 w-4" />
                         {format(date, "d 'de' MMMM, yyyy", { locale: es })}
                       </Button>
                     </PopoverTrigger>
@@ -448,19 +446,59 @@ const WorkTab = () => {
                 );
             }
         },
-        { accessorKey: 'genre', header: 'Género' },
         {
           accessorKey: 'key',
           header: 'Key',
           cell: ({ row }) => {
-            const keyValue = row.getValue('key') as string;
-            const keyLabel = keyOptions.find(opt => opt.value === keyValue)?.label || keyValue;
-            return <span>{keyLabel}</span>;
+            const keyText = row.getValue('key') as string;
+            const parts = keyText.split(' / ');
+            return (
+              <span>
+                <span className="font-semibold text-orange-500">{parts[0]}</span>
+                {parts[1] && (
+                  <>
+                    <span className="text-muted-foreground"> / </span>
+                    <span className="font-semibold text-sky-700">{parts[1]}</span>
+                  </>
+                )}
+              </span>
+            );
           },
         },
         {
           accessorKey: 'bpm',
           header: 'BPM',
+        },
+        { 
+            accessorKey: 'deliveryStatus', 
+            header: 'Estado',
+            cell: ({ row }) => {
+                const item = row.original;
+                const statusOptions: WorkItem['deliveryStatus'][] = ['Pending', 'In Transit', 'In Revision', 'Delivered', 'Returned'];
+          
+                return (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="p-0 h-auto">
+                        <Badge className={cn("cursor-pointer", statusColorMap[item.deliveryStatus])}>
+                          {item.deliveryStatus}
+                        </Badge>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      {statusOptions.map(status => (
+                        <DropdownMenuItem
+                          key={status}
+                          onSelect={() => handleStatusUpdate(item.id, status)}
+                        >
+                           <span className={cn('h-2 w-2 rounded-full mr-2', statusColorMap[status])} />
+                          <span>{status}</span>
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                );
+            }
         },
         {
             accessorKey: 'revisionsRemaining',
@@ -523,37 +561,8 @@ const WorkTab = () => {
             header: 'Precio',
             cell: ({row}) => formatUSD(row.original.price)
         },
-        { 
-            accessorKey: 'deliveryStatus', 
-            header: 'Estado',
-            cell: ({ row }) => {
-                const item = row.original;
-                const statusOptions: WorkItem['deliveryStatus'][] = ['Pending', 'In Transit', 'In Revision', 'Delivered', 'Returned'];
-          
-                return (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="p-0 h-auto">
-                        <Badge className={cn("cursor-pointer", statusColorMap[item.deliveryStatus])}>
-                          {item.deliveryStatus}
-                        </Badge>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      {statusOptions.map(status => (
-                        <DropdownMenuItem
-                          key={status}
-                          onSelect={() => handleStatusUpdate(item.id, status)}
-                        >
-                           <span className={cn('h-2 w-2 rounded-full mr-2', statusColorMap[status])} />
-                          <span>{status}</span>
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                );
-            }
-        },
+        { accessorKey: 'orderNumber', header: 'Orden #' },
+        { accessorKey: 'genre', header: 'Género' },
         {
             id: 'edit',
             cell: ({ row }) => (
@@ -570,7 +579,7 @@ const WorkTab = () => {
               </div>
             )
         },
-    ], [appState.workItems, appState.workPackageTemplates, handleDateUpdate, handleStatusUpdate, handleKeyUpdate, handlePackageUpdate, keyOptions, handleRevisionsUpdate]);
+    ], [appState.workItems, appState.workPackageTemplates, handleDateUpdate, handleStatusUpdate, handleKeyUpdate, handlePackageUpdate, keyOptions, handleRevisionsUpdate, handleRevisionsUpdate]);
 
     const table = useReactTable({
         data: sortedWorkItems,
@@ -769,9 +778,9 @@ const WorkTab = () => {
                     </CardHeader>
                     <CardContent>
                       <div className="text-center text-4xl font-bold tracking-tighter">
-                        <span className="text-yellow-400">{formatCOP(financialSummary.incomeThisMonth)}</span>
+                        <span className="text-orange-600">{formatCOP(financialSummary.incomeThisMonth)}</span>
                         <span className="text-muted-foreground mx-2">/</span>
-                        <span className="text-green-400">{formatUSD(financialSummary.incomeThisMonth / (exchangeRate || 4000))}</span>
+                        <span className="text-green-700">{formatUSD(financialSummary.incomeThisMonth / (exchangeRate || 4000))}</span>
                       </div>
                     </CardContent>
                   </Card>
@@ -824,3 +833,5 @@ const WorkTab = () => {
 };
 
 export default WorkTab;
+
+    
