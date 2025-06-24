@@ -27,7 +27,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useAppState, WorkItem } from '@/context/AppStateContext';
-import { MessageSquare, Clipboard, TrendingUp, Trash2, Wrench, Link, Music, Settings, PlusCircle, CalendarIcon, Flame } from 'lucide-react';
+import { MessageSquare, Clipboard, TrendingUp, Trash2, Wrench, Link, Music, Settings, PlusCircle, CalendarIcon } from 'lucide-react';
 import WorkItemModal from '@/components/WorkItemModal';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
@@ -322,7 +322,6 @@ const WorkTab = () => {
 
     const handleDateUpdate = (itemId: string, newDate: Date) => {
         const formattedDate = format(newDate, 'yyyy-MM-dd');
-        const reminderDate = format(subDays(newDate, 1), 'yyyy-MM-dd');
   
         setAppState(prevState => {
             const updatedWorkItems = prevState.workItems.map(item =>
@@ -330,7 +329,7 @@ const WorkTab = () => {
             );
     
             const updatedEvents = prevState.calendarEventsData.map(event =>
-                event.workItemId === itemId ? { ...event, start: reminderDate } : event
+                event.workItemId === itemId ? { ...event, start: formattedDate } : event
             );
             
             return { ...prevState, workItems: updatedWorkItems, calendarEventsData: updatedEvents };
@@ -392,7 +391,7 @@ const WorkTab = () => {
             header: 'Entrega',
             cell: ({ row }) => {
                 const item = row.original;
-                const date = new Date(item.deliveryDate);
+                const date = new Date(item.deliveryDate + 'T00:00:00');
           
                 return (
                   <Popover>
@@ -518,25 +517,23 @@ const WorkTab = () => {
     
     return (
         <div className="space-y-8">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex flex-col items-start">
-                <h1 className="text-2xl font-bold tracking-tight">FIVERR📀</h1>
-                <div className="flex items-center gap-2 mt-2">
-                  <a href="https://www.fiverr.com/seller_dashboard" target="_blank" rel="noopener noreferrer" onClick={() => playSound('genericClick')}>
-                    <Button className="bg-green-600 hover:bg-green-700 text-white shadow-sm">
-                      <Link className="mr-2 h-4 w-4" />
-                      Fiverr
-                    </Button>
-                  </a>
-                  <a href="https://tunebat.com/Analyzer" target="_blank" rel="noopener noreferrer" onClick={() => playSound('genericClick')}>
-                    <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm">
-                      <Music className="mr-2 h-4 w-4" />
-                      Tunebat
-                    </Button>
-                  </a>
-                </div>
-              </div>
+            <div className="flex items-center justify-between mb-6">
+              <h1 className="text-4xl font-bold tracking-tight">FIVERR📀</h1>
+
               <div className="flex items-center gap-2">
+                <a href="https://www.fiverr.com/seller_dashboard" target="_blank" rel="noopener noreferrer" onClick={() => playSound('genericClick')}>
+                  <Button className="bg-green-600 hover:bg-green-700 text-white shadow-sm">
+                    <Link className="mr-2 h-4 w-4" />
+                    Fiverr
+                  </Button>
+                </a>
+                <a href="https://tunebat.com/Analyzer" target="_blank" rel="noopener noreferrer" onClick={() => playSound('genericClick')}>
+                  <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm">
+                    <Music className="mr-2 h-4 w-4" />
+                    Tunebat
+                  </Button>
+                </a>
+                
                 <Button variant="outline" onClick={handleOpenPackageSettingsModal}>
                   <Settings className="mr-2 h-4 w-4" />
                   Set Packages
@@ -544,6 +541,7 @@ const WorkTab = () => {
                 <Button onClick={handleOpenNewOrderModal}>
                   Nueva Orden🤑💵
                 </Button>
+                
               </div>
             </div>
 
@@ -759,3 +757,5 @@ const WorkTab = () => {
 };
 
 export default WorkTab;
+
+    
