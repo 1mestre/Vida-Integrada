@@ -19,7 +19,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useAppState, WorkItem, WorkPackageTemplate } from '@/context/AppStateContext';
-import { MessageSquare, Clipboard, TrendingUp, Trash2, Wrench, Link, Music, Settings, PlusCircle, CalendarIcon, PlayCircle, FolderPlus } from 'lucide-react';
+import { MessageSquare, TrendingUp, Trash2, Wrench, Link, Music, Settings, PlusCircle, PlayCircle, FolderPlus, FileText } from 'lucide-react';
 import WorkItemModal from '@/components/WorkItemModal';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
@@ -34,8 +34,11 @@ import PackageSettingsModal from '@/components/PackageSettingsModal';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuGroup } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import html2pdf from 'html2pdf.js';
+import { renderToString } from 'react-dom/server';
+import { AgreementTemplate } from '@/components/pdf/AgreementTemplate';
 
 
 // Pega esta función completa para reemplazar la versión anterior.
@@ -311,6 +314,23 @@ const WorkTab = () => {
           });
     }, []);
 
+    const handleGeneratePdf = (item: WorkItem) => {
+      const formattedDate = format(new Date(), 'MMMM d, yyyy');
+      const element = renderToString(<AgreementTemplate clientName={item.clientName} date={formattedDate} />);
+    
+      const options = {
+        margin: 0,
+        filename: `Rights Of Use - ${item.clientName} - #${item.orderNumber}.pdf`,
+        image: { type: 'jpeg', quality: 1.0 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+    
+      html2pdf().from(element).set(options).save();
+      playSound('genericClick');
+    };
+    
+
     const sortedWorkItems = useMemo(() => {
         return [...appState.workItems].sort((a, b) => new Date(a.deliveryDate).getTime() - new Date(b.deliveryDate).getTime());
     }, [appState.workItems]);
@@ -337,7 +357,6 @@ const WorkTab = () => {
     };
 
     const handleAddIncome = () => {
-      // 1. Validar y convertir el input a un número de forma segura.
       const rawAmount = parseFloat(amount);
       if (isNaN(rawAmount) || rawAmount <= 0) {
         toast({
@@ -345,14 +364,12 @@ const WorkTab = () => {
           title: "Monto Inválido",
           description: "Por favor, introduce un número positivo.",
         });
-        console.error("Monto inválido introducido.");
         return;
       }
       
       setRateLoading(true);
       
-      // 2. Obtener la tasa de cambio actual.
-      let currentRate = 4000; // Tasa de fallback
+      let currentRate = 4000;
       fetch('https://open.er-api.com/v6/latest/USD').then(res => res.json()).then(data => {
         currentRate = data.rates.COP;
       }).catch(error => {
@@ -361,19 +378,16 @@ const WorkTab = () => {
         let netUSD = 0;
         let netCOP = 0;
       
-        // 3. Aplicar la lógica de negocio correcta.
         if (appState.selectedInputCurrencyIngresos === 'USD') {
           const grossAmount = rawAmount;
           netUSD = (grossAmount - 3) * 0.97;
           netCOP = netUSD * currentRate;
-        } else { // Si el input es en COP
+        } else {
           netCOP = rawAmount;
           netUSD = netCOP / currentRate;
         }
       
-        // Asegurarse de que no estamos guardando NaN
         if (isNaN(netUSD) || isNaN(netCOP)) {
-            console.error("Error en el cálculo, resultado es NaN. Revisar fórmula.");
             toast({
               variant: "destructive",
               title: "Error de Cálculo",
@@ -392,12 +406,10 @@ const WorkTab = () => {
           netCOPValue: netCOP,
         };
       
-        // 4. Actualizar el estado de la aplicación.
         setAppState(prevState => ({
           contributions: [newContribution, ...prevState.contributions],
         }));
         
-        // Limpiar el formulario después de guardar.
         setAmount('');
         setRateLoading(false);
       });
@@ -744,6 +756,29 @@ const WorkTab = () => {
                 </div>
               </div>
               <div className="flex items-center gap-4">
+                 <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="outline">
+                        <FileText className="mr-2 h-4 w-4" />
+                        Generar Contrato
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-56">
+                        <DropdownMenuLabel>Selecciona una Orden</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuGroup>
+                        {appState.workItems.length > 0 ? (
+                            appState.workItems.map((item) => (
+                            <DropdownMenuItem key={item.id} onSelect={() => handleGeneratePdf(item)}>
+                                <span>{item.clientName} - #{item.orderNumber}</span>
+                            </DropdownMenuItem>
+                            ))
+                        ) : (
+                            <DropdownMenuItem disabled>No hay órdenes</DropdownMenuItem>
+                        )}
+                        </DropdownMenuGroup>
+                    </DropdownMenuContent>
+                </DropdownMenu>
                  <Button variant="outline" onClick={handleOpenPackageSettingsModal}>
                    <Settings className="mr-2 h-4 w-4" />
                    Set Packages
@@ -953,9 +988,5 @@ const WorkTab = () => {
 };
 
 export default WorkTab;
-
-    
-
-    
 
     
