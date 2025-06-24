@@ -42,29 +42,36 @@ const getContractHtml = (clientName: string, date: string): string => {
 // La función principal de la API
 export async function POST(request: Request) {
   try {
+    const { clientName, orderNumber, date } = await request.json();
     const accessKey = process.env.APIFLASH_ACCESS_KEY;
 
-    // La comprobación que estaba fallando
     if (!accessKey) {
-      throw new Error('ApiFlash access key is not configured. Verified at server.');
+      throw new Error('ApiFlash access key is not configured in Vercel environment variables.');
     }
-
-    const { clientName, orderNumber, date } = await request.json();
-
     if (!clientName || !orderNumber || !date) {
-      return new NextResponse('Client name, order number, and date are required', { status: 400 });
+      return new NextResponse('Client name, order number and date are required', { status: 400 });
     }
 
-    const html = getContractHtml(clientName, date);
+    const html = getContractHtml(clientName, date); // Esta función no cambia
 
-    const apiUrl = new URL('https://api.apiflash.com/v1/htmltopdf');
-    apiUrl.searchParams.append('access_key', accessKey);
-    apiUrl.searchParams.append('html', html);
-    apiUrl.searchParams.append('format', 'A4');
-    apiUrl.searchParams.append('margin', '0');
-    apiUrl.searchParams.append('delay', '3');
+    // --- INICIO DE LA CORRECCIÓN CLAVE ---
+    const apiUrl = 'https://api.apiflash.com/v1/htmltopdf'; // URL base del endpoint
 
-    const apiResponse = await fetch(apiUrl.toString(), { method: 'POST' });
+    const apiResponse = await fetch(apiUrl, {
+      method: 'POST', // Usamos el método POST
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      // Enviamos los datos en el cuerpo de la petición, no en la URL
+      body: JSON.stringify({
+        access_key: accessKey,
+        html: html,
+        format: 'A4',
+        margin: 0,
+        delay: 3, // Damos 3s para que carguen fuentes, texturas, etc.
+      }),
+    });
+    // --- FIN DE LA CORRECCIÓN ---
 
     if (!apiResponse.ok) {
       const errorText = await apiResponse.text();
