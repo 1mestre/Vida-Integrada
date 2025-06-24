@@ -14,6 +14,7 @@ import { PlusCircle, TrendingUp, Trash2 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useSound } from '@/context/SoundContext';
 import { v4 as uuidv4 } from 'uuid';
+import { useToast } from '@/hooks/use-toast';
 
 const formatCOP = (value: number) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(value);
 const formatUSD = (value: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
@@ -66,6 +67,7 @@ const IncomeTab = () => {
   const [rateLoading, setRateLoading] = useState(true);
   const [amount, setAmount] = useState('');
   const { playSound } = useSound();
+  const { toast } = useToast();
   
   const currentMonthKey = format(new Date(), 'yyyy-MM');
   const currentMonthTarget = appState.monthlyTargets[currentMonthKey] || 0;
@@ -85,49 +87,76 @@ const IncomeTab = () => {
   }, []);
 
   const handleAddIncome = async () => {
-    if (!amount) return;
+    // 1. Validar y convertir el input a un número de forma segura.
+    const rawAmount = parseFloat(amount);
+    if (isNaN(rawAmount) || rawAmount <= 0) {
+      toast({
+        variant: "destructive",
+        title: "Monto Inválido",
+        description: "Por favor, introduce un número positivo.",
+      });
+      console.error("Monto inválido introducido.");
+      return;
+    }
+    
     setRateLoading(true);
     
-    // 1. Get the current exchange rate before doing anything else
-    const currentRate = await fetch('https://open.er-api.com/v6/latest/USD')
-        .then(res => res.json())
-        .then(data => data.rates.COP || 4000)
-        .catch(() => 4000);
-    
-    setExchangeRate(currentRate);
-    setRateLoading(false);
-    playSound('pomodoroStart');
-    
+    // 2. Obtener la tasa de cambio actual.
+    let currentRate = 4000; // Tasa de fallback
+    try {
+      const response = await fetch('https://open.er-api.com/v6/latest/USD');
+      if (response.ok) {
+        const data = await response.json();
+        currentRate = data.rates.COP;
+      }
+      setExchangeRate(currentRate);
+    } catch (error) {
+      console.error("No se pudo obtener la tasa de cambio, usando fallback.", error);
+      setExchangeRate(currentRate);
+    }
+  
     let netUSD = 0;
     let netCOP = 0;
-    const numericAmount = parseFloat(amount);
-
+  
+    // 3. Aplicar la lógica de negocio correcta.
     if (appState.selectedInputCurrencyIngresos === 'USD') {
-        const grossAmount = numericAmount;
-        // 2. Apply the formula to get the net USD
-        netUSD = (grossAmount - 3) * 0.97;
-        // 3. "Freeze" the value in COP using the rate from that moment
-        netCOP = netUSD * currentRate;
-    } else { // If the input is in COP
-        // 2. The COP value is what was entered
-        netCOP = numericAmount;
-        // 3. "Freeze" the value in USD using the rate from that moment
-        netUSD = netCOP / currentRate;
+      const grossAmount = rawAmount;
+      netUSD = (grossAmount - 3) * 0.97;
+      netCOP = netUSD * currentRate;
+    } else { // Si el input es en COP
+      netCOP = rawAmount;
+      netUSD = netCOP / currentRate;
     }
-
-    const newContribution: Contribution = {
-        id: uuidv4(),
-        date: new Date().toISOString(),
-        netUSDValue: netUSD,
-        netCOPValue: netCOP,
-    };
+  
+    // Asegurarse de que no estamos guardando NaN
+    if (isNaN(netUSD) || isNaN(netCOP)) {
+        console.error("Error en el cálculo, resultado es NaN. Revisar fórmula.");
+        toast({
+          variant: "destructive",
+          title: "Error de Cálculo",
+          description: "No se pudo procesar el ingreso. El resultado era inválido.",
+        });
+        setRateLoading(false);
+        return;
+    }
     
-    // 4. Update application state
+    playSound('pomodoroStart');
+  
+    const newContribution: Contribution = {
+      id: uuidv4(),
+      date: new Date().toISOString(),
+      netUSDValue: netUSD,
+      netCOPValue: netCOP,
+    };
+  
+    // 4. Actualizar el estado de la aplicación.
     setAppState(prevState => ({
-        contributions: [newContribution, ...prevState.contributions],
+      contributions: [newContribution, ...prevState.contributions],
     }));
-
+    
+    // Limpiar el formulario después de guardar.
     setAmount('');
+    setRateLoading(false);
   };
 
 
