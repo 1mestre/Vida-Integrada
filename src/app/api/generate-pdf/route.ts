@@ -56,20 +56,26 @@ export async function POST(request: Request) {
       throw new Error('ApiFlash access key is not configured in Vercel environment variables.');
     }
     if (!clientName || !orderNumber || !date) {
-      return new NextResponse('Client, order number, and date are required', { status: 400 });
+      return new NextResponse('Client name, order number, and date are required', { status: 400 });
     }
 
     const html = getContractHtml(clientName, date);
     
-    // Usamos el endpoint htmltopdf, que es más directo.
-    const apiUrl = new URL('https://api.apiflash.com/v1/htmltopdf');
-    apiUrl.searchParams.append('access_key', accessKey);
-    apiUrl.searchParams.append('html', html);
-    apiUrl.searchParams.append('format', 'A4');
-    apiUrl.searchParams.append('margin', '0'); // Los márgenes los controla nuestro CSS
-    apiUrl.searchParams.append('delay', '2'); // Espera 2s para que carguen fuentes/imágenes
-    
-    const apiResponse = await fetch(apiUrl.href);
+    const apiUrl = 'https://api.apiflash.com/v1/htmltopdf';
+
+    const apiResponse = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        access_key: accessKey,
+        html: html,
+        format: 'A4',
+        margin: 0,
+        delay: 3,
+      }),
+    });
 
     if (!apiResponse.ok) {
       const errorText = await apiResponse.text();
