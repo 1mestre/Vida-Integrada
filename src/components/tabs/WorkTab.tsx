@@ -70,62 +70,86 @@ const generateClientMessage = (item: WorkItem, packageTemplates: WorkPackageTemp
     if (item.vocalChainPreset) {
         message += `🎁 EXCLUSIVE GIFT: Custom vocal chain preset made for ${isMultiple ? `these ${item.genre} vibes` : `this ${item.genre} vibe`} 🎙️🎙️\n(Appreciate you being chill to work with, let's keep the collabs going!!) 🤝🤝\n\n`;
     }
-
-    // === Bloque 3: Oferta de "Upsell" (Inteligente, Diferencial y a Prueba de Fallos) ===
+    
+    // === Bloque 3: Oferta de "Upsell" (Inteligente, Completa y Diferencial) ===
+    // 1. Ordenar plantillas por precio para identificar roles
     const sortedPkgs = [...packageTemplates].sort((a, b) => a.price - b.price);
+    const cheapestPkg = sortedPkgs[0];
+    const middlePkg = sortedPkgs.length > 1 ? sortedPkgs[1] : null;
+    const highestPkg = sortedPkgs[sortedPkgs.length - 1]; // Siempre el último
+
+    let upsellSection = "";
+
+    // Función auxiliar para comparar beneficios
+    const getDifferentialFeatures = (higherPkg: WorkPackageTemplate, lowerPkg: WorkItem | WorkPackageTemplate): string[] => {
+        const features: string[] = [];
+        if (higherPkg.masterAudio && !lowerPkg.masterAudio) features.push("• Professional mixing/mastering 🎛️🎚️");
+        if (higherPkg.separateFiles && !lowerPkg.separateFiles) features.push("• Full STEMS 💎");
+        if (higherPkg.projectFileDelivery && !lowerPkg.projectFileDelivery) features.push("• FLP Project File 🎚️🎚️");
+        if (higherPkg.exclusiveLicense && !lowerPkg.exclusiveLicense) features.push("• Exclusive license (100% yours) 📜");
+        if (higherPkg.vocalProduction && !lowerPkg.vocalProduction) features.push("• Vocal Production ✨🎙️");
+        return features;
+    };
+    
     const currentPackageTemplate = sortedPkgs.find(p => p.name === item.packageName);
-    const highestPackageTemplate = sortedPkgs[sortedPkgs.length - 1];
 
     // Solo mostrar la oferta si el cliente NO tiene el paquete más alto
-    if (currentPackageTemplate && highestPackageTemplate && currentPackageTemplate.id !== highestPackageTemplate.id) {
-        // Identificar cuál es el siguiente nivel de paquete
-        const currentIndex = sortedPkgs.findIndex(p => p.id === currentPackageTemplate.id);
-        const nextPackageTemplate = sortedPkgs[currentIndex + 1];
-
-        if (nextPackageTemplate) {
-            let upsellText = `🤔 BUT WAIT - If you're feeling this and want the full experience, just pay the difference:\n`;
-            const priceDiff = nextPackageTemplate.price - currentPackageTemplate.price;
-
-            if (priceDiff > 0) {
-                upsellText += `• ${currentPackageTemplate.name} ($${currentPackageTemplate.price}) → ${nextPackageTemplate.name} ($${nextPackageTemplate.price}): +$${priceDiff}\n\n`;
+    if (currentPackageTemplate && highestPkg && currentPackageTemplate.id !== highestPkg.id) {
+        let upsellOffers: string[] = [];
+        
+        // CASO A: El paquete actual es el más barato
+        if (item.packageName === cheapestPkg?.name) {
+            // Oferta a Paquete Intermedio
+            if (middlePkg) {
+                const diff = middlePkg.price - cheapestPkg.price;
+                if (diff > 0) {
+                    let offer = `• ${cheapestPkg.name} ($${cheapestPkg.price}) → ${middlePkg.name} ($${middlePkg.price}): +$${diff}\n`;
+                    const features = getDifferentialFeatures(middlePkg, cheapestPkg);
+                    if (features.length > 0) offer += `  And get:\n  ${features.join('\n  ')}`;
+                    upsellOffers.push(offer);
+                }
             }
-
-            // Calcular los beneficios diferenciales
-            const differentialFeatures: string[] = [];
-            if (nextPackageTemplate.masterAudio && !item.masterAudio) differentialFeatures.push("• Professional mixing/mastering 🎛️🎚️");
-            if (nextPackageTemplate.separateFiles && !item.separateFiles) differentialFeatures.push("• Full STEMS 💎");
-            if (nextPackageTemplate.projectFileDelivery && !item.projectFileDelivery) differentialFeatures.push("• FLP Project File 🎚️🎚️");
-            if (nextPackageTemplate.exclusiveLicense && !item.exclusiveLicense) differentialFeatures.push("• Exclusive license (100% yours) 📜");
-            if (nextPackageTemplate.vocalProduction && !item.vocalProduction) differentialFeatures.push("• Vocal Production ✨🎙️");
-            
-            // Solo mostrar la sección "And get:" si hay beneficios reales que ofrecer
-            if (differentialFeatures.length > 0) {
-                upsellText += "And get:\n" + differentialFeatures.join('\n') + "\n\n";
+            // Oferta a Paquete Más Caro
+            const diffToHighest = highestPkg.price - cheapestPkg.price;
+            if (diffToHighest > 0) {
+                let offer = `• ${cheapestPkg.name} ($${cheapestPkg.price}) → ${highestPkg.name} ($${highestPkg.price}): +$${diffToHighest}\n`;
+                const features = getDifferentialFeatures(highestPkg, cheapestPkg);
+                if (features.length > 0) offer += `  And get:\n  ${features.join('\n  ')}`;
+                upsellOffers.push(offer);
             }
+        }
+        // CASO B: El paquete actual es el intermedio
+        else if (middlePkg && item.packageName === middlePkg.name) {
+             const diff = highestPkg.price - middlePkg.price;
+             if (diff > 0) {
+                let offer = `• ${middlePkg.name} ($${middlePkg.price}) → ${highestPkg.name} ($${highestPkg.price}): +$${diff}\n`;
+                const features = getDifferentialFeatures(highestPkg, middlePkg);
+                if (features.length > 0) offer += `  And get:\n  ${features.join('\n  ')}`;
+                upsellOffers.push(offer);
+             }
+        }
 
-            message += upsellText + "Just holla at me if you wanna upgrade! 🚀🚀\n\n";
+        if (upsellOffers.length > 0) {
+            upsellSection = "🤔 BUT WAIT - If you're feeling this and want the full experience, just pay the difference:\n" + upsellOffers.join('\n\n') + "\n\nJust holla at me if you wanna upgrade! 🚀🚀\n\n";
         }
     }
+    
+    message += upsellSection;
     
     // === Bloque 4: Secciones Finales (CON LÓGICA DE REVISIONES CORREGIDA) ===
     message += `${isMultiple ? 'Keys' : 'Key'}: ${item.key} | ${isMultiple ? 'BPMs' : 'BPM'}: ${item.bpm}\n\n`;
     message += `📦📦 Order #${item.orderNumber}\n\n`;
     
-    const cheapestPkgName = sortedPkgs[0]?.name;
-    const middlePkgName = sortedPkgs[1]?.name;
-    const highestPkgName = sortedPkgs[2]?.name;
-
-    if (item.packageName === highestPkgName) {
+    if (item.packageName === highestPkg?.name) { // Compara con el más caro
         message += `✅✅ This is built for the BIGGG stages - Spotify, radio, wherever you wanna take it!! 🌟🌟\n${item.revisionsRemaining} revisions remaining 🔧🔧\n\n🎁 PRO TIP: Drop a 5-star review and I'll hook you UPPP with $10 off your next order!! Helps me out FOR REALLL 🙏🙏\n\nNow go make some MAGIC happen!! ✨🎤`;
-    } else if (item.packageName === middlePkgName) {
+    } else if (middlePkg && item.packageName === middlePkg.name) { // Compara con el intermedio
         message += `✅ ${item.revisionsRemaining} revisions remaining 🔧\n${isMultiple ? "Time to make these BEATS slap!! 💥💥" : "Time to make some WAVES!! 🌊🌊"}\n\n🎁 PRO TIP: Leave me a 5-star review and I'll give you $10 off your next beat!! WIN-WIN SITUATION 😉💰💰\n\nLet's get this music out there!!! 🚀🚀`;
-    } else { // Paquete más barato (Amateur/Basic)
+    } else { // El paquete más barato
         message += "✅ Let me know what you think of the direction!! If you're vibing with it, we can ALWAYSSS take it to the next level!! 🎯🎯\n\n";
-        // Lógica de revisiones corregida:
         if (item.revisionsRemaining > 0) {
             message += `(${item.revisionsRemaining} custom revision(s) included in this deal! 😉💡💡)`;
         } else {
-            message += "(No revisions on demos, but that's what upgrades are for!! 😉💡💡)";
+            message += "(No revisions on standard demos, but that's what upgrades are for!! 😉💡💡)";
         }
     }
 
@@ -988,4 +1012,5 @@ const WorkTab = () => {
 export default WorkTab;
 
     
+
 
