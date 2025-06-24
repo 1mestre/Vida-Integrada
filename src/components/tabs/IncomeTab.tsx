@@ -26,7 +26,7 @@ const IncomeDisplay = ({ monthlyTotals, accumulatedTotals, progress }: {
         <div className="flex flex-col items-center gap-4">
             <Card>
                 <CardHeader>
-                    <CardTitle className="text-center text-sm font-medium text-muted-foreground">
+                    <CardTitle className="text-center">
                         Ingresos Este Mes
                     </CardTitle>
                 </CardHeader>
@@ -34,12 +34,12 @@ const IncomeDisplay = ({ monthlyTotals, accumulatedTotals, progress }: {
                     <div className="flex justify-center items-baseline gap-4">
                         <div className="text-center">
                             <p className="text-2xl font-bold tracking-tighter text-yellow-500">{formatCOP(monthlyTotals.cop)}</p>
-                            <p className="text-xs font-medium text-muted-foreground">(COP)</p>
+                            <p className="text-xs font-medium text-yellow-500">(COP)</p>
                         </div>
                         <div className="text-2xl font-bold text-muted-foreground">/</div>
                         <div className="text-center">
                             <p className="text-2xl font-bold tracking-tighter text-green-500">{formatUSD(monthlyTotals.usd)}</p>
-                            <p className="text-xs font-medium text-muted-foreground">(USD)</p>
+                            <p className="text-xs font-medium text-green-500">(USD)</p>
                         </div>
                     </div>
                 </CardContent>
@@ -260,3 +260,5 @@ const IncomeTab = () => {
 };
 
 export default IncomeTab;
+
+    
