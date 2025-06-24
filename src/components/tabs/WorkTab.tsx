@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { useAppState, WorkItem } from '@/context/AppStateContext';
+import { useAppState, WorkItem, WorkPackageTemplate } from '@/context/AppStateContext';
 import { MessageSquare, Clipboard, TrendingUp, Trash2, Wrench, Link, Music, Settings, PlusCircle, CalendarIcon, Flame } from 'lucide-react';
 import WorkItemModal from '@/components/WorkItemModal';
 import { useToast } from '@/hooks/use-toast';
@@ -44,7 +44,8 @@ import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 
-const generateClientMessage = (item: WorkItem): string => {
+// Pega esta función completa para reemplazar la versión anterior.
+const generateClientMessage = (item: WorkItem, packageTemplates: WorkPackageTemplate[]): string => {
     const isMultiple = item.remakeType.includes('Multiple');
     let message = `Heyyy ${item.clientName}! 👋👋\n\n`;
 
@@ -75,19 +76,31 @@ const generateClientMessage = (item: WorkItem): string => {
     if (item.vocalChainPreset) {
         message += `🎁 EXCLUSIVE GIFT: Custom vocal chain preset made for ${isMultiple ? `these ${item.genre} vibes` : `this ${item.genre} vibe`} 🎙️🎙️\n(Appreciate you being chill to work with, let's keep the collabs going!!) 🤝🤝\n\n`;
     }
+    
+    // === Bloque 3: Oferta de "Upsell" (CON PRECIOS 100% DINÁMICOS) ===
+    if (item.packageName === 'Amateurs' && !item.exclusiveLicense) {
+        // Búsqueda dinámica de precios desde las plantillas
+        const amateurPkg = packageTemplates.find(p => p.name === 'Amateurs');
+        const exclusivePkg = packageTemplates.find(p => p.name === 'Exclusive');
+        // Asumimos que puedes tener un paquete "Pro" intermedio
+        const proPkg = packageTemplates.find(p => p.name === 'Pro'); 
 
-    // === Bloque 3: Oferta de "Upsell" (Inteligente y Dinámica) ===
-    if (item.packageName === 'Amateurs') {
-        const upsellOptions: string[] = [];
-        // Revisa qué le falta al cliente para ofrecerlo.
-        if (!item.exclusiveLicense) upsellOptions.push("• Exclusive license (100% yours) 📜");
-        if (!item.masterAudio) upsellOptions.push("• Professional mixing/mastering 🎛️🎚️");
-        if (!item.separateFiles) upsellOptions.push("• Full remake treatment 💯💯");
+        // Usamos precios de fallback por si un paquete no existe
+        const amateurPrice = amateurPkg ? amateurPkg.price : 10;
+        const proPrice = proPkg ? proPkg.price : 15;
+        const exclusivePrice = exclusivePkg ? exclusivePkg.price : 30;
 
-        // Solo muestra la sección de upsell si hay algo que ofrecer.
-        if (upsellOptions.length > 0) {
-            message += "🤔 BUT WAIT - If you're feeling this demo and want the full experience, just pay the difference:\n• Amateur ($10) → Pro ($15): +$5\n• Amateur ($10) → Exclusive ($30): +$20\n• Pro ($15) → Exclusive ($30): +$15\n\nAnd get:\n" + upsellOptions.join('\n') + "\n\nJust holla at me if you wanna upgrade! 🚀🚀\n\n";
-        }
+        // Cálculos dinámicos
+        const amateurToProDiff = proPrice - amateurPrice;
+        const amateurToExclusiveDiff = exclusivePrice - amateurPrice;
+        const proToExclusiveDiff = exclusivePrice - proPrice;
+        
+        let upsellText = "🤔 BUT WAIT - If you're feeling this demo and want the full experience, just pay the difference:\n";
+        if (proPkg) upsellText += `• Amateur ($${amateurPrice}) → Pro ($${proPrice}): +$${amateurToProDiff}\n`;
+        if (exclusivePkg) upsellText += `• Amateur ($${amateurPrice}) → Exclusive ($${exclusivePrice}): +$${amateurToExclusiveDiff}\n`;
+        if (proPkg && exclusivePkg) upsellText += `• Pro ($${proPrice}) → Exclusive ($${exclusivePrice}): +$${proToExclusiveDiff}\n`;
+
+        message += upsellText + "\nAnd get:\n• The polished, final version(s) 🔥🔥\n• Exclusive license (100% yours) 📜\n• Professional mixing/mastering 🎛️🎚️\n• Full remake treatment 💯💯\n\nJust holla at me if you wanna upgrade! 🚀🚀\n\n";
     }
 
     // === Bloque 4: Secciones Finales ===
@@ -416,7 +429,7 @@ const WorkTab = () => {
             cell: ({ row }) => (
                 <div className="text-center">
                     <Button variant="ghost" size="icon" onClick={() => {
-                        setMessageToShow(generateClientMessage(row.original));
+                        setMessageToShow(generateClientMessage(row.original, appState.workPackageTemplates));
                         setIsAlertOpen(true);
                     }}>
                         <MessageSquare className="h-4 w-4 text-primary" />
@@ -868,6 +881,3 @@ const WorkTab = () => {
 };
 
 export default WorkTab;
-
-    
-    
