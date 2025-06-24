@@ -35,7 +35,7 @@ import { Progress } from "@/components/ui/progress";
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { format, subDays } from 'date-fns';
+import { format, differenceInCalendarDays, subDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useSound } from '@/context/SoundContext';
 import PackageSettingsModal from '@/components/PackageSettingsModal';
@@ -110,32 +110,36 @@ const FileNameToolsPopover = ({ item }: { item: WorkItem }) => {
 
 const generateClientMessage = (item: WorkItem): string => {
     const isMultiple = item.remakeType.includes('Multiple');
-    const quantity = item.quantity || 1;
     let message = `Heyyy ${item.clientName}! 👋👋\n\n`;
 
     // Saludo
     if (item.packageName === 'Masterpiece') {
-        message += isMultiple ? `Yoooo, your ${quantity} ${item.genre} masterpiece remaked beats are officially done and they're straight fire fr!! 🔥🔥✨ Hahaha, we went CRAZY on these!!\n\n` : `Yooo, your ${item.genre} masterpiece is officially done and it's straighttt fire fr!! 🔥✨\n\n`;
+        message += isMultiple ? `Yoooo, your ${item.genre} masterpiece remaked beats are officially done and they're straight fire fr!! 🔥🔥✨ Hahaha, we went CRAZY on these!!\n\n` : `Yooo, your ${item.genre} masterpiece is officially done and it's straighttt fire fr!! 🔥✨\n\n`;
     } else if (item.packageName === 'Exclusive') {
-        message += isMultiple ? `Your ${quantity} ${item.genre} remaked beats are readyyy to drop!! 💣💣 No cap, these ones hit DIFFERENT!! 💯🎵\n\n` : `Your ${item.genre} beat is readyyy to drop!! No cap, this one hits different 💯🎵\n\n`;
-    } else {
-        message += isMultiple ? `So hereee are those ${quantity} ${item.genre} demos you wanted!! 🎉 Just some quick vibes, nothing too wild yet hehe 😎🎧\n\n` : `So here's that ${item.genre} demo you wanted!! Just a quick vibe check, nothing too wild yet 😎🎧\n\n`;
+        message += isMultiple ? `Your ${item.genre} remaked beats are readyyy to drop!! 💣💣 No cap, these ones hit DIFFERENT!! 💯🎵\n\n` : `Your ${item.genre} beat is readyyy to drop!! No cap, this one hits different 💯🎵\n\n`;
+    } else { // Amateurs
+        message += isMultiple ? `So hereee are those ${item.genre} demos you wanted!! 🎉 Just some quick vibes, nothing too wild yet hehe 😎🎧\n\n` : `So here's that ${item.genre} demo you wanted!! Just a quick vibe check, nothing too wild yet 😎🎧\n\n`;
     }
     
-    // Entregables (sección dinámica)
-    const deliverables: string[] = [];
-    if (item.masterAudio) deliverables.push("- Full WAV: Mixed, mastered, and READYYY to upload!! 🎯");
-    if (item.separateFiles) deliverables.push("- Full WAV + STEMS: The WHOLE package, no bs!! 💎");
-    if (item.projectFileDelivery) deliverables.push("- FLP Project File: Full creative control in your hands!! 🎚️🎚️");
-    if (item.exclusiveLicense) deliverables.push("- Exclusive Rights Contract: 100% ownership, no sharing needed!! 📋");
-    if (item.vocalProduction) deliverables.push("- Vocal Production Add-on: Pro-level vocal mixing & tuning to make your voice SHINE!! ✨🎙️");
-    
-    if (deliverables.length > 0) {
-        message += "📎📎 WHAT YOU'RE GETTING:\n" + deliverables.join('\n') + '\n';
+    // Detalles del Remake
+    if (item.remakeType === 'Single Remake') {
+        if (item.packageName === 'Masterpiece') message += "🎛️🎛️ This remake got the FULL treatment - custom-built and clean as hell!! Readyyy for the big leagues!! 🏆🏆\n\n";
+        else if (item.packageName === 'Exclusive') message += "🎛️ The remake is LOCKED and loaded!! 🔫 Custom-made just for you, readyyy for your vocals!! 🎤✨\n\n";
+        else message += "🎛️ This is just the demo version of the remake - think of it as the rough draft with MADDD potential!! 🎨\n\n";
+    } else if (isMultiple) {
+        if (item.packageName === 'Masterpiece') message += "🎛️🎛️ These remakes are CLEANNN as hell and ready to make some NOISEEE!! Each one hits different!! 🚀🚀\n\n";
+        else if (item.packageName === 'Exclusive') message += "🎛️ All these remakes are LOCKED IN!! 🔒 Multiple vibes, same CRAZY energy!! 💪💪 Hahaha let's gooo!\n\n";
+        else message += "🎛️ These are just demo ideas for the remakes - the foundation's there, just needs the FULLLL glow-up!! 🏗️🏗️\n\n";
     }
 
-    if (item.vocalChainPreset) {
-        message += `\n🎁 EXCLUSIVE GIFT: Custom vocal chain preset made for this vibe! 🎤✨\n(Appreciate you being chill to work with, let's keep the collabs going!!) 🤝\n\n`;
+    // Entregables
+    message += "📎📎 WHAT YOU'RE GETTING:\n";
+    if (item.packageName === 'Masterpiece') {
+        message += `- Full WAV + STEMS: The WHOLE package, no bs!! 💎\n- FLP Project File: Full creative control in your hands!! 🎚️🎚️\n- Exclusive Rights Contract: It's 100000% yours, period!! 📜\n- EXCLUSIVE GIFT: Custom vocal chain preset made for ${isMultiple ? `these ${item.genre} vibes` : `this ${item.genre} vibe`} 🎙️🎙️\n(Appreciate you being chill to work with, let's keep the collabs going!!) 🤝🤝\n\n`;
+    } else if (item.packageName === 'Exclusive') {
+        message += `- Full WAV: Mixed, mastered, and READYYY to upload!! 🎯\n- Exclusive Rights Contract: 100% ownership, no sharing needed!! 📋\n- EXCLUSIVE GIFT: Custom vocal chain preset made for ${isMultiple ? `these ${item.genre} styles` : `this ${item.genre} style`} 🎤✨\n(Appreciate you being chill to work with, let's keep the collabs going!!) 🤝\n\n`;
+    } else { // Amateurs
+        message += `- 60-sec MP3 demo: Just the vibe, raw and UNFILTEREDDD!! 🎵\n- Heads up: No exclusive rights or pro mixing included (this is just a taste!!) 👀👀\n\n🤔 BUT WAIT - If you're feeling this demo and want the full experience, just pay the difference:\n• Amateur ($10) → Pro ($15): +$5\n• Amateur ($10) → Exclusive ($30): +$20\n• Pro ($15) → Exclusive ($30): +$15\n\nAnd get:\n• The polished, final version(s) 🔥🔥\n• Exclusive license (100% yours) 📜\n• Professional mixing/mastering 🎛️🎛️\n• Full remake treatment 💯💯\n\nJust holla at me if you wanna upgrade! 🚀🚀\n\n`;
     }
 
     // Secciones Finales
@@ -145,8 +149,8 @@ const generateClientMessage = (item: WorkItem): string => {
     if (item.packageName === 'Masterpiece') {
         message += `✅✅ This is built for the BIGGG stages - Spotify, radio, wherever you wanna take it!! 🌟🌟\n${item.revisionsRemaining} revisions remaining 🔧🔧\n\n🎁 PRO TIP: Drop a 5-star review and I'll hook you UPPP with $10 off your next order!! Helps me out FOR REALLL 🙏🙏\n\nNow go make some MAGIC happen!! ✨🎤`;
     } else if (item.packageName === 'Exclusive') {
-        message += `✅ ${item.revisionsRemaining} revisions remaining 🔧\n${isMultiple ? "Time to make these BEATS slap!! 💥💥" : "Time to make some WAVES!! 🌊🌊"}\n\n🎁 PRO TIP: Leave me a 5-star review and I'll give you $10 off your next beat!! WIN-WIN SITUATION 😉💰💰\n\nLet's get this music out there!!! 🚀🚀`;
-    } else {
+        message += `✅ ${item.revisionsRemaining} revisions remaining 🔧\n${isMultiple ? "Time to make these BEATS slap!! 💥💥\n\n🎁 PRO TIP: Leave me a 5-star review and I'll give you $10 off your next order!! WIN-WIN SITUATION 😉💰💰\n\nLet's get this music out there!!! 🚀🚀" : "Time to make some WAVES!! 🌊🌊\n\n🎁 PRO TIP: Leave me a 5-star review and I'll give you $10 off your next beat!! WIN-WIN SITUATION 😉💰💰\n\nLet's get this music out there!!! 🚀🚀"}`;
+    } else { // Amateurs
         message += "✅ Let me know what you think of the direction!! If you're vibing with it, we can ALWAYSSS take it to the next level!! 🎯🎯\n\n(No revisions on demos, but that's what upgrades are for!! 😉💡💡)";
     }
 
@@ -396,64 +400,63 @@ const WorkTab = () => {
     const columns: ColumnDef<WorkItem>[] = useMemo(() => [
         {
             id: 'actions',
-            header: 'Mensaje',
+            header: () => <div className="text-center">Mensaje</div>,
             cell: ({ row }) => (
-                <Button variant="ghost" size="icon" onClick={() => {
-                    setMessageToShow(generateClientMessage(row.original));
-                    setIsAlertOpen(true);
-                }}>
-                    <MessageSquare className="h-4 w-4 text-primary" />
-                </Button>
+                <div className="text-center">
+                    <Button variant="ghost" size="icon" onClick={() => {
+                        setMessageToShow(generateClientMessage(row.original));
+                        setIsAlertOpen(true);
+                    }}>
+                        <MessageSquare className="h-4 w-4 text-primary" />
+                    </Button>
+                </div>
             )
         },
         {
           id: 'tools',
-          header: 'Tools',
+          header: () => <div className="text-center">Tools</div>,
           cell: ({ row }) => {
             const item = row.original;
-            return <FileNameToolsPopover item={item} />;
+            return <div className="text-center"><FileNameToolsPopover item={item} /></div>;
           },
         },
-        { accessorKey: 'clientName', header: 'Cliente' },
+        { 
+            accessorKey: 'clientName', 
+            header: () => <div className="text-center">Cliente</div>,
+            cell: ({ row }) => <div className="text-center">{row.getValue('clientName')}</div>
+        },
         { 
             accessorKey: 'deliveryDate', 
-            header: 'Entrega',
+            header: () => <div className="text-center">Entrega</div>,
             cell: ({ row }) => {
-                const item = row.original;
-                const date = new Date(item.deliveryDate + 'T00:00:00');
-          
+                const date = new Date(row.original.deliveryDate + 'T00:00:00');
+                const today = new Date();
+                const daysDiff = differenceInCalendarDays(date, today);
+            
+                let colorClass = 'text-muted-foreground';
+                if (daysDiff <= 1) {
+                  colorClass = 'text-red-500 font-bold';
+                } else if (daysDiff <= 3) {
+                  colorClass = 'text-yellow-500 font-semibold';
+                } else if (daysDiff >= 4) {
+                  colorClass = 'text-green-600';
+                }
+            
                 return (
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="ghost" className="w-full justify-start text-left font-normal">
-                        {format(date, "d 'de' MMMM, yyyy", { locale: es })}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={date}
-                        onSelect={(newDate) => {
-                          if (newDate) {
-                            handleDateUpdate(item.id, newDate);
-                          }
-                        }}
-                        disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
+                  <div className={cn('text-center font-medium', colorClass)}>
+                    {format(date, "d 'de' MMMM, yyyy", { locale: es })}
+                  </div>
                 );
             }
         },
         {
           accessorKey: 'key',
-          header: 'Key',
+          header: () => <div className="text-center">Key</div>,
           cell: ({ row }) => {
             const keyText = row.getValue('key') as string;
             const parts = keyText.split(' / ');
             return (
-              <span>
+              <div className="text-center">
                 <span className="font-semibold text-orange-500">{parts[0]}</span>
                 {parts[1] && (
                   <>
@@ -461,112 +464,128 @@ const WorkTab = () => {
                     <span className="font-semibold text-sky-700">{parts[1]}</span>
                   </>
                 )}
-              </span>
+              </div>
             );
           },
         },
         {
           accessorKey: 'bpm',
-          header: 'BPM',
+          header: () => <div className="text-center">BPM</div>,
+          cell: ({ row }) => <div className="text-center">{row.getValue('bpm')}</div>
         },
         { 
             accessorKey: 'deliveryStatus', 
-            header: 'Estado',
+            header: () => <div className="text-center">Estado</div>,
             cell: ({ row }) => {
                 const item = row.original;
                 const statusOptions: WorkItem['deliveryStatus'][] = ['Pending', 'In Transit', 'In Revision', 'Delivered', 'Returned'];
           
                 return (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="p-0 h-auto">
-                        <Badge className={cn("cursor-pointer", statusColorMap[item.deliveryStatus])}>
-                          {item.deliveryStatus}
-                        </Badge>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      {statusOptions.map(status => (
-                        <DropdownMenuItem
-                          key={status}
-                          onSelect={() => handleStatusUpdate(item.id, status)}
-                        >
-                           <span className={cn('h-2 w-2 rounded-full mr-2', statusColorMap[status])} />
-                          <span>{status}</span>
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                    <div className="text-center">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="p-0 h-auto">
+                                <Badge className={cn("cursor-pointer", statusColorMap[item.deliveryStatus])}>
+                                {item.deliveryStatus}
+                                </Badge>
+                            </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                            {statusOptions.map(status => (
+                                <DropdownMenuItem
+                                key={status}
+                                onSelect={() => handleStatusUpdate(item.id, status)}
+                                >
+                                <span className={cn('h-2 w-2 rounded-full mr-2', statusColorMap[status])} />
+                                <span>{status}</span>
+                                </DropdownMenuItem>
+                            ))}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
                 );
             }
         },
         {
             accessorKey: 'revisionsRemaining',
-            header: 'Revisiones',
+            header: () => <div className="text-center">Revisiones</div>,
             cell: ({ row }) => {
               const item = row.original;
               const revisionOptions = [4, 3, 2, 1, 0];
           
               return (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className={cn("font-semibold", revisionColorMap[item.revisionsRemaining])}>
-                      {item.revisionsRemaining}
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    {revisionOptions.map(revs => (
-                      <DropdownMenuItem key={revs} onSelect={() => handleRevisionsUpdate(item.id, revs)}>
-                        <span className={cn('font-semibold', revisionColorMap[revs])}>{revs}</span>
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <div className="text-center">
+                    <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className={cn("font-semibold", revisionColorMap[item.revisionsRemaining])}>
+                        {item.revisionsRemaining}
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        {revisionOptions.map(revs => (
+                        <DropdownMenuItem key={revs} onSelect={() => handleRevisionsUpdate(item.id, revs)}>
+                            <span className={cn('font-semibold', revisionColorMap[revs])}>{revs}</span>
+                        </DropdownMenuItem>
+                        ))}
+                    </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
               );
             },
         },
         { 
             accessorKey: 'packageName', 
-            header: 'Paquete',
+            header: () => <div className="text-center">Paquete</div>,
             cell: ({ row }) => {
                 const item = row.original;
                 const packageOptions = appState.workPackageTemplates.map(p => p.name);
 
                 return (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="p-0 h-auto">
-                        <Badge className={cn("cursor-pointer", packageColorMap[item.packageName])}>
-                          {item.packageName}
-                        </Badge>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      {packageOptions.map(pkgName => (
-                        <DropdownMenuItem
-                          key={pkgName}
-                          onSelect={() => handlePackageUpdate(item.id, pkgName)}
-                        >
-                          <span className={cn('h-2 w-2 rounded-full mr-2', packageColorMap[pkgName])} />
-                          <span>{pkgName}</span>
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                    <div className="text-center">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="p-0 h-auto">
+                                <Badge className={cn("cursor-pointer", packageColorMap[item.packageName])}>
+                                {item.packageName}
+                                </Badge>
+                            </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                            {packageOptions.map(pkgName => (
+                                <DropdownMenuItem
+                                key={pkgName}
+                                onSelect={() => handlePackageUpdate(item.id, pkgName)}
+                                >
+                                <span className={cn('h-2 w-2 rounded-full mr-2', packageColorMap[pkgName])} />
+                                <span>{pkgName}</span>
+                                </DropdownMenuItem>
+                            ))}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
                 );
             }
         },
         {
             accessorKey: 'price',
-            header: 'Precio',
-            cell: ({row}) => formatUSD(row.original.price)
+            header: () => <div className="text-center">Precio</div>,
+            cell: ({row}) => <div className="text-center">{formatUSD(row.original.price)}</div>
         },
-        { accessorKey: 'orderNumber', header: 'Orden #' },
-        { accessorKey: 'genre', header: 'Género' },
+        { 
+            accessorKey: 'orderNumber', 
+            header: () => <div className="text-center">Orden #</div>,
+            cell: ({ row }) => <div className="text-center">{row.getValue('orderNumber')}</div>
+        },
+        { 
+            accessorKey: 'genre', 
+            header: () => <div className="text-center">Género</div>,
+            cell: ({ row }) => <div className="text-center">{row.getValue('genre')}</div>
+        },
         {
             id: 'edit',
+            header: () => <div className="text-center">Acciones</div>,
             cell: ({ row }) => (
-              <div className="flex gap-1">
+              <div className="flex gap-1 justify-center">
                 <Button variant="outline" size="sm" onClick={() => {
                     setSelectedItem(row.original);
                     setIsModalOpen(true);
