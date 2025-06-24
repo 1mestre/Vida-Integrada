@@ -216,17 +216,30 @@ const IncomeTab = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex justify-center items-baseline text-2xl font-bold tracking-tight">
+            <div className="flex justify-center items-center gap-6 text-center">
               
-              {/* Sección COP */}
-              <span className="text-yellow-400">${monthlyTotals.cop.toLocaleString('es-CO')}</span>
-              <span className="text-xs font-medium text-muted-foreground ml-1.5">(COP)</span>
+              {/* Columna COP */}
+              <div className="flex flex-col items-center">
+                <p className="text-3xl font-bold tracking-tighter text-yellow-400">
+                  ${monthlyTotals.cop.toLocaleString('es-CO')}
+                </p>
+                <p className="text-xs font-medium text-muted-foreground">
+                  COP
+                </p>
+              </div>
               
-              <span className="text-muted-foreground mx-3">/</span>
+              {/* Separador (Opcional, pero ayuda visualmente) */}
+              <div className="h-10 w-px bg-border"></div>
 
-              {/* Sección USD */}
-              <span className="text-green-400">${monthlyTotals.usd.toFixed(2)}</span>
-              <span className="text-xs font-medium text-muted-foreground ml-1.5">(USD)</span>
+              {/* Columna USD */}
+              <div className="flex flex-col items-center">
+                <p className="text-3xl font-bold tracking-tighter text-green-400">
+                  ${monthlyTotals.usd.toFixed(2)}
+                </p>
+                <p className="text-xs font-medium text-muted-foreground">
+                  USD
+                </p>
+              </div>
 
             </div>
           </CardContent>
