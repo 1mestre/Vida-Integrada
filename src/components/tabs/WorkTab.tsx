@@ -19,7 +19,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useAppState, WorkItem, WorkPackageTemplate } from '@/context/AppStateContext';
-import { MessageSquare, Clipboard, TrendingUp, Trash2, Wrench, Link, Music, Settings, PlusCircle, CalendarIcon, FolderPlus } from 'lucide-react';
+import { MessageSquare, Clipboard, TrendingUp, Trash2, Wrench, Link, Music, Settings, PlusCircle, CalendarIcon, PlayCircle } from 'lucide-react';
 import WorkItemModal from '@/components/WorkItemModal';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
@@ -180,29 +180,19 @@ const FileNameToolsPopover = ({ item, toast, playSound }: { item: WorkItem; toas
                         ))}
                     </div>
                     <Button
-                        className="bg-orange-500 hover:bg-orange-600 text-white w-full"
-                        onClick={async () => {
-                          try {
-                            // Construye la URL con los datos como query params
-                            const params = new URLSearchParams({
-                              clientName: item.clientName, // Asume que 'item' tiene los datos de la orden
-                              genre: item.genre,
-                              bpm: item.bpm,
-                              key: item.key,
-                            });
-                            // LA RUTA CORRECTA ES /create-project
-                            await fetch(`http://localhost:12345/create-project?${params.toString()}`);
-                            playSound('genericClick'); 
-                            // Opcional: Notificación de éxito
-                            console.log("Orden de crear proyecto enviada al agente local.");
-                          } catch (error) {
-                            alert("Error: No se pudo conectar con el agente local.");
-                            console.error("Error al enviar la orden de crear proyecto:", error);
-                          }
-                        }}
+                      className="bg-orange-500 hover:bg-orange-600 text-white w-full mt-4"
+                      onClick={async () => {
+                        try {
+                          // Envía una señal simple a la ruta /open-fl
+                          await fetch(`http://localhost:12345/open-fl`);
+                          playSound('genericClick');
+                        } catch (error) {
+                          alert("Error: No se pudo conectar con el agente local.");
+                        }
+                      }}
                     >
-                        <FolderPlus className="mr-2 h-4 w-4" />
-                        Crear Proyecto FLP
+                      <PlayCircle className="mr-2 h-4 w-4" />
+                      Abrir FL Studio
                     </Button>
                 </div>
             </PopoverContent>
@@ -976,5 +966,7 @@ const WorkTab = () => {
 };
 
 export default WorkTab;
+
+    
 
     
