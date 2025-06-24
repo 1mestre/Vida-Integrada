@@ -16,14 +16,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-    AlertDialog,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useAppState, WorkItem, WorkPackageTemplate } from '@/context/AppStateContext';
@@ -45,7 +37,6 @@ import { cn } from '@/lib/utils';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 
 
-// Pega esta función completa para reemplazar la versión anterior.
 const generateClientMessage = (item: WorkItem, packageTemplates: WorkPackageTemplate[]): string => {
     const isMultiple = item.remakeType.includes('Multiple');
     let message = `Heyyy ${item.clientName}! 👋👋\n\n`;
@@ -79,15 +70,13 @@ const generateClientMessage = (item: WorkItem, packageTemplates: WorkPackageTemp
     }
 
     // === Bloque 3: Oferta de "Upsell" (Inteligente, Diferencial y Completa) ===
-    // 1. Ordenar plantillas por precio para identificar roles
-    const sortedPkgs = [...packageTemplates].sort((a, b) => a.price - b.price);
-    const cheapestPkg = sortedPkgs[0];
-    const middlePkg = sortedPkgs.length > 1 ? sortedPkgs[1] : null;
-    const highestPkg = sortedPkgs.length > 2 ? sortedPkgs[2] : middlePkg;
+    const sortedPkgsUpsell = [...packageTemplates].sort((a, b) => a.price - b.price);
+    const cheapestPkgUpsell = sortedPkgsUpsell[0];
+    const middlePkgUpsell = sortedPkgsUpsell.length > 1 ? sortedPkgsUpsell[1] : null;
+    const highestPkgUpsell = sortedPkgsUpsell.length > 2 ? sortedPkgsUpsell[2] : middlePkgUpsell;
 
     let upsellSection = "";
 
-    // Función auxiliar para comparar beneficios
     const getDifferentialFeatures = (higherPkg: WorkPackageTemplate, lowerPkg: WorkPackageTemplate): string[] => {
         const features: string[] = [];
         if (higherPkg.masterAudio && !lowerPkg.masterAudio) features.push("• Professional mixing/mastering 🎛️🎚️");
@@ -98,40 +87,35 @@ const generateClientMessage = (item: WorkItem, packageTemplates: WorkPackageTemp
         return features;
     };
     
-    // Solo mostrar la oferta si el cliente NO tiene todos los beneficios del paquete más alto
-    if (highestPkg && !(item.exclusiveLicense && item.projectFileDelivery && item.separateFiles)) {
+    if (highestPkgUpsell && !(item.exclusiveLicense && item.projectFileDelivery && item.separateFiles)) {
         let upsellOffers: string[] = [];
         
-        // CASO A: El paquete actual es el más barato
-        if (item.packageName === cheapestPkg?.name) {
-            // Oferta a Paquete Intermedio
-            if (middlePkg) {
-                const diff = middlePkg.price - cheapestPkg.price;
+        if (item.packageName === cheapestPkgUpsell?.name) {
+            if (middlePkgUpsell) {
+                const diff = middlePkgUpsell.price - cheapestPkgUpsell.price;
                 if (diff > 0) {
-                    let offer = `• ${cheapestPkg.name} ($${cheapestPkg.price}) → ${middlePkg.name} ($${middlePkg.price}): +$${diff}\n`;
-                    const features = getDifferentialFeatures(middlePkg, cheapestPkg);
+                    let offer = `• ${cheapestPkgUpsell.name} ($${cheapestPkgUpsell.price}) → ${middlePkgUpsell.name} ($${middlePkgUpsell.price}): +$${diff}\n`;
+                    const features = getDifferentialFeatures(middlePkgUpsell, cheapestPkgUpsell);
                     if (features.length > 0) offer += `  And get:\n  ${features.join('\n  ')}\n`;
                     upsellOffers.push(offer);
                 }
             }
-            // Oferta a Paquete Más Caro (solo si es diferente al intermedio)
-            if (highestPkg && (!middlePkg || highestPkg.id !== middlePkg.id)) {
-                const diff = highestPkg.price - cheapestPkg.price;
+            if (highestPkgUpsell && (!middlePkgUpsell || highestPkgUpsell.id !== middlePkgUpsell.id)) {
+                const diff = highestPkgUpsell.price - cheapestPkgUpsell.price;
                 if (diff > 0) {
-                    let offer = `• ${cheapestPkg.name} ($${cheapestPkg.price}) → ${highestPkg.name} ($${highestPkg.price}): +$${diff}\n`;
-                    const features = getDifferentialFeatures(highestPkg, cheapestPkg);
+                    let offer = `• ${cheapestPkgUpsell.name} ($${cheapestPkgUpsell.price}) → ${highestPkgUpsell.name} ($${highestPkgUpsell.price}): +$${diff}\n`;
+                    const features = getDifferentialFeatures(highestPkgUpsell, cheapestPkgUpsell);
                     if (features.length > 0) offer += `  And get:\n  ${features.join('\n  ')}\n`;
                     upsellOffers.push(offer);
                 }
             }
         }
-        // CASO B: El paquete actual es el intermedio
-        else if (item.packageName === middlePkg?.name) {
-             if (highestPkg && middlePkg.id !== highestPkg.id) {
-                const diff = highestPkg.price - middlePkg.price;
+        else if (item.packageName === middlePkgUpsell?.name) {
+             if (highestPkgUpsell && middlePkgUpsell.id !== highestPkgUpsell.id) {
+                const diff = highestPkgUpsell.price - middlePkgUpsell.price;
                 if (diff > 0) {
-                    let offer = `• ${middlePkg.name} ($${middlePkg.price}) → ${highestPkg.name} ($${highestPkg.price}): +$${diff}\n`;
-                    const features = getDifferentialFeatures(highestPkg, middlePkg);
+                    let offer = `• ${middlePkgUpsell.name} ($${middlePkgUpsell.price}) → ${highestPkgUpsell.name} ($${highestPkgUpsell.price}): +$${diff}\n`;
+                    const features = getDifferentialFeatures(highestPkgUpsell, middlePkgUpsell);
                     if (features.length > 0) offer += `  And get:\n  ${features.join('\n  ')}\n`;
                     upsellOffers.push(offer);
                 }
@@ -144,17 +128,28 @@ const generateClientMessage = (item: WorkItem, packageTemplates: WorkPackageTemp
     }
     
     message += upsellSection;
-    
-    // === Bloque 4: Secciones Finales (sin cambios) ===
+
+    // === Bloque 4: Secciones Finales (CON LÓGICA DE REVISIONES CORREGIDA) ===
     message += `${isMultiple ? 'Keys' : 'Key'}: ${item.key} | ${isMultiple ? 'BPMs' : 'BPM'}: ${item.bpm}\n\n`;
     message += `📦📦 Order #${item.orderNumber}\n\n`;
     
-    if (item.packageName === 'Masterpiece') {
+    const sortedPkgs = [...packageTemplates].sort((a, b) => a.price - b.price);
+    const cheapestPkgName = sortedPkgs[0]?.name;
+    const middlePkgName = sortedPkgs[1]?.name;
+    const highestPkgName = sortedPkgs[2]?.name;
+
+    if (item.packageName === highestPkgName) {
         message += `✅✅ This is built for the BIGGG stages - Spotify, radio, wherever you wanna take it!! 🌟🌟\n${item.revisionsRemaining} revisions remaining 🔧🔧\n\n🎁 PRO TIP: Drop a 5-star review and I'll hook you UPPP with $10 off your next order!! Helps me out FOR REALLL 🙏🙏\n\nNow go make some MAGIC happen!! ✨🎤`;
-    } else if (item.packageName === 'Exclusive') {
-        message += `✅ ${item.revisionsRemaining} revisions remaining 🔧\n${isMultiple ? "Time to make these BEATS slap!! 💥💥\n\n🎁 PRO TIP: Leave me a 5-star review and I'll give you $10 off your next order!! WIN-WIN SITUATION 😉💰💰\n\nLet's get this music out there!!! 🚀🚀" : "Time to make some WAVES!! 🌊🌊\n\n🎁 PRO TIP: Leave me a 5-star review and I'll give you $10 off your next beat!! WIN-WIN SITUATION 😉💰💰\n\nLet's get this music out there!!! 🚀🚀"}`;
-    } else { // Amateurs
-        message += "✅ Let me know what you think of the direction!! If you're vibing with it, we can ALWAYSSS take it to the next level!! 🎯🎯\n\n(No revisions on demos, but that's what upgrades are for!! 😉💡💡)";
+    } else if (item.packageName === middlePkgName) {
+        message += `✅ ${item.revisionsRemaining} revisions remaining 🔧\n${isMultiple ? "Time to make these BEATS slap!! 💥💥" : "Time to make some WAVES!! 🌊🌊"}\n\n🎁 PRO TIP: Leave me a 5-star review and I'll give you $10 off your next beat!! WIN-WIN SITUATION 😉💰💰\n\nLet's get this music out there!!! 🚀🚀`;
+    } else { // Paquete más barato (Amateur/Basic)
+        message += "✅ Let me know what you think of the direction!! If you're vibing with it, we can ALWAYSSS take it to the next level!! 🎯🎯\n\n";
+        // Lógica de revisiones corregida:
+        if (item.revisionsRemaining > 0) {
+            message += `(${item.revisionsRemaining} revisions included for this custom order! 😉💡💡)`;
+        } else {
+            message += "(No revisions on standard demos, but that's what upgrades are for!! 😉💡💡)";
+        }
     }
 
     return message;
@@ -299,8 +294,6 @@ const WorkTab = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
     const [selectedItem, setSelectedItem] = useState<WorkItem | null>(null);
-    const [isAlertOpen, setIsAlertOpen] = useState(false);
-    const [messageToShow, setMessageToShow] = useState('');
     const { toast } = useToast();
     const { playSound } = useSound();
 
@@ -328,15 +321,6 @@ const WorkTab = () => {
         return [...appState.workItems].sort((a, b) => new Date(a.deliveryDate).getTime() - new Date(b.deliveryDate).getTime());
     }, [appState.workItems]);
 
-    const handleCopy = () => {
-        navigator.clipboard.writeText(messageToShow).then(() => {
-            toast({ title: 'Copiado', description: 'El mensaje se ha copiado al portapapeles.' });
-        }).catch(err => {
-            toast({ variant: 'destructive', title: 'Error', description: 'No se pudo copiar el mensaje.' });
-            console.error('Failed to copy: ', err);
-        });
-        setIsAlertOpen(false);
-    };
     
     const handleDeleteWorkItem = (itemToDelete: WorkItem) => {
         playSound('deleteItem');
@@ -489,16 +473,38 @@ const WorkTab = () => {
         {
             id: 'actions',
             header: () => <div className="text-center">Mensaje</div>,
-            cell: ({ row }) => (
-                <div className="text-center">
-                    <Button variant="ghost" size="icon" onClick={() => {
-                        setMessageToShow(generateClientMessage(row.original, appState.workPackageTemplates));
-                        setIsAlertOpen(true);
-                    }}>
-                        <MessageSquare className="h-4 w-4 text-primary" />
+            cell: ({ row }) => {
+              const item = row.original;
+              
+              return (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                      <MessageSquare className="h-4 w-4 text-primary" />
                     </Button>
-                </div>
-            )
+                  </PopoverTrigger>
+                  <PopoverContent className="w-96">
+                    <div className="space-y-4">
+                      <h4 className="font-medium">Mensaje Personalizado</h4>
+                      <pre className="text-xs whitespace-pre-wrap font-mono p-4 bg-muted rounded-md max-h-[50vh] overflow-y-auto">
+                        {generateClientMessage(item, appState.workPackageTemplates)}
+                      </pre>
+                      <Button 
+                        size="sm" 
+                        className="w-full"
+                        onClick={() => {
+                          navigator.clipboard.writeText(generateClientMessage(item, appState.workPackageTemplates));
+                          toast({ title: "Copiado", description: "Mensaje copiado al portapapeles." });
+                        }}
+                      >
+                        <Clipboard className="mr-2" />
+                        Copiar Mensaje
+                      </Button>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              );
+            },
         },
         {
           id: 'tools',
@@ -668,7 +674,7 @@ const WorkTab = () => {
               </div>
             )
         },
-    ], [appState.workItems, appState.workPackageTemplates, handleDateUpdate, handleStatusUpdate, handlePackageUpdate, handleRevisionsUpdate]);
+    ], [appState.workItems, appState.workPackageTemplates, handleDateUpdate, handleStatusUpdate, handlePackageUpdate, handleRevisionsUpdate, toast]);
 
     const table = useReactTable({
         data: sortedWorkItems,
@@ -901,26 +907,6 @@ const WorkTab = () => {
               isOpen={isSettingsModalOpen}
               onClose={() => setIsSettingsModalOpen(false)}
             />
-
-            <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
-                <AlertDialogContent className="glassmorphism-card max-w-2xl">
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Mensaje para el Cliente</AlertDialogTitle>
-                        <AlertDialogDescription asChild>
-                           <pre className="whitespace-pre-wrap max-h-[60vh] overflow-y-auto text-sm text-foreground/80 p-2 border rounded-md bg-black/20 font-sans">
-                                {messageToShow}
-                            </pre>
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                         <Button variant="outline" onClick={() => setIsAlertOpen(false)}>Cerrar</Button>
-                         <Button onClick={handleCopy}>
-                            <Clipboard className="mr-2 h-4 w-4"/>
-                            Copiar al Portapapeles
-                         </Button>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
         </div>
     );
 };
@@ -928,4 +914,6 @@ const WorkTab = () => {
 export default WorkTab;
 
     
+    
+
     
