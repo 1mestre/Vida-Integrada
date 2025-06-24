@@ -791,16 +791,22 @@ const WorkTab = () => {
                 <div className="flex flex-col items-center gap-4">
                   <Card className="w-full max-w-md glassmorphism-card">
                     <CardHeader>
-                      <CardTitle className="text-center text-lg font-semibold">
-                        Ingresos Este Mes
-                      </CardTitle>
+                        <CardTitle className="text-center text-sm font-medium text-muted-foreground">
+                            Ingresos Este Mes
+                        </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="text-center text-4xl font-bold tracking-tighter">
-                        <span className="text-yellow-600">{formatCOP(financialSummary.incomeThisMonth)}</span>
-                        <span className="text-muted-foreground mx-2">/</span>
-                        <span className="text-green-700">{formatUSD(financialSummary.incomeThisMonth / (exchangeRate || 4000)).replace('$', '$ ')}</span>
-                      </div>
+                        <div className="flex justify-center items-baseline gap-4">
+                            <div className="text-center">
+                                <p className="text-2xl font-bold tracking-tighter text-yellow-500">{formatCOP(financialSummary.incomeThisMonth)}</p>
+                                <p className="text-xs font-medium text-muted-foreground">(COP)</p>
+                            </div>
+                            <div className="text-2xl font-bold text-muted-foreground">/</div>
+                            <div className="text-center">
+                                <p className="text-2xl font-bold tracking-tighter text-green-500">{formatUSD(financialSummary.incomeThisMonth / (exchangeRate || 4000))}</p>
+                                <p className="text-xs font-medium text-muted-foreground">(USD)</p>
+                            </div>
+                        </div>
                     </CardContent>
                   </Card>
                   <div className="text-center">
