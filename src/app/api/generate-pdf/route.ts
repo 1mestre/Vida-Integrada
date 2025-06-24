@@ -1,4 +1,4 @@
-// src/app/api/generate-pdf/route.ts
+
 // src/app/api/generate-pdf/route.ts
 import { NextResponse } from 'next/server';
 
@@ -75,14 +75,12 @@ export async function POST(request: Request) {
 
     const apiResponse = await fetch(apiUrl.toString(), { method: 'POST' });
 
-<<<<<<< HEAD
     if (!apiResponse.ok) {
         const errorBody = await apiResponse.text();
         throw new Error(`ApiFlash responded with status ${apiResponse.status}: ${errorBody}`);
     }
 
     const pdfBuffer = await apiResponse.arrayBuffer();
-
 
     return new NextResponse(pdfBuffer, {
       status: 200,
