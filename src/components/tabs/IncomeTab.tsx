@@ -209,9 +209,9 @@ const IncomeTab = () => {
           </CardHeader>
           <CardContent>
             <div className="text-center text-4xl font-bold tracking-tighter">
-              <span className="text-glow-yellow">{formatCOP(financialSummary.totalNetCOP)}</span>
+              <span className="text-glow-yellow-soft">{formatCOP(financialSummary.totalNetCOP)}</span>
               <span className="text-muted-foreground mx-2">/</span>
-              <span className="text-glow-green">{formatUSD(financialSummary.totalNetUSD)}</span>
+              <span className="text-glow-green-soft">{formatUSD(financialSummary.totalNetUSD)}</span>
             </div>
           </CardContent>
         </Card>

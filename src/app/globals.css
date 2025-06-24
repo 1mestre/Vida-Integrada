@@ -190,25 +190,16 @@
   z-index: 1;
 }
 
-/* --- INICIO: Código para Brillo Animado --- */
-@keyframes glow-pulse {
-  0%, 100% {
-    text-shadow: 0 0 5px currentColor, 0 0 10px currentColor;
-    opacity: 0.8;
-  }
-  50% {
-    text-shadow: 0 0 10px currentColor, 0 0 20px currentColor;
-    opacity: 1;
-  }
+/* --- INICIO: Código para Brillo Estático y Suave --- */
+.text-glow-yellow-soft {
+  color: #FBBF24; /* Color base amarillo */
+  /* Sombra de texto estática para crear un brillo suave */
+  text-shadow: 0 0 8px rgba(251, 191, 36, 0.4); 
 }
 
-.text-glow-yellow {
-  color: #FBBF24; /* Amarillo */
-  animation: glow-pulse 4s ease-in-out infinite;
+.text-glow-green-soft {
+  color: #34D399; /* Color base verde */
+  /* Sombra de texto estática para crear un brillo suave */
+  text-shadow: 0 0 8px rgba(52, 211, 153, 0.5);
 }
-
-.text-glow-green {
-  color: #34D399; /* Verde */
-  animation: glow-pulse 4s ease-in-out infinite;
-}
-/* --- FIN: Código para Brillo Animado --- */
+/* --- FIN: Código para Brillo Estático y Suave --- */
