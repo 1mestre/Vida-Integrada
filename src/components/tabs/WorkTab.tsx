@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { useAppState, WorkItem, WorkPackageTemplate } from '@/context/AppStateContext';
+import { useAppState, WorkItem, WorkPackageTemplate, type Contribution } from '@/context/AppStateContext';
 import { MessageSquare, TrendingUp, Trash2, Wrench, Link, Music, Settings, PlusCircle, PlayCircle, FileText, FileDown } from 'lucide-react';
 import WorkItemModal from '@/components/WorkItemModal';
 import { useToast } from '@/hooks/use-toast';
@@ -38,8 +38,8 @@ import { cn } from '@/lib/utils';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuGroup } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import html2pdf from 'html2pdf.js';
-import { renderToString } from 'react-dom/server';
 import { AgreementTemplate } from '@/components/pdf/AgreementTemplate';
+import { v4 as uuidv4 } from 'uuid';
 
 
 // Pega esta función completa para reemplazar la versión anterior.
@@ -321,7 +321,6 @@ const WorkTab = () => {
 
     const handleGeneratePdf = (item: WorkItem) => {
         playSound('genericClick');
-        const formattedDate = format(new Date(), 'MMMM d, yyyy');
         
         // 1. Crear un div invisible y añadirlo al cuerpo del documento
         const container = document.createElement('div');
@@ -333,7 +332,7 @@ const WorkTab = () => {
         const root = ReactDOMClient.createRoot(container);
         root.render(<AgreementTemplate 
           clientName={item.clientName} 
-          date={formattedDate} 
+          date={format(new Date(), 'MMMM d, yyyy')} 
         />);
   
         // 3. Darle un respiro al navegador para que complete el renderizado
@@ -349,9 +348,9 @@ const WorkTab = () => {
           // 4. Generar el PDF desde el contenedor y luego limpiarlo
           html2pdf().from(container).set(options).save().then(() => {
             document.body.removeChild(container);
-            root.unmount(); // Cleanup React root
+            root.unmount();
           });
-        }, 500); // 500ms para dar tiempo a cargar imágenes externas de la plantilla
+        }, 500);
       };
 
     const sortedWorkItems = useMemo(() => {
@@ -379,7 +378,7 @@ const WorkTab = () => {
         setIsSettingsModalOpen(true);
     };
 
-    const handleAddIncome = () => {
+    const handleAddIncome = async () => {
       const rawAmount = parseFloat(amount);
       if (isNaN(rawAmount) || rawAmount <= 0) {
         toast({
@@ -389,18 +388,21 @@ const WorkTab = () => {
         });
         return;
       }
-      
+    
       setRateLoading(true);
-      
-      let currentRate = 4000;
-      fetch('https://open.er-api.com/v6/latest/USD').then(res => res.json()).then(data => {
-        currentRate = data.rates.COP;
-      }).catch(error => {
-        console.error("No se pudo obtener la tasa de cambio, usando fallback.", error);
-      }).finally(() => {
+    
+      try {
+        const response = await fetch('https://open.er-api.com/v6/latest/USD');
+        let currentRate = 4000; // fallback
+        if (response.ok) {
+          const data = await response.json();
+          currentRate = data.rates.COP;
+        }
+        setExchangeRate(currentRate); // update UI
+    
         let netUSD = 0;
         let netCOP = 0;
-      
+    
         if (appState.selectedInputCurrencyIngresos === 'USD') {
           const grossAmount = rawAmount;
           netUSD = (grossAmount - 3) * 0.97;
@@ -409,33 +411,40 @@ const WorkTab = () => {
           netCOP = rawAmount;
           netUSD = netCOP / currentRate;
         }
-      
+    
         if (isNaN(netUSD) || isNaN(netCOP)) {
-            toast({
-              variant: "destructive",
-              title: "Error de Cálculo",
-              description: "No se pudo procesar el ingreso. El resultado era inválido.",
-            });
-            setRateLoading(false);
-            return;
+          toast({
+            variant: "destructive",
+            title: "Error de Cálculo",
+            description: "No se pudo procesar el ingreso. El resultado era inválido.",
+          });
+          return;
         }
-        
+    
         playSound('pomodoroStart');
-      
-        const newContribution = {
-          id: new Date().toISOString(),
+    
+        const newContribution: Contribution = {
+          id: uuidv4(),
           date: new Date().toISOString(),
           netUSDValue: netUSD,
           netCOPValue: netCOP,
         };
-      
+    
         setAppState(prevState => ({
           contributions: [newContribution, ...prevState.contributions],
         }));
-        
+    
         setAmount('');
+      } catch (error) {
+        console.error("No se pudo obtener la tasa de cambio, usando fallback.", error);
+        toast({
+          variant: "destructive",
+          title: "Error de Red",
+          description: "No se pudo obtener la tasa de cambio actualizada.",
+        });
+      } finally {
         setRateLoading(false);
-      });
+      }
     };
 
 
@@ -1018,4 +1027,5 @@ export default WorkTab;
     
 
     
+
 
