@@ -302,20 +302,45 @@ const WorkTab = () => {
 
     const handleGeneratePdf = useCallback(async (item: WorkItem) => {
         playSound('genericClick');
-    
-        // Dynamically import client-side libraries
-        const { pdf } = await import('@react-pdf/renderer');
-        const { default: saveAs } = await import('file-saver');
-        const { AgreementDocument } = await import('@/components/pdf/AgreementTemplate');
+
+        // Dynamically import client-side libraries to avoid server-side errors
+        const html2pdf = (await import('html2pdf.js')).default;
+        const ReactDOMClient = (await import('react-dom/client'));
+        const { AgreementTemplate } = await import('@/components/pdf/AgreementTemplate');
+
+        // Create a hidden container for rendering the template
+        const container = document.createElement('div');
+        container.style.position = 'absolute';
+        container.style.left = '-9999px';
+        document.body.appendChild(container);
+
+        // Render the React component into the container
+        const root = ReactDOMClient.createRoot(container);
+        root.render(<AgreementTemplate 
+            clientName={item.clientName} 
+            date={format(new Date(), 'MMMM d, yyyy')} 
+        />);
         
-        const doc = <AgreementDocument 
-          clientName={item.clientName} 
-          date={format(new Date(), 'MMMM d, yyyy')} 
-        />;
-        
-        const blob = await pdf(doc).toBlob();
-        
-        saveAs(blob, `Rights Of Use - ${item.clientName} - #${item.orderNumber}.pdf`);
+        // Wait for fonts/images to load as requested
+        setTimeout(() => {
+            const options = {
+                margin: 0,
+                filename: `Rights Of Use - ${item.clientName}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            // Generate PDF and clean up afterward
+            html2pdf().from(container).set(options).save().then(() => {
+                root.unmount();
+                document.body.removeChild(container);
+            }).catch(err => {
+                console.error("PDF generation failed:", err);
+                root.unmount();
+                document.body.removeChild(container);
+            });
+        }, 500);
     }, [playSound]);
 
     useEffect(() => {
@@ -948,7 +973,7 @@ const WorkTab = () => {
                                                 <p className="font-medium">{format(new Date(`${key}-02`), 'MMMM yyyy', { locale: es })}</p>
                                                 <div className="flex justify-between items-center">
                                                     <span className="text-muted-foreground">{formatCOP(monthIncome)} / {formatCOP(target)}</span>
-                                                    <span className={`font-bold ${achieved ? 'text-ios-green' : 'text-ios-orange'}`}>
+                                                    <span className={`font-bold ${achieved ? 'text-ios-green' : 'Logrado'}`}>
                                                         {achieved ? 'Logrado' : 'Pendiente'}
                                                     </span>
                                                 </div>
