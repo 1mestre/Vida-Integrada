@@ -20,7 +20,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useAppState, WorkItem, WorkPackageTemplate } from '@/context/AppStateContext';
-import { MessageSquare, TrendingUp, Trash2, Wrench, Link, Music, Settings, PlusCircle, PlayCircle, FolderPlus, FileText } from 'lucide-react';
+import { MessageSquare, TrendingUp, Trash2, Wrench, Link, Music, Settings, PlusCircle, PlayCircle, FileText } from 'lucide-react';
 import WorkItemModal from '@/components/WorkItemModal';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
@@ -115,13 +115,17 @@ const generateClientMessage = (item: WorkItem, packageTemplates: WorkPackageTemp
     message += `${isMultiple ? 'Keys' : 'Key'}: ${item.key} | ${isMultiple ? 'BPMs' : 'BPM'}: ${item.bpm}\n\n`;
     message += `📦📦 Order #${item.orderNumber}\n\n`;
     
-    if (item.packageName === 'Masterpiece') {
+    const cheapestPkgName = sortedPkgs[0]?.name;
+    const middlePkgName = sortedPkgs[1]?.name;
+    const highestPkgName = sortedPkgs[2]?.name;
+
+    if (item.packageName === highestPkgName) {
         message += `✅✅ This is built for the BIGGG stages - Spotify, radio, wherever you wanna take it!! 🌟🌟\n${item.revisionsRemaining} revisions remaining 🔧🔧\n\n🎁 PRO TIP: Drop a 5-star review and I'll hook you UPPP with $10 off your next order!! Helps me out FOR REALLL 🙏🙏\n\nNow go make some MAGIC happen!! ✨🎤`;
-    } else if (item.packageName === 'Exclusive') {
+    } else if (item.packageName === middlePkgName) {
         message += `✅ ${item.revisionsRemaining} revisions remaining 🔧\n${isMultiple ? "Time to make these BEATS slap!! 💥💥" : "Time to make some WAVES!! 🌊🌊"}\n\n🎁 PRO TIP: Leave me a 5-star review and I'll give you $10 off your next beat!! WIN-WIN SITUATION 😉💰💰\n\nLet's get this music out there!!! 🚀🚀`;
-    } else { // Amateurs
+    } else { // Paquete más barato (Amateur/Basic)
         message += "✅ Let me know what you think of the direction!! If you're vibing with it, we can ALWAYSSS take it to the next level!! 🎯🎯\n\n";
-        // Lógica dinámica para las revisiones en el paquete Amateurs
+        // Lógica de revisiones corregida:
         if (item.revisionsRemaining > 0) {
             message += `(${item.revisionsRemaining} custom revision(s) included in this deal! 😉💡💡)`;
         } else {
@@ -315,40 +319,60 @@ const WorkTab = () => {
           });
     }, []);
 
+    // Reemplaza la función handleGeneratePdf con esta versión corregida y robusta
     const handleGeneratePdf = (item: WorkItem) => {
-      // 1. Crear un div invisible y añadirlo al cuerpo del documento
+      playSound('genericClick');
+      
+      const formattedDate = format(new Date(), 'MMMM d, yyyy');
+
+      // 1. Crear el contenedor invisible
       const container = document.createElement('div');
-      container.style.position = 'absolute';
-      container.style.left = '-9999px'; // Lo mueve fuera de la pantalla
       document.body.appendChild(container);
-    
-      // 2. Usar ReactDOM.createRoot para renderizar el componente en el div
-      // Este es el paso clave que asegura que el contenido esté listo
-      const root = ReactDOMClient.createRoot(container);
-      root.render(<AgreementTemplate 
-        clientName={item.clientName} 
-        date={format(new Date(), 'MMMM d, yyyy')} 
-      />);
-    
-      // 3. Darle un respiro al navegador para que complete el renderizado
-      setTimeout(() => {
+
+      // 2. Crear un objeto de imagen para precargar el fondo
+      const bgImage = new Image();
+      bgImage.src = '/contract-background.png'; // Ruta a tu imagen en la carpeta /public
+
+      // 3. Cuando la imagen termine de cargarse, ejecuta la lógica de renderizado y PDF
+      bgImage.onload = () => {
+        // 4. Renderizar la plantilla de React DENTRO del callback onload
+        const root = ReactDOMClient.createRoot(container);
+        root.render(<AgreementTemplate 
+          clientName={item.clientName} 
+          date={formattedDate} 
+        />);
+
         const options = {
           margin: 0,
           filename: `Rights Of Use - ${item.clientName} - #${item.orderNumber}.pdf`,
           image: { type: 'jpeg', quality: 1.0 },
-          html2canvas: { scale: 2, useCORS: true },
+          html2canvas: { 
+            scale: 2, 
+            useCORS: true,
+            allowTaint: true,
+            onrendered: (canvas: any) => {
+              // Este callback puede ayudar a asegurar que todo se dibuje
+              document.body.removeChild(container);
+            }
+          },
           jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
-    
-        // 4. Generar el PDF desde el contenedor y luego limpiarlo
-        html2pdf().from(container).set(options).save().then(() => {
-          document.body.removeChild(container);
+
+        // 5. Generar el PDF
+        html2pdf().from(container).set(options).save();
+      };
+
+      // Manejo de error por si la imagen de fondo no se puede cargar
+      bgImage.onerror = () => {
+        toast({
+          variant: "destructive",
+          title: "Error de Plantilla",
+          description: "No se pudo cargar la imagen de fondo del contrato.",
         });
-      }, 100); // Una pequeña demora de 100ms es usualmente suficiente
-      
-      playSound('genericClick');
+        console.error("Error: No se pudo cargar la imagen de fondo del contrato.");
+        document.body.removeChild(container);
+      };
     };
-    
 
     const sortedWorkItems = useMemo(() => {
         return [...appState.workItems].sort((a, b) => new Date(a.deliveryDate).getTime() - new Date(b.deliveryDate).getTime());
