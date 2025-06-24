@@ -19,7 +19,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useAppState, WorkItem, WorkPackageTemplate, type Contribution } from '@/context/AppStateContext';
-import { TrendingUp, Settings, PlusCircle, PlayCircle, FileText, FileDown, Wrench, Music, Link, MoreVertical, Edit, MessageSquare, Trash2 } from 'lucide-react';
+import { TrendingUp, Settings, PlusCircle, FileText, FileDown, Wrench, Music, Link, MoreVertical, Edit, MessageSquare, Trash2 } from 'lucide-react';
 import WorkItemModal from '@/components/WorkItemModal';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
@@ -544,20 +544,6 @@ const WorkTab = () => {
                           <DropdownMenuItem onSelect={() => copyToClipboard(filenames.project, 'Nombre de archivo FLP')}>
                             <span>Copiar Nombre FLP</span>
                           </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onSelect={async () => {
-                              try {
-                                await fetch(`http://localhost:12345/open-fl`);
-                                playSound('genericClick');
-                              } catch (error) {
-                                toast({ variant: "destructive", title: "Error de Conexión", description: "No se pudo conectar con el agente local." });
-                              }
-                            }}
-                          >
-                            <PlayCircle className="mr-2 h-4 w-4" />
-                            <span>Abrir FL Studio</span>
-                          </DropdownMenuItem>
                         </DropdownMenuSubContent>
                       </DropdownMenuPortal>
                     </DropdownMenuSub>
@@ -1002,3 +988,4 @@ const WorkTab = () => {
 export default WorkTab;
 
     
+
