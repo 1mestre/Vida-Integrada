@@ -20,7 +20,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useAppState, WorkItem, WorkPackageTemplate } from '@/context/AppStateContext';
-import { MessageSquare, TrendingUp, Trash2, Wrench, Link, Music, Settings, PlusCircle, PlayCircle, FileText } from 'lucide-react';
+import { MessageSquare, TrendingUp, Trash2, Wrench, Link, Music, Settings, PlusCircle, PlayCircle, FileText, FileDown } from 'lucide-react';
 import WorkItemModal from '@/components/WorkItemModal';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
@@ -319,60 +319,40 @@ const WorkTab = () => {
           });
     }, []);
 
-    // Reemplaza la función handleGeneratePdf con esta versión corregida y robusta
     const handleGeneratePdf = (item: WorkItem) => {
-      playSound('genericClick');
-      
-      const formattedDate = format(new Date(), 'MMMM d, yyyy');
-
-      // 1. Crear el contenedor invisible
-      const container = document.createElement('div');
-      document.body.appendChild(container);
-
-      // 2. Crear un objeto de imagen para precargar el fondo
-      const bgImage = new Image();
-      bgImage.src = '/contract-background.png'; // Ruta a tu imagen en la carpeta /public
-
-      // 3. Cuando la imagen termine de cargarse, ejecuta la lógica de renderizado y PDF
-      bgImage.onload = () => {
-        // 4. Renderizar la plantilla de React DENTRO del callback onload
+        playSound('genericClick');
+        const formattedDate = format(new Date(), 'MMMM d, yyyy');
+        
+        // 1. Crear un div invisible y añadirlo al cuerpo del documento
+        const container = document.createElement('div');
+        container.style.position = 'absolute';
+        container.style.left = '-9999px';
+        document.body.appendChild(container);
+  
+        // 2. Usar ReactDOM.createRoot para renderizar el componente en el div
         const root = ReactDOMClient.createRoot(container);
         root.render(<AgreementTemplate 
           clientName={item.clientName} 
           date={formattedDate} 
         />);
-
-        const options = {
-          margin: 0,
-          filename: `Rights Of Use - ${item.clientName} - #${item.orderNumber}.pdf`,
-          image: { type: 'jpeg', quality: 1.0 },
-          html2canvas: { 
-            scale: 2, 
-            useCORS: true,
-            allowTaint: true,
-            onrendered: (canvas: any) => {
-              // Este callback puede ayudar a asegurar que todo se dibuje
-              document.body.removeChild(container);
-            }
-          },
-          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        };
-
-        // 5. Generar el PDF
-        html2pdf().from(container).set(options).save();
+  
+        // 3. Darle un respiro al navegador para que complete el renderizado
+        setTimeout(() => {
+          const options = {
+            margin: 0,
+            filename: `Rights Of Use - ${item.clientName} - #${item.orderNumber}.pdf`,
+            image: { type: 'jpeg', quality: 1.0 },
+            html2canvas: { scale: 2, useCORS: true },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+          };
+  
+          // 4. Generar el PDF desde el contenedor y luego limpiarlo
+          html2pdf().from(container).set(options).save().then(() => {
+            document.body.removeChild(container);
+            root.unmount(); // Cleanup React root
+          });
+        }, 500); // 500ms para dar tiempo a cargar imágenes externas de la plantilla
       };
-
-      // Manejo de error por si la imagen de fondo no se puede cargar
-      bgImage.onerror = () => {
-        toast({
-          variant: "destructive",
-          title: "Error de Plantilla",
-          description: "No se pudo cargar la imagen de fondo del contrato.",
-        });
-        console.error("Error: No se pudo cargar la imagen de fondo del contrato.");
-        document.body.removeChild(container);
-      };
-    };
 
     const sortedWorkItems = useMemo(() => {
         return [...appState.workItems].sort((a, b) => new Date(a.deliveryDate).getTime() - new Date(b.deliveryDate).getTime());
@@ -764,13 +744,16 @@ const WorkTab = () => {
                 }}>
                     Editar
                 </Button>
-                <Button variant="destructive" size="icon" className="h-8 w-8" onClick={() => handleDeleteWorkItem(row.original)}>
+                 <Button variant="destructive" size="icon" className="h-8 w-8" onClick={() => handleDeleteWorkItem(row.original)}>
                     <Trash2 className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleGeneratePdf(row.original)}>
+                    <FileDown className="h-4 w-4 text-green-500" />
                 </Button>
               </div>
             )
         },
-    ], [appState.workItems, appState.workPackageTemplates, handleDateUpdate, handleStatusUpdate, handlePackageUpdate, handleRevisionsUpdate, toast, playSound]);
+    ], [appState.workItems, appState.workPackageTemplates, handleDateUpdate, handleStatusUpdate, handlePackageUpdate, handleRevisionsUpdate, toast, playSound, handleGeneratePdf]);
 
     const table = useReactTable({
         data: sortedWorkItems,
@@ -1035,3 +1018,4 @@ export default WorkTab;
     
 
     
+
