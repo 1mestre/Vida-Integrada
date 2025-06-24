@@ -507,7 +507,7 @@ const WorkTab = () => {
               </div>
             )
         },
-    ], [appState.workItems, keyOptions, handleKeyUpdate, handleDateUpdate, handleStatusUpdate]);
+    ], [appState.workItems, keyOptions, handleDateUpdate, handleStatusUpdate, handleKeyUpdate]);
 
     const table = useReactTable({
         data: sortedWorkItems,
@@ -518,22 +518,26 @@ const WorkTab = () => {
     return (
         <div className="space-y-8">
             <div className="flex items-center justify-between mb-6">
-              <h1 className="text-4xl font-bold tracking-tight">FIVERR📀</h1>
+              
+              <div className="flex flex-col items-start">
+                <h1 className="text-3xl font-bold tracking-tight">FIVERR📀</h1>
+                <div className="flex items-center gap-2 mt-2">
+                  <a href="https://www.fiverr.com/seller_dashboard" target="_blank" rel="noopener noreferrer" onClick={() => playSound('genericClick')}>
+                    <Button className="bg-green-600 hover:bg-green-700 text-white shadow-sm">
+                      <Link className="mr-2 h-4 w-4" />
+                      Fiverr
+                    </Button>
+                  </a>
+                  <a href="https://tunebat.com/Analyzer" target="_blank" rel="noopener noreferrer" onClick={() => playSound('genericClick')}>
+                    <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm">
+                      <Music className="mr-2 h-4 w-4" />
+                      Tunebat
+                    </Button>
+                  </a>
+                </div>
+              </div>
 
               <div className="flex items-center gap-2">
-                <a href="https://www.fiverr.com/seller_dashboard" target="_blank" rel="noopener noreferrer" onClick={() => playSound('genericClick')}>
-                  <Button className="bg-green-600 hover:bg-green-700 text-white shadow-sm">
-                    <Link className="mr-2 h-4 w-4" />
-                    Fiverr
-                  </Button>
-                </a>
-                <a href="https://tunebat.com/Analyzer" target="_blank" rel="noopener noreferrer" onClick={() => playSound('genericClick')}>
-                  <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm">
-                    <Music className="mr-2 h-4 w-4" />
-                    Tunebat
-                  </Button>
-                </a>
-                
                 <Button variant="outline" onClick={handleOpenPackageSettingsModal}>
                   <Settings className="mr-2 h-4 w-4" />
                   Set Packages
@@ -541,7 +545,6 @@ const WorkTab = () => {
                 <Button onClick={handleOpenNewOrderModal}>
                   Nueva Orden🤑💵
                 </Button>
-                
               </div>
             </div>
 
