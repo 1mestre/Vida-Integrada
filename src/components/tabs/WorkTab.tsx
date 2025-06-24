@@ -19,7 +19,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useAppState, WorkItem, WorkPackageTemplate } from '@/context/AppStateContext';
-import { MessageSquare, Clipboard, TrendingUp, Trash2, Wrench, Link, Music, Settings, PlusCircle, CalendarIcon, PlayCircle } from 'lucide-react';
+import { MessageSquare, Clipboard, TrendingUp, Trash2, Wrench, Link, Music, Settings, PlusCircle, CalendarIcon, PlayCircle, FolderPlus } from 'lucide-react';
 import WorkItemModal from '@/components/WorkItemModal';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
@@ -187,7 +187,11 @@ const FileNameToolsPopover = ({ item, toast, playSound }: { item: WorkItem; toas
                           await fetch(`http://localhost:12345/open-fl`);
                           playSound('genericClick');
                         } catch (error) {
-                          alert("Error: No se pudo conectar con el agente local.");
+                          toast({
+                            variant: "destructive",
+                            title: "Error de Conexión",
+                            description: "No se pudo conectar con el agente local.",
+                          });
                         }
                       }}
                     >
@@ -737,23 +741,6 @@ const WorkTab = () => {
                       Tunebat
                     </Button>
                   </a>
-                  <Button
-                    className="bg-orange-600 hover:bg-orange-700 text-white shadow-sm"
-                    onClick={async () => {
-                      try {
-                        await fetch('http://localhost:12345/open-template');
-                        playSound('genericClick');
-                      } catch (error) {
-                        toast({
-                          variant: "destructive",
-                          title: "Error de Conexión",
-                          description: "No se pudo conectar con el agente local. Asegúrate de que esté en ejecución.",
-                        });
-                      }
-                    }}
-                  >
-                    FL TEMPLATE🥭
-                  </Button>
                 </div>
               </div>
               <div className="flex items-center gap-4">
@@ -966,6 +953,8 @@ const WorkTab = () => {
 };
 
 export default WorkTab;
+
+    
 
     
 
