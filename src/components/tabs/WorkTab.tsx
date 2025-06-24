@@ -35,7 +35,7 @@ import { Progress } from "@/components/ui/progress";
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { format, differenceInCalendarDays, subDays } from 'date-fns';
+import { format, differenceInCalendarDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useSound } from '@/context/SoundContext';
 import PackageSettingsModal from '@/components/PackageSettingsModal';
@@ -598,7 +598,7 @@ const WorkTab = () => {
               </div>
             )
         },
-    ], [appState.workItems, appState.workPackageTemplates, handleDateUpdate, handleStatusUpdate, handleKeyUpdate, handlePackageUpdate, keyOptions, handleRevisionsUpdate, handleRevisionsUpdate]);
+    ], [appState.workItems, appState.workPackageTemplates, handleDateUpdate, handleStatusUpdate, handleKeyUpdate, handlePackageUpdate, keyOptions, handleRevisionsUpdate]);
 
     const table = useReactTable({
         data: sortedWorkItems,
