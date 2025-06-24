@@ -2,8 +2,8 @@
 "use client";
 
 import React, { useState } from 'react';
-import ProductivityCard from './ProductivityCard';
-import { ListTodo, Plus, X, Hourglass, Play, CheckCircle } from 'lucide-react';
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { ListTodo, Plus, X, Hourglass, Play, CheckCircle, Sun, Moon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -11,7 +11,6 @@ import { useSound } from '@/context/SoundContext';
 import { useAppState, KanbanTask, WorkItem, UniversityTask } from '@/context/AppStateContext';
 import StatusUpdateModal from '@/components/StatusUpdateModal';
 import { cn } from '@/lib/utils';
-
 
 type ColumnId = 'todo' | 'inprogress' | 'done';
 
@@ -36,7 +35,12 @@ const columnToUniStatusMap: Record<ColumnId, UniversityTask['status']> = {
     done: 'completado'
 };
 
-const TaskManager = () => {
+interface TaskManagerProps {
+  handleResetDayTasks: () => void;
+  handleResetNightTasks: () => void;
+}
+
+const TaskManager: React.FC<TaskManagerProps> = ({ handleResetDayTasks, handleResetNightTasks }) => {
   const { appState, setAppState } = useAppState();
   const [newTaskText, setNewTaskText] = useState('');
   const { playSound } = useSound(); 
@@ -214,33 +218,59 @@ const TaskManager = () => {
 
   return (
     <>
-    <ProductivityCard title="Tareas de Hoy" icon={<ListTodo className="text-primary"/>}>
-      <div className="space-y-4">
-        <div className="flex gap-2">
-          <Input 
-            value={newTaskText} 
-            onChange={(e) => setNewTaskText(e.target.value)} 
-            placeholder="Añadir nueva tarea..."
-            className="bg-background/30"
-            onKeyPress={(e) => e.key === 'Enter' && handleAddTask()}
-          />
-          <Button onClick={handleAddTask}><Plus className="h-4 w-4"/></Button>
+    <Card className="glassmorphism-card h-full">
+      <CardHeader className="flex flex-row items-center justify-between">
+        <h2 className="text-xl font-bold flex items-center">
+          <ListTodo className="mr-3 h-5 w-5 text-blue-400" />
+          Tareas de Hoy
+        </h2>
+        <div className="flex items-center gap-2">
+          <Button 
+            size="icon" 
+            onClick={handleResetDayTasks} 
+            aria-label="Resetear Tareas Diurnas"
+            className="bg-amber-500 text-amber-950 hover:bg-amber-600 shadow-lg"
+          >
+            <Sun className="h-5 w-5" />
+          </Button>
+          <Button 
+            size="icon" 
+            onClick={handleResetNightTasks} 
+            aria-label="Resetear Tareas Nocturnas"
+            className="bg-indigo-800 text-indigo-200 hover:bg-indigo-900 shadow-lg"
+          >
+            <Moon className="h-5 w-5" />
+          </Button>
         </div>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          <div className="flex gap-2">
+            <Input 
+              value={newTaskText} 
+              onChange={(e) => setNewTaskText(e.target.value)} 
+              placeholder="Añadir nueva tarea..."
+              className="bg-background/30"
+              onKeyPress={(e) => e.key === 'Enter' && handleAddTask()}
+            />
+            <Button onClick={handleAddTask}><Plus className="h-4 w-4"/></Button>
+          </div>
 
-        <div className="text-xs text-muted-foreground p-3 rounded-lg bg-ios-red/10 border border-ios-red/30 flex gap-2">
-            <X className="h-4 w-4 text-ios-red mt-1 flex-shrink-0" />
-            <div>
-                <span className="font-bold text-ios-red">QUÉ NO HACER HOY:</span> Consumir videos de YouTube, redes sociales sin propósito, procrastinar decisiones.
-            </div>
-        </div>
+          <div className="text-xs text-muted-foreground p-3 rounded-lg bg-ios-red/10 border border-ios-red/30 flex gap-2">
+              <X className="h-4 w-4 text-ios-red mt-1 flex-shrink-0" />
+              <div>
+                  <span className="font-bold text-ios-red">QUÉ NO HACER HOY:</span> Consumir videos de YouTube, redes sociales sin propósito, procrastinar decisiones.
+              </div>
+          </div>
 
-        <div className="flex flex-col md:flex-row gap-4">
-            <Column columnId="todo" />
-            <Column columnId="inprogress" />
-            <Column columnId="done" />
+          <div className="flex flex-col md:flex-row gap-4">
+              <Column columnId="todo" />
+              <Column columnId="inprogress" />
+              <Column columnId="done" />
+          </div>
         </div>
-      </div>
-    </ProductivityCard>
+      </CardContent>
+    </Card>
 
     {taskToUpdate && targetColumn && (
       <StatusUpdateModal
