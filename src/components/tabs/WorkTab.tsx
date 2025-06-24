@@ -194,6 +194,12 @@ const statusColorMap: Record<WorkItem['deliveryStatus'], string> = {
   'Returned': 'bg-red-600 hover:bg-red-700 text-white'
 };
 
+const packageColorMap: Record<WorkItem['packageName'], string> = {
+  'Masterpiece': 'bg-purple-600 hover:bg-purple-700',
+  'Exclusive': 'bg-sky-600 hover:bg-sky-700',
+  'Amateurs': 'bg-teal-600 hover:bg-teal-700',
+};
+
 const formatCOP = (value: number) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(value);
 const formatUSD = (value: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
 
@@ -453,7 +459,11 @@ const WorkTab = () => {
             header: 'Paquete',
             cell: ({ row }) => {
                 const packageName = row.getValue('packageName') as string;
-                return <Badge variant="secondary">{packageName}</Badge>
+                return (
+                  <Badge className={cn(packageColorMap[packageName] || 'bg-gray-500')}>
+                    {packageName}
+                  </Badge>
+                );
             }
         },
         {
@@ -761,7 +771,3 @@ const WorkTab = () => {
 };
 
 export default WorkTab;
-
-    
-
-    
