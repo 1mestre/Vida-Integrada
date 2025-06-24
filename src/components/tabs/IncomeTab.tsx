@@ -82,6 +82,11 @@ const IncomeTab = () => {
     return { totalNetCOP, totalNetUSD, incomeThisMonth, progress };
   }, [appState.contributions, currentMonthTarget, currentMonthKey]);
 
+  const incomeThisMonthInUSD = useMemo(() => {
+    if (!financialSummary.incomeThisMonth || !exchangeRate) return 0;
+    return financialSummary.incomeThisMonth / exchangeRate;
+  }, [financialSummary.incomeThisMonth, exchangeRate]);
+
   const monthTimeProgress = useMemo(() => {
     const today = new Date();
     const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
@@ -200,25 +205,29 @@ const IncomeTab = () => {
             </Card>
         </div>
       </div>
-      <div className="space-y-6">
-        <Card className="glassmorphism-card">
+      <div className="flex flex-col items-center gap-4">
+        {/* Tarjeta Principal: Ingresos del Mes */}
+        <Card className="w-full max-w-md glassmorphism-card">
           <CardHeader>
-            <CardTitle className="text-center text-sm font-medium text-muted-foreground">
-              Ingresos Totales
+            <CardTitle className="text-center text-lg font-semibold">
+              Ingresos Este Mes
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-center text-4xl font-bold tracking-tighter">
-              <span className="text-glow-yellow-soft">{formatCOP(financialSummary.totalNetCOP)}</span>
+              <span className="text-yellow-400">{formatCOP(financialSummary.incomeThisMonth)}</span>
               <span className="text-muted-foreground mx-2">/</span>
-              <span className="text-glow-green-soft">{formatUSD(financialSummary.totalNetUSD)}</span>
+              <span className="text-green-400">{formatUSD(incomeThisMonthInUSD)}</span>
             </div>
           </CardContent>
         </Card>
-        <Card className="glassmorphism-card text-center p-6">
-            <p className="text-sm text-muted-foreground">Ingresos Este Mes</p>
-            <p className="text-3xl font-semibold">{formatCOP(financialSummary.incomeThisMonth)}</p>
-        </Card>
+
+        {/* Texto Secundario: Ingresos Acumulados */}
+        <div className="text-center">
+          <p className="text-sm text-muted-foreground">
+            Ingresos Acumulados: {formatCOP(financialSummary.totalNetCOP)} / {formatUSD(financialSummary.totalNetUSD)}
+          </p>
+        </div>
         {financialSummary.progress >= 100 && (
             <Card className="glassmorphism-card bg-ios-green/20 border-ios-green p-4 text-center">
                 <p className="font-bold text-ios-green animate-pulse">🎉✨ ¡FELICITACIONES! ¡META ALCANZADA! ✨🎉</p>

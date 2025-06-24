@@ -27,7 +27,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useAppState, WorkItem } from '@/context/AppStateContext';
-import { MessageSquare, Clipboard, TrendingUp, Trash2, Wrench, Link, Music, Settings, PlusCircle, CalendarIcon } from 'lucide-react';
+import { MessageSquare, Clipboard, TrendingUp, Trash2, Wrench, Link, Music, Settings, PlusCircle, CalendarIcon, Flame } from 'lucide-react';
 import WorkItemModal from '@/components/WorkItemModal';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
@@ -542,7 +542,7 @@ const WorkTab = () => {
                   <Settings className="mr-2 h-4 w-4" />
                   Set Packages
                 </Button>
-                <Button onClick={handleOpenNewOrderModal}>
+                <Button onClick={handleOpenNewOrderModal} className="h-14 text-lg">
                   Nueva Orden🤑💵
                 </Button>
               </div>
@@ -707,9 +707,9 @@ const WorkTab = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="text-center text-4xl font-bold tracking-tighter">
-                      <span className="text-glow-yellow">{formatCOP(financialSummary.totalNetCOP)}</span>
+                      <span className="text-glow-yellow-soft">{formatCOP(financialSummary.totalNetCOP)}</span>
                       <span className="text-muted-foreground mx-2">/</span>
-                      <span className="text-glow-green">{formatUSD(financialSummary.totalNetUSD)}</span>
+                      <span className="text-glow-green-soft">{formatUSD(financialSummary.totalNetUSD)}</span>
                     </div>
                   </CardContent>
                 </Card>
