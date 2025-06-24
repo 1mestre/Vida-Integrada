@@ -19,7 +19,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useAppState, WorkItem, WorkPackageTemplate, type Contribution } from '@/context/AppStateContext';
-import { TrendingUp, Settings, PlusCircle, FileText, FileDown, Wrench, Music, Link, Edit, MessageSquare, Trash2 } from 'lucide-react';
+import { TrendingUp, Settings, PlusCircle, FileDown, Wrench, Music, Link, Edit, MessageSquare, Trash2 } from 'lucide-react';
 import WorkItemModal from '@/components/WorkItemModal';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
@@ -37,8 +37,6 @@ import { cn } from '@/lib/utils';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuGroup, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuPortal, DropdownMenuSubContent } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { v4 as uuidv4 } from 'uuid';
-import html2pdf from 'html2pdf.js';
-import ReactDOMClient from 'react-dom/client';
 import { AgreementTemplate } from '@/components/pdf/AgreementTemplate';
 
 
@@ -253,36 +251,36 @@ const WorkTab = () => {
     const currentMonthKey = format(new Date(), 'yyyy-MM');
     const currentMonthTarget = appState.monthlyTargets[currentMonthKey] || 0;
 
-    const handleGeneratePdf = (item: WorkItem) => {
-      playSound('genericClick');
-  
-      // 1. Crear un contenedor temporal y oculto
-      const container = document.createElement('div');
-      // No es necesario añadirlo al body visible, html2pdf lo puede manejar en memoria
-  
-      // 2. Usar createRoot para renderizar el componente de forma asíncrona
-      const root = ReactDOMClient.createRoot(container);
-      root.render(<AgreementTemplate 
-          clientName={item.clientName} 
-          date={format(new Date(), 'MMMM d, yyyy')} 
-      />);
+    const handleGeneratePdf = useCallback(async (item: WorkItem) => {
+        playSound('genericClick');
+        
+        // Dynamically import libraries only on the client
+        const ReactDOMClient = (await import('react-dom/client')).default;
+        const html2pdf = (await import('html2pdf.js')).default;
+
+        const container = document.createElement('div');
+        document.body.appendChild(container);
+    
+        const root = ReactDOMClient.createRoot(container);
+        root.render(<AgreementTemplate 
+            clientName={item.clientName} 
+            date={format(new Date(), 'MMMM d, yyyy')} 
+        />);
       
-      // 3. Pausa estratégica para permitir la carga de recursos externos (fuentes, logo)
-      setTimeout(() => {
-          const options = {
-              margin: 0,
-              filename: `Rights Of Use - ${item.clientName}.pdf`,
-              image: { type: 'jpeg', quality: 0.98 },
-              html2canvas: { scale: 2, useCORS: true }, // useCORS es clave para imágenes externas
-              jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-          };
-  
-          // 4. Generar el PDF desde el contenedor y luego limpiarlo
-          html2pdf().from(container).set(options).save().then(() => {
-            root.unmount();
-          });
-      }, 500); // 500ms es una pausa razonable
-    };
+        setTimeout(() => {
+            const options = {
+                margin: 0,
+                filename: `Rights Of Use - ${item.clientName}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            html2pdf().from(container).set(options).save().then(() => {
+                document.body.removeChild(container);
+                root.unmount();
+            });
+        }, 500); 
+    }, [playSound]);
     
     const handleOpenEditModal = (item: WorkItem) => {
       setSelectedItem(item);
@@ -544,21 +542,21 @@ const WorkTab = () => {
                     </DropdownMenuSubTrigger>
                     <DropdownMenuPortal>
                       <DropdownMenuSubContent>
-                        <DropdownMenuItem onSelect={() => {
+                        <DropdownMenuItem onClick={() => {
                           navigator.clipboard.writeText(generateFileNames(item).wav);
                           toast({ title: "Copiado!" });
                           playSound('genericClick');
                         }}>
                           Copiar Nombre WAV
                         </DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => {
+                        <DropdownMenuItem onClick={() => {
                           navigator.clipboard.writeText(generateFileNames(item).stems);
                           toast({ title: "Copiado!" });
                           playSound('genericClick');
                         }}>
                           Copiar Nombre STEMS
                         </DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => {
+                        <DropdownMenuItem onClick={() => {
                           navigator.clipboard.writeText(generateFileNames(item).project);
                           toast({ title: "Copiado!" });
                           playSound('genericClick');
@@ -760,7 +758,7 @@ const WorkTab = () => {
             );
           },
         }
-    ], [appState.workPackageTemplates, appState.contributions, handleDateUpdate, handleStatusUpdate, handlePackageUpdate, handleRevisionsUpdate, playSound, handleDeleteWorkItem, handleGeneratePdf, handleCopyMessage]);
+    ], [appState.workPackageTemplates, appState.contributions, handleDateUpdate, handleStatusUpdate, handlePackageUpdate, handleRevisionsUpdate, playSound, handleDeleteWorkItem, handleGeneratePdf, handleCopyMessage, toast]);
 
     const table = useReactTable({
         data: sortedWorkItems,
@@ -786,29 +784,6 @@ const WorkTab = () => {
                       Tunebat
                     </Button>
                   </a>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button className="bg-amber-700 text-white hover:bg-amber-800 shadow-sm">
-                        <FileText className="mr-2 h-4 w-4" />
-                        Generar Contrato
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-56">
-                      <DropdownMenuLabel>Selecciona una Orden</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuGroup>
-                        {appState.workItems.length > 0 ? (
-                          appState.workItems.map((item) => (
-                            <DropdownMenuItem key={item.id} onSelect={() => handleGeneratePdf(item)}>
-                              <span>{item.clientName} - #{item.orderNumber}</span>
-                            </DropdownMenuItem>
-                          ))
-                        ) : (
-                          <DropdownMenuItem disabled>No hay órdenes</DropdownMenuItem>
-                        )}
-                      </DropdownMenuGroup>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
                 </div>
               </div>
               <div className="flex items-center gap-2">
