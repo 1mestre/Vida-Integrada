@@ -36,11 +36,10 @@ import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuGroup } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { AgreementTemplate } from '@/components/pdf/AgreementTemplate';
+import { AgreementDocument } from '@/components/pdf/AgreementTemplate';
 import { v4 as uuidv4 } from 'uuid';
-import html2pdf from 'html2pdf.js';
-import * as ReactDOMClient from 'react-dom/client';
-
+import { pdf } from '@react-pdf/renderer';
+import { saveAs } from 'file-saver';
 
 // Pega esta función completa para reemplazar la versión anterior.
 const generateClientMessage = (item: WorkItem, packageTemplates: WorkPackageTemplate[]): string => {
@@ -304,6 +303,19 @@ const WorkTab = () => {
     const currentMonthKey = format(new Date(), 'yyyy-MM');
     const currentMonthTarget = appState.monthlyTargets[currentMonthKey] || 0;
 
+    const handleGeneratePdf = useCallback(async (item: WorkItem) => {
+      playSound('genericClick');
+      
+      const doc = <AgreementDocument 
+        clientName={item.clientName} 
+        date={format(new Date(), 'MMMM d, yyyy')} 
+      />;
+      
+      const blob = await pdf(doc).toBlob();
+      
+      saveAs(blob, `Rights Of Use - ${item.clientName} - #${item.orderNumber}.pdf`);
+    }, [playSound]);
+
     useEffect(() => {
         fetch('https://open.er-api.com/v6/latest/USD')
           .then(res => res.json())
@@ -316,33 +328,6 @@ const WorkTab = () => {
             setRateLoading(false);
           });
     }, []);
-
-    const handleGeneratePdf = useCallback((item: WorkItem) => {
-      playSound('genericClick');
-      
-      const container = document.createElement('div');
-      document.body.appendChild(container);
-
-      const root = ReactDOMClient.createRoot(container);
-      root.render(<AgreementTemplate 
-        clientName={item.clientName} 
-        date={format(new Date(), 'MMMM d, yyyy')} 
-      />);
-
-      setTimeout(() => {
-        const options = {
-          margin: 0,
-          filename: `Rights Of Use - ${item.clientName} - #${item.orderNumber}.pdf`,
-          image: { type: 'jpeg', quality: 1.0 },
-          html2canvas: { scale: 2, useCORS: true, allowTaint: true, },
-          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        };
-        html2pdf().from(container).set(options).save().then(() => {
-          document.body.removeChild(container);
-          root.unmount();
-        });
-      }, 500);
-    }, [playSound]);
     
     const sortedWorkItems = useMemo(() => {
         return [...appState.workItems].sort((a, b) => new Date(a.deliveryDate).getTime() - new Date(b.deliveryDate).getTime());
