@@ -201,13 +201,19 @@ const IncomeTab = () => {
         </div>
       </div>
       <div className="space-y-6">
-        <Card className="glassmorphism-card text-center p-6">
-            <p className="text-sm text-muted-foreground">INGRESO PESOS</p>
-            <p className="text-4xl font-bold text-ios-green">{formatCOP(financialSummary.totalNetCOP)}</p>
-        </Card>
-        <Card className="glassmorphism-card text-center p-6">
-            <p className="text-sm text-muted-foreground">INGRESO USD</p>
-            <p className="text-3xl font-semibold text-ios-blue">{formatUSD(financialSummary.totalNetUSD)}</p>
+        <Card className="glassmorphism-card">
+          <CardHeader>
+            <CardTitle className="text-center text-sm font-medium text-muted-foreground">
+              Ingresos Totales
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center text-4xl font-bold tracking-tighter">
+              <span className="text-glow-yellow">{formatCOP(financialSummary.totalNetCOP)}</span>
+              <span className="text-muted-foreground mx-2">/</span>
+              <span className="text-glow-green">{formatUSD(financialSummary.totalNetUSD)}</span>
+            </div>
+          </CardContent>
         </Card>
         <Card className="glassmorphism-card text-center p-6">
             <p className="text-sm text-muted-foreground">Ingresos Este Mes</p>

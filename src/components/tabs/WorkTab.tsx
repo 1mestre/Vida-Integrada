@@ -27,7 +27,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useAppState, WorkItem } from '@/context/AppStateContext';
-import { MessageSquare, Clipboard, TrendingUp, Trash2, Wrench, Link, Music, Settings, PlusCircle, CalendarIcon } from 'lucide-react';
+import { MessageSquare, Clipboard, TrendingUp, Trash2, Wrench, Link, Music, Settings, PlusCircle, CalendarIcon, Flame } from 'lucide-react';
 import WorkItemModal from '@/components/WorkItemModal';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
@@ -112,7 +112,9 @@ const FileNameToolsPopover = ({ item }: { item: WorkItem }) => {
 const generateClientMessage = (item: WorkItem): string => {
   let message = `Heyyy ${item.clientName}! 👋👋\n\n`;
 
+  // Bloque Principal: Elige la plantilla base según el nombre del paquete
   if (item.packageName === 'Masterpiece') {
+    // --- Plantilla Masterpiece ---
     message += `Yooo, your ${item.genre} masterpiece${item.remakeType === 'Multiple Remakes' ? 's are' : ' is'} officially done and it's straighttt fire fr!! ${item.remakeType === 'Multiple Remakes' ? '🔥🔥✨ Hahaha, we went CRAZY on these!!' : '🔥✨'}\n\n`;
     
     if (item.remakeType === 'Single Remake') {
@@ -125,6 +127,7 @@ const generateClientMessage = (item: WorkItem): string => {
     if (item.separateFiles) message += "- Full WAV + STEMS: The WHOLE package, no bs!! 💎\n";
     if (item.projectFileDelivery) message += "- FLP Project File: Full creative control in your hands!! 🎚️🎚️\n";
     if (item.exclusiveLicense) message += "- Exclusive Rights Contract: It's 100000% yours, period!! 📜\n";
+    // MODIFICACIÓN: Se añade la producción vocal como un extra condicional
     if (item.vocalProduction) message += "- Vocal Production: Pro-level vocal mixing & tuning to make your voice SHINE!! ✨🎙️\n";
     
     if (item.vocalChainPreset) {
@@ -133,6 +136,7 @@ const generateClientMessage = (item: WorkItem): string => {
     }
 
   } else if (item.packageName === 'Exclusive') {
+    // --- Plantilla Exclusive ---
     message += `Your ${item.genre} ${item.remakeType === 'Multiple Remakes' ? 'beats are' : 'beat is'} readyyy to drop!! ${item.remakeType === 'Multiple Remakes' ? '💣💣 No cap, these ones hit DIFFERENT!! 💯🎵' : 'No cap, this one hits different 💯🎵'}\n\n`;
 
     if (item.remakeType === 'Single Remake') {
@@ -144,6 +148,7 @@ const generateClientMessage = (item: WorkItem): string => {
     message += "📎📎 WHAT YOU'RE GETTING:\n";
     if (item.masterAudio) message += "- Full WAV: Mixed, mastered, and READYYY to upload!! 🎯\n";
     if (item.exclusiveLicense) message += "- Exclusive Rights Contract: 100% ownership, no sharing needed!! 📋\n";
+    // MODIFICACIÓN: Se añade la producción vocal como un extra condicional
     if (item.vocalProduction) message += "- Vocal Production: Pro-level vocal mixing & tuning to make your voice SHINE!! ✨🎙️\n";
     
     if (item.vocalChainPreset) {
@@ -151,18 +156,21 @@ const generateClientMessage = (item: WorkItem): string => {
       message += "(Appreciate you being chill to work with, let's keep the collabs going!!) 🤝\n\n";
     }
 
-  } else {
+  } else { // Asumimos 'Amateurs' o cualquier otro
+    // --- Plantilla Amateurs ---
     message += `So here's that ${item.genre} demo you wanted!! Just a quick vibe check, nothing too wild yet 😎🎧\n\n`;
     message += "🎛️ This is just the demo version of the remake - think of it as the rough draft with MADDD potential!! 🎨\n\n";
     
     message += "📎📎 WHAT YOU'RE GETTING:\n";
     if (item.songLength > 0) message += `- ${item.songLength}-sec MP3 demo: Just the vibe, raw and UNFILTEREDDD!! 🎵\n`;
     message += "- Heads up: No exclusive rights or pro mixing included (this is just a taste!!) 👀👀\n\n";
+    // MODIFICACIÓN: Se añade la producción vocal como un extra condicional también aquí
     if (item.vocalProduction) message += "- Vocal Production Add-on: Available for this track!! 🎤 Ask me about it!\n\n";
 
     message += "🤔 BUT WAIT - If you're feeling this demo and want the full experience, just pay the difference:\n[Aquí puedes poner la lógica de precios de upgrade si la necesitas]\n\nJust holla at me if you wanna upgrade! 🚀🚀\n\n";
   }
 
+  // --- Secciones Finales (Sin Cambios) ---
   message += `${item.remakeType === 'Multiple Remakes' ? 'Keys' : 'Key'}: ${item.key} | ${item.remakeType === 'Multiple Remakes' ? 'BPMs' : 'BPM'}: ${item.bpm}\n\n`;
   message += `📦📦 Order #${item.orderNumber}\n\n`;
 
@@ -170,7 +178,7 @@ const generateClientMessage = (item: WorkItem): string => {
     message += `✅✅ This is built for the BIGGG stages - Spotify, radio, wherever you wanna take it!! 🌟🌟\n${item.revisionsRemaining} revisions remaining 🔧🔧\n\n🎁 PRO TIP: Drop a 5-star review and I'll hook you UPPP with $10 off your next order!! Helps me out FOR REALLL 🙏🙏\n\nNow go make some MAGIC happen!! ✨🎤`;
   } else if (item.packageName === 'Exclusive') {
     message += `✅ ${item.revisionsRemaining} revisions remaining 🔧\n${item.remakeType === 'Multiple Remakes' ? "Time to make these BEATS slap!! 💥💥" : "Time to make some WAVES!! 🌊🌊"}\n\n🎁 PRO TIP: Leave me a 5-star review and I'll give you $10 off your next beat!! WIN-WIN SITUATION 😉💰💰\n\nLet's get this music out there!!! 🚀🚀`;
-  } else {
+  } else { // Amateurs
     message += "✅ Let me know what you think of the direction!! If you're vibing with it, we can ALWAYSSS take it to the next level!! 🎯🎯\n\n(No revisions on demos, but that's what upgrades are for!! 😉💡💡)";
   }
 
@@ -511,31 +519,32 @@ const WorkTab = () => {
     return (
         <div className="space-y-8">
             <div className="flex items-center justify-between mb-4">
-              <h1 className="text-2xl font-bold tracking-tight">FIVERR📀</h1>
-              <div className="flex items-center gap-2">
-                <a href="https://www.fiverr.com/seller_dashboard" target="_blank" rel="noopener noreferrer" onClick={() => playSound('genericClick')}>
-                  <Button className="bg-green-600 hover:bg-green-700 text-white shadow-sm">
-                    <Link className="mr-2 h-4 w-4" />
-                    Fiverr
-                  </Button>
-                </a>
-                <a href="https://tunebat.com/Analyzer" target="_blank" rel="noopener noreferrer" onClick={() => playSound('genericClick')}>
-                  <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm">
-                    <Music className="mr-2 h-4 w-4" />
-                    Tunebat
-                  </Button>
-                </a>
+              <div className="flex flex-col items-start">
+                <h1 className="text-2xl font-bold tracking-tight">FIVERR📀</h1>
+                <div className="flex items-center gap-2 mt-2">
+                  <a href="https://www.fiverr.com/seller_dashboard" target="_blank" rel="noopener noreferrer" onClick={() => playSound('genericClick')}>
+                    <Button className="bg-green-600 hover:bg-green-700 text-white shadow-sm">
+                      <Link className="mr-2 h-4 w-4" />
+                      Fiverr
+                    </Button>
+                  </a>
+                  <a href="https://tunebat.com/Analyzer" target="_blank" rel="noopener noreferrer" onClick={() => playSound('genericClick')}>
+                    <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm">
+                      <Music className="mr-2 h-4 w-4" />
+                      Tunebat
+                    </Button>
+                  </a>
+                </div>
               </div>
-            </div>
-
-            <div className="flex items-center justify-end gap-2 mb-4">
-              <Button variant="outline" onClick={handleOpenPackageSettingsModal}>
-                <Settings className="mr-2 h-4 w-4" />
-                Set Packages
-              </Button>
-              <Button onClick={handleOpenNewOrderModal}>
-                Nueva Orden🤑💵
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" onClick={handleOpenPackageSettingsModal}>
+                  <Settings className="mr-2 h-4 w-4" />
+                  Set Packages
+                </Button>
+                <Button onClick={handleOpenNewOrderModal}>
+                  Nueva Orden🤑💵
+                </Button>
+              </div>
             </div>
 
             <Card className="glassmorphism-card">
@@ -689,13 +698,19 @@ const WorkTab = () => {
                 </div>
               </div>
               <div className="space-y-6">
-                <Card className="glassmorphism-card text-center p-6">
-                    <p className="text-sm text-muted-foreground">INGRESO PESOS</p>
-                    <p className="text-4xl font-bold text-ios-green">{formatCOP(financialSummary.totalNetCOP)}</p>
-                </Card>
-                <Card className="glassmorphism-card text-center p-6">
-                    <p className="text-sm text-muted-foreground">INGRESO USD</p>
-                    <p className="text-3xl font-semibold text-ios-blue">{formatUSD(financialSummary.totalNetUSD)}</p>
+                <Card className="glassmorphism-card">
+                  <CardHeader>
+                    <CardTitle className="text-center text-sm font-medium text-muted-foreground">
+                      Ingresos Totales
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-center text-4xl font-bold tracking-tighter">
+                      <span className="text-glow-yellow">{formatCOP(financialSummary.totalNetCOP)}</span>
+                      <span className="text-muted-foreground mx-2">/</span>
+                      <span className="text-glow-green">{formatUSD(financialSummary.totalNetUSD)}</span>
+                    </div>
+                  </CardContent>
                 </Card>
                 <Card className="glassmorphism-card text-center p-6">
                     <p className="text-sm text-muted-foreground">Ingresos Este Mes</p>

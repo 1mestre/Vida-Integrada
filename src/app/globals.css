@@ -189,3 +189,26 @@
   position: relative;
   z-index: 1;
 }
+
+/* --- INICIO: Código para Brillo Animado --- */
+@keyframes glow-pulse {
+  0%, 100% {
+    text-shadow: 0 0 5px currentColor, 0 0 10px currentColor;
+    opacity: 0.8;
+  }
+  50% {
+    text-shadow: 0 0 10px currentColor, 0 0 20px currentColor;
+    opacity: 1;
+  }
+}
+
+.text-glow-yellow {
+  color: #FBBF24; /* Amarillo */
+  animation: glow-pulse 4s ease-in-out infinite;
+}
+
+.text-glow-green {
+  color: #34D399; /* Verde */
+  animation: glow-pulse 4s ease-in-out infinite;
+}
+/* --- FIN: Código para Brillo Animado --- */
