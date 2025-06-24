@@ -209,7 +209,7 @@ const IncomeTab = () => {
         </div>
       </div>
       <div className="flex flex-col items-center gap-4">
-        <Card className="w-full max-w-md glassmorphism-card">
+        <Card>
           <CardHeader>
             <CardTitle className="text-center text-sm font-medium text-muted-foreground">
               Ingresos Este Mes
