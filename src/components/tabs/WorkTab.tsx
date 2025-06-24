@@ -112,82 +112,56 @@ const FileNameToolsPopover = ({ item }: { item: WorkItem }) => {
 const generateClientMessage = (item: WorkItem): string => {
   const isMultiple = item.remakeType.includes('Multiple');
   const quantity = item.quantity || 1;
-
   let message = `Heyyy ${item.clientName}! 👋👋\n\n`;
 
-  // Bloque Principal: Elige la plantilla base según el nombre del paquete
+  // --- Bloque 1: Saludo Inicial basado en el paquete ---
   if (item.packageName === 'Masterpiece') {
-    // --- Plantilla Masterpiece ---
     message += isMultiple 
-      ? `Yooo, your ${quantity} ${item.genre} masterpiece remade beats are officially done and they're straight fire fr!! 🔥🔥✨ Hahaha, we went CRAZY on these!!\n\n`
+      ? `Yoooo, your ${quantity} ${item.genre} masterpiece remaked beats are officially done and they're straight fire fr!! 🔥🔥✨ Hahaha, we went CRAZY on these!!\n\n`
       : `Yooo, your ${item.genre} masterpiece is officially done and it's straighttt fire fr!! 🔥✨\n\n`;
-    
-    if (item.remakeType === 'Single Remake') {
-      message += "🎛️🎛️ This remake got the FULL treatment - custom-built and clean as hell!! Readyyy for the big leagues!! 🏆🏆\n\n";
-    } else if (item.remakeType === 'Multiple Remakes') {
-      message += "🎛️🎛️ These remakes are CLEANNN as hell and ready to make some NOISEEE!! Each one hits different!! 🚀🚀\n\n";
-    }
-
-    message += "📎📎 WHAT YOU'RE GETTING:\n";
-    if (item.separateFiles) message += "- Full WAV + STEMS: The WHOLE package, no bs!! 💎\n";
-    if (item.projectFileDelivery) message += "- FLP Project File: Full creative control in your hands!! 🎚️🎚️\n";
-    if (item.exclusiveLicense) message += "- Exclusive Rights Contract: It's 100000% yours, period!! 📜\n";
-    if (item.vocalProduction) message += "- Vocal Production: Pro-level vocal mixing & tuning to make your voice SHINE!! ✨🎙️\n";
-    
-    if (item.vocalChainPreset) {
-      message += `\n🎁 EXCLUSIVE GIFT: Custom vocal chain preset made for ${isMultiple ? `these ${item.genre} vibes` : `this ${item.genre} vibe`} 🎙️🎙️\n`;
-      message += "(Appreciate you being chill to work with, let's keep the collabs going!!) 🤝🤝\n\n";
-    }
-
   } else if (item.packageName === 'Exclusive') {
-    // --- Plantilla Exclusive ---
     message += isMultiple
-      ? `Your ${quantity} ${item.genre} remade beats are readyyy to drop!! 💣💣 No cap, these ones hit DIFFERENT!! 💯🎵\n\n`
+      ? `Your ${quantity} ${item.genre} remaked beats are readyyy to drop!! 💣💣 No cap, these ones hit DIFFERENT!! 💯🎵\n\n`
       : `Your ${item.genre} beat is readyyy to drop!! No cap, this one hits different 💯🎵\n\n`;
-
-    if (item.remakeType === 'Single Remake') {
-      message += "🎛️ The remake is LOCKED and loaded!! 🔫 Custom-made just for you, readyyy for your vocals!! 🎤✨\n\n";
-    } else if (item.remakeType === 'Multiple Remakes') {
-      message += "🎛️ All these remakes are LOCKED IN!! 🔒 Multiple vibes, same CRAZY energy!! 💪💪 Hahaha let's gooo!\n\n";
-    }
-
-    message += "📎📎 WHAT YOU'RE GETTING:\n";
-    if (item.masterAudio) message += "- Full WAV: Mixed, mastered, and READYYY to upload!! 🎯\n";
-    if (item.exclusiveLicense) message += "- Exclusive Rights Contract: 100% ownership, no sharing needed!! 📋\n";
-    if (item.vocalProduction) message += "- Vocal Production: Pro-level vocal mixing & tuning to make your voice SHINE!! ✨🎙️\n";
-    
-    if (item.vocalChainPreset) {
-      message += `\n🎁 EXCLUSIVE GIFT: Custom vocal chain preset made for ${isMultiple ? `these ${item.genre} styles` : `this ${item.genre} style`} 🎤✨\n`;
-      message += "(Appreciate you being chill to work with, let's keep the collabs going!!) 🤝\n\n";
-    }
-
-  } else { // Asumimos 'Amateurs' o cualquier otro
-    // --- Plantilla Amateurs ---
-     message += isMultiple
+  } else { // Amateurs
+    message += isMultiple
       ? `So hereee are those ${quantity} ${item.genre} demos you wanted!! 🎉 Just some quick vibes, nothing too wild yet hehe 😎🎧\n\n`
       : `So here's that ${item.genre} demo you wanted!! Just a quick vibe check, nothing too wild yet 😎🎧\n\n`;
-    message += `🎛️ This is just the demo version of the remake${isMultiple ? 's' : ''} - think of it as the rough draft with MADDD potential!! 🎨\n\n`;
-    
-    message += "📎📎 WHAT YOU'RE GETTING:\n";
-    if (item.songLength > 0) message += `- ${item.songLength}-sec MP3 demo: Just the vibe, raw and UNFILTEREDDD!! 🎵\n`;
-    message += "- Heads up: No exclusive rights or pro mixing included (this is just a taste!!) 👀👀\n\n";
-    if (item.vocalProduction) message += "- Vocal Production Add-on: Available for this track!! 🎤 Ask me about it!\n\n";
-
-    message += "🤔 BUT WAIT - If you're feeling this demo and want the full experience, just pay the difference:\n[Aquí puedes poner la lógica de precios de upgrade si la necesitas]\n\nJust holla at me if you wanna upgrade! 🚀🚀\n\n";
   }
 
-  // --- Secciones Finales ---
-  message += `${isMultiple ? 'Keys' : 'Key'}: ${item.key} | ${isMultiple ? 'BPMs' : 'BPM'}: ${item.bpm}\n\n`;
-  message += `📦📦 Order #${item.orderNumber}\n\n`;
+  // --- Bloque 2: Detalles del Remake ---
+  if (item.remakeType.includes('Remake')) {
+    if (item.packageName === 'Masterpiece') {
+      message += isMultiple ? "🎛️🎛️ These remakes are CLEANNN as hell and ready to make some NOISEEE!! Each one hits different!! 🚀🚀\n\n" : "🎛️🎛️ This remake got the FULL treatment - custom-built and clean as hell!! Readyyy for the big leagues!! 🏆🏆\n\n";
+    } else if (item.packageName === 'Exclusive') {
+      message += isMultiple ? "🎛️ All these remakes are LOCKED IN!! 🔒 Multiple vibes, same CRAZY energy!! 💪💪 Hahaha let's gooo!\n\n" : "🎛️ The remake is LOCKED and loaded!! 🔫 Custom-made just for you, readyyy for your vocals!! 🎤✨\n\n";
+    } else { // Amateurs
+      message += isMultiple ? "🎛️ These are just demo ideas for the remakes - the foundation's there, just needs the FULLLL glow-up!! 🏗️🏗️\n\n" : "🎛️ This is just the demo version of the remake - think of it as the rough draft with MADDD potential!! 🎨\n\n";
+    }
+  }
 
+  // --- Bloque 3: Lista de Entregables (100% Dinámica) ---
+  message += "🎁 Entregables\n";
+  if (item.masterAudio) message += "- Audio Masterizado\n";
+  if (item.separateFiles) message += "- Archivos Separados (STEMS)\n";
+  if (item.projectFileDelivery) message += "- Archivo de Proyecto (FLP)\n";
+  if (item.exclusiveLicense) message += "- Licencia Exclusiva\n";
+  if (item.vocalProduction) message += "- Producción Vocal\n";
+  if (item.vocalChainPreset) message += "- Preset Cadena Vocal (Regalo)\n";
+  message += "\n";
+
+  // --- Bloque 4: Secciones Finales ---
+  message += `${isMultiple ? 'Tonalidades' : 'Tonalidad'}: ${item.key} | ${isMultiple ? 'BPMs' : 'BPM'}: ${item.bpm}\n\n`;
+  message += `📦 Orden #${item.orderNumber}\n\n`;
+  
   if (item.packageName === 'Masterpiece') {
-    message += `✅✅ This is built for the BIGGG stages - Spotify, radio, wherever you wanna take it!! 🌟🌟\n${item.revisionsRemaining} revisions remaining 🔧🔧\n\n🎁 PRO TIP: Drop a 5-star review and I'll hook you UPPP with $10 off your next order!! Helps me out FOR REALLL 🙏🙏\n\nNow go make some MAGIC happen!! ✨🎤`;
+    message += `✅✅ ¡Construido para los grandes escenarios! (Spotify, radio, etc.) 🌟🌟\n${item.revisionsRemaining} revisiones restantes 🔧🔧\n\n🎁 PRO TIP: ¡Una reseña 5 estrellas te da $10 de descuento en tu próximo pedido! 🙏🙏\n\n¡Ahora a crear magia! ✨🎤`;
   } else if (item.packageName === 'Exclusive') {
-    message += `✅ ${item.revisionsRemaining} revisions remaining 🔧\n`;
-    message += isMultiple ? "Time to make these BEATS slap!! 💥💥" : "Time to make some WAVES!! 🌊🌊";
-    message += `\n\n🎁 PRO TIP: Leave me a 5-star review and I'll give you $10 off your next ${isMultiple ? 'order' : 'beat'}!! WIN-WIN SITUATION 😉💰💰\n\nLet's get this music out there!!! 🚀🚀`;
+    message += `✅ ${item.revisionsRemaining} revisiones restantes 🔧\n`;
+    message += isMultiple ? "¡A romperla con estos BEATS! 💥💥\n\n" : "¡A crear olas! 🌊🌊\n\n";
+    message += `🎁 PRO TIP: ¡Una reseña 5 estrellas te da $10 de descuento en tu próximo beat! 😉💰💰\n\n¡Vamos a sacar esta música! 🚀🚀`;
   } else { // Amateurs
-    message += "✅ Let me know what you think of the direction!! If you're vibing with it, we can ALWAYSSS take it to the next level!! 🎯🎯\n\n(No revisions on demos, but that's what upgrades are for!! 😉💡💡)";
+    message += "✅ ¡Déjame saber qué te parece la dirección! Si te gusta, ¡siempre podemos llevarlo al siguiente nivel! 🎯🎯\n\n(No hay revisiones en los demos, ¡pero para eso son las mejoras! 😉💡💡)";
   }
 
   return message;
@@ -463,6 +437,7 @@ const WorkTab = () => {
                             handleDateUpdate(item.id, newDate);
                           }
                         }}
+                        disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
                         initialFocus
                       />
                     </PopoverContent>

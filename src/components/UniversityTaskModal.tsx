@@ -124,6 +124,7 @@ const UniversityTaskModal: React.FC<UniversityTaskModalProps> = ({ isOpen, onClo
                               field.onChange(format(date, 'yyyy-MM-dd'));
                             }
                           }}
+                          disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
                           initialFocus
                         />
                       </PopoverContent>
