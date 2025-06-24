@@ -30,12 +30,18 @@ interface WorkItemModalProps {
 const DELIVERY_STATUSES: WorkItem['deliveryStatus'][] = ['Pending', 'In Transit', 'In Revision', 'Delivered', 'Returned'];
 
 const keyOptions = [
-    { value: 'C / Am', label: 'C / Am' }, { value: 'Db / Bbm', label: 'C# / A#m' },
-    { value: 'D / Bm', label: 'D / Bm' }, { value: 'Eb / Cm', label: 'D# / Cm' },
-    { value: 'E / C#m', label: 'E / C#m' }, { value: 'F / Dm', label: 'F / Dm' },
-    { value: 'F# / D#m', label: 'F# / D#m' }, { value: 'G / Em', label: 'G / Em' },
-    { value: 'Ab / Fm', label: 'G# / Fm' }, { value: 'A / F#m', label: 'A / F#m' },
-    { value: 'Bb / Gm', label: 'A# / Gm' }, { value: 'B / G#m', label: 'B / G#m' },
+  { value: 'C / Am', label: 'C Maj / A min' },
+  { value: 'G / Em', label: 'G Maj / E min' },
+  { value: 'D / Bm', label: 'D Maj / B min' },
+  { value: 'A / F#m', label: 'A Maj / F# min' },
+  { value: 'E / C#m', label: 'E Maj / C# min' },
+  { value: 'B / G#m', label: 'B Maj / G# min' },
+  { value: 'F# / D#m', label: 'F# Maj / D# min' },
+  { value: 'Db / Bbm', label: 'Db Maj / Bb min' },
+  { value: 'Ab / Fm', label: 'Ab Maj / F min' },
+  { value: 'Eb / Cm', label: 'Eb Maj / C min' },
+  { value: 'Bb / Gm', label: 'Bb Maj / G min' },
+  { value: 'F / Dm', label: 'F Maj / D min' }
 ];
 
 const remakeTypeOptions: { value: WorkItem['remakeType'], label: string }[] = [

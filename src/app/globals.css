@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -196,10 +197,25 @@
   text-shadow: 0 0 8px rgba(52, 211, 153, 0.5);
 }
 /* --- FIN: Código para Brillo Estático y Suave --- */
-/* --- INICIO: Estilo sutil para el día de hoy en el calendario --- */
+/* --- INICIO: Nuevo estilo para el número del día de hoy --- */
+/* Primero, nos aseguramos de que el borde anterior desaparezca */
 .fc .fc-day-today {
-  background-color: transparent !important; /* Mantiene el fondo transparente */
-  border: 1px solid hsl(var(--border)) !important; /* Borde más delgado y gris (color del tema) */
-  border-radius: 0.75rem !important; /* Bordes redondeados */
+  background-color: transparent !important;
+  border: none !important;
+}
+
+/* Ahora, estilizamos el número del día actual para que sea un círculo */
+.fc .fc-day-today .fc-daygrid-day-number {
+  background-color: #111827; /* Azul oscuro (gris-900 de Tailwind) */
+  color: hsl(var(--primary-foreground)) !important; /* Texto claro */
+  width: 2rem;  /* Ancho fijo */
+  height: 2rem; /* Alto fijo */
+  border-radius: 9999px; /* Círculo perfecto */
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  top: 4px; /* Pequeño ajuste para centrarlo visualmente */
+  left: 4px;
 }
 /* --- FIN: Estilo personalizado --- */

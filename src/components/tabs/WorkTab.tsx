@@ -230,8 +230,18 @@ const WorkTab = () => {
     const currentMonthTarget = appState.monthlyTargets[currentMonthKey] || 0;
 
     const keyOptions = [
-        'C / Am', 'G / Em', 'D / Bm', 'A / F#m', 'E / C#m', 'B / G#m',
-        'F# / D#m', 'Db / Bbm', 'Ab / Fm', 'Eb / Cm', 'Bb / Gm', 'F / Dm'
+      { value: 'C / Am', label: 'C Maj / A min' },
+      { value: 'G / Em', label: 'G Maj / E min' },
+      { value: 'D / Bm', label: 'D Maj / B min' },
+      { value: 'A / F#m', label: 'A Maj / F# min' },
+      { value: 'E / C#m', label: 'E Maj / C# min' },
+      { value: 'B / G#m', label: 'B Maj / G# min' },
+      { value: 'F# / D#m', label: 'F# Maj / D# min' },
+      { value: 'Db / Bbm', label: 'Db Maj / Bb min' },
+      { value: 'Ab / Fm', label: 'Ab Maj / F min' },
+      { value: 'Eb / Cm', label: 'Eb Maj / C min' },
+      { value: 'Bb / Gm', label: 'Bb Maj / G min' },
+      { value: 'F / Dm', label: 'F Maj / D min' }
     ];
 
     useEffect(() => {
@@ -465,26 +475,9 @@ const WorkTab = () => {
           accessorKey: 'key',
           header: 'Key',
           cell: ({ row }) => {
-            const item = row.original;
-            return (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="w-full justify-start text-left font-normal px-2">
-                    {item.key}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start">
-                  {keyOptions.map(key => (
-                    <DropdownMenuItem
-                      key={key}
-                      onSelect={() => handleKeyUpdate(item.id, key)}
-                    >
-                      {key}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            );
+            const keyValue = row.getValue('key') as string;
+            const keyLabel = keyOptions.find(opt => opt.value === keyValue)?.label || keyValue;
+            return <span>{keyLabel}</span>;
           },
         },
         {
@@ -574,7 +567,7 @@ const WorkTab = () => {
               </div>
             )
         },
-    ], [appState.workItems, keyOptions, appState.workPackageTemplates, handleDateUpdate, handleStatusUpdate, handleKeyUpdate, handlePackageUpdate]);
+    ], [appState.workItems, appState.workPackageTemplates, handleDateUpdate, handleStatusUpdate, handleKeyUpdate, handlePackageUpdate, keyOptions]);
 
     const table = useReactTable({
         data: sortedWorkItems,
