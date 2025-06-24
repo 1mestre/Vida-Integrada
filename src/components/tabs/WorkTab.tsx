@@ -56,7 +56,7 @@ const generateClientMessage = (item: WorkItem, packageTemplates: WorkPackageTemp
     } else if (item.packageName === 'Exclusive') {
         message += isMultiple ? `Your ${item.genre} remaked beats are readyyy to drop!! 💣💣 No cap, these ones hit DIFFERENT!! 💯🎵\n\n` : `Your ${item.genre} beat is readyyy to drop!! No cap, this one hits different 💯🎵\n\n`;
         message += isMultiple ? "🎛️ All these remakes are LOCKED IN!! 🔒 Multiple vibes, same CRAZY energy!! 💪💪 Hahaha let's gooo!\n\n" : "🎛️ The remake is LOCKED and loaded!! 🔫 Custom-made just for you, readyyy for your vocals!! 🎤✨\n\n";
-    } else { // Amateurs
+    } else { // Amateurs or any other lower-tier package
         message += isMultiple ? `So hereee are those ${item.genre} demos you wanted!! 🎉 Just some quick vibes, nothing too wild yet hehe 😎🎧\n\n` : `So here's that ${item.genre} demo you wanted!! Just a quick vibe check, nothing too wild yet 😎🎧\n\n`;
         message += isMultiple ? "🎛️ These are just demo ideas for the remakes - the foundation's there, just needs the FULLLL glow-up!! 🏗️🏗️\n\n" : "🎛️ This is just the demo version of the remake - think of it as the rough draft with MADDD potential!! 🎨\n\n";
     }
@@ -77,33 +77,27 @@ const generateClientMessage = (item: WorkItem, packageTemplates: WorkPackageTemp
         message += `🎁 EXCLUSIVE GIFT: Custom vocal chain preset made for ${isMultiple ? `these ${item.genre} vibes` : `this ${item.genre} vibe`} 🎙️🎙️\n(Appreciate you being chill to work with, let's keep the collabs going!!) 🤝🤝\n\n`;
     }
     
-    // === Bloque 3: Oferta de "Upsell" (CON PRECIOS 100% DINÁMICOS) ===
-    if (item.packageName === 'Amateurs' && !item.exclusiveLicense) {
-        // Búsqueda dinámica de precios desde las plantillas
-        const amateurPkg = packageTemplates.find(p => p.name === 'Amateurs');
-        const exclusivePkg = packageTemplates.find(p => p.name === 'Exclusive');
-        // Asumimos que puedes tener un paquete "Pro" intermedio
-        const proPkg = packageTemplates.find(p => p.name === 'Pro'); 
-
-        // Usamos precios de fallback por si un paquete no existe
-        const amateurPrice = amateurPkg ? amateurPkg.price : 10;
-        const proPrice = proPkg ? proPkg.price : 15;
-        const exclusivePrice = exclusivePkg ? exclusivePkg.price : 30;
-
-        // Cálculos dinámicos
-        const amateurToProDiff = proPrice - amateurPrice;
-        const amateurToExclusiveDiff = exclusivePrice - amateurPrice;
-        const proToExclusiveDiff = exclusivePrice - proPrice;
+    // === Bloque 3: Oferta de "Upsell" (Totalmente Dinámica y Robusta) ===
+    const currentPkg = packageTemplates.find(p => p.name === item.packageName);
+    if (currentPkg && !item.exclusiveLicense) {
+        const potentialUpgrades = packageTemplates
+            .filter(p => p.price > currentPkg.price)
+            .sort((a, b) => a.price - b.price);
         
-        let upsellText = "🤔 BUT WAIT - If you're feeling this demo and want the full experience, just pay the difference:\n";
-        if (proPkg) upsellText += `• Amateur ($${amateurPrice}) → Pro ($${proPrice}): +$${amateurToProDiff}\n`;
-        if (exclusivePkg) upsellText += `• Amateur ($${amateurPrice}) → Exclusive ($${exclusivePrice}): +$${amateurToExclusiveDiff}\n`;
-        if (proPkg && exclusivePkg) upsellText += `• Pro ($${proPrice}) → Exclusive ($${exclusivePrice}): +$${proToExclusiveDiff}\n`;
-
-        message += upsellText + "\nAnd get:\n• The polished, final version(s) 🔥🔥\n• Exclusive license (100% yours) 📜\n• Professional mixing/mastering 🎛️🎚️\n• Full remake treatment 💯💯\n\nJust holla at me if you wanna upgrade! 🚀🚀\n\n";
+        if (potentialUpgrades.length > 0) {
+            let upsellText = "🤔 BUT WAIT - If you're feeling this demo and want the full experience, just pay the difference:\n";
+            
+            potentialUpgrades.forEach(upgradePkg => {
+                const diff = upgradePkg.price - currentPkg.price;
+                upsellText += `• ${currentPkg.name} ($${currentPkg.price}) → ${upgradePkg.name} ($${upgradePkg.price}): +$${diff}\n`;
+            });
+            
+            message += upsellText + "\nAnd get:\n• The polished, final version(s) 🔥🔥\n• Exclusive license (100% yours) 📜\n• Professional mixing/mastering 🎛️🎚️\n• Full remake treatment 💯💯\n\nJust holla at me if you wanna upgrade! 🚀🚀\n\n";
+        }
     }
 
-    // === Bloque 4: Secciones Finales ===
+
+    // === Bloque 4: Secciones Finales (sin cambios) ===
     message += `${isMultiple ? 'Keys' : 'Key'}: ${item.key} | ${isMultiple ? 'BPMs' : 'BPM'}: ${item.bpm}\n\n`;
     message += `📦📦 Order #${item.orderNumber}\n\n`;
     
@@ -593,8 +587,6 @@ const WorkTab = () => {
             header: () => <div className="text-center">Paquete</div>,
             cell: ({ row }) => {
                 const item = row.original;
-                const packageOptions = appState.workPackageTemplates.map(p => p.name);
-
                 return (
                     <div className="text-center">
                         <DropdownMenu>
@@ -606,13 +598,13 @@ const WorkTab = () => {
                             </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                            {packageOptions.map(pkgName => (
+                            {appState.workPackageTemplates.map(pkg => (
                                 <DropdownMenuItem
-                                key={pkgName}
-                                onSelect={() => handlePackageUpdate(item.id, pkgName)}
+                                key={pkg.id}
+                                onSelect={() => handlePackageUpdate(item.id, pkg.name)}
                                 >
-                                <span className={cn('h-2 w-2 rounded-full mr-2', packageColorMap[pkgName])} />
-                                <span>{pkgName}</span>
+                                <span className={cn('h-2 w-2 rounded-full mr-2', packageColorMap[pkg.name])} />
+                                <span>{pkg.name}</span>
                                 </DropdownMenuItem>
                             ))}
                             </DropdownMenuContent>
