@@ -17,6 +17,56 @@ import { useSound } from '@/context/SoundContext';
 const formatCOP = (value: number) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(value);
 const formatUSD = (value: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
 
+const IncomeDisplay = ({ monthlyTotals, accumulatedTotals, progress }: {
+    monthlyTotals: { cop: number, usd: number };
+    accumulatedTotals: { cop: number, usd: number };
+    progress: number;
+}) => {
+    return (
+        <div className="flex flex-col items-center gap-4">
+            <Card>
+                <CardHeader>
+                    <CardTitle className="text-center text-sm font-medium text-muted-foreground">
+                        Ingresos Este Mes
+                    </CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="flex justify-center items-center gap-6 text-center">
+                        <div className="flex flex-col items-center">
+                            <p className="text-3xl font-bold tracking-tighter text-yellow-400">
+                                ${monthlyTotals.cop.toLocaleString('es-CO')}
+                            </p>
+                            <p className="text-xs font-medium text-muted-foreground">
+                                COP
+                            </p>
+                        </div>
+                        <div className="h-10 w-px bg-border"></div>
+                        <div className="flex flex-col items-center">
+                            <p className="text-3xl font-bold tracking-tighter text-green-400">
+                                ${monthlyTotals.usd.toFixed(2)}
+                            </p>
+                            <p className="text-xs font-medium text-muted-foreground">
+                                USD
+                            </p>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+            <div className="text-center">
+                <p className="text-sm text-muted-foreground">
+                    Ingresos Acumulados: {formatCOP(accumulatedTotals.cop)} / {formatUSD(accumulatedTotals.usd)}
+                </p>
+            </div>
+            {progress >= 100 && (
+                <Card className="glassmorphism-card bg-ios-green/20 border-ios-green p-4 text-center">
+                    <p className="font-bold text-ios-green animate-pulse">🎉✨ ¡FELICITACIONES! ¡META ALCANZADA! ✨🎉</p>
+                </Card>
+            )}
+        </div>
+    );
+};
+
+
 const IncomeTab = () => {
   const { appState, setAppState } = useAppState();
   const [exchangeRate, setExchangeRate] = useState<number | null>(null);
@@ -208,57 +258,13 @@ const IncomeTab = () => {
             </Card>
         </div>
       </div>
-      <div className="flex flex-col items-center gap-4">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-center text-sm font-medium text-muted-foreground">
-              Ingresos Este Mes
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex justify-center items-center gap-6 text-center">
-              
-              {/* Columna COP */}
-              <div className="flex flex-col items-center">
-                <p className="text-3xl font-bold tracking-tighter text-yellow-400">
-                  ${monthlyTotals.cop.toLocaleString('es-CO')}
-                </p>
-                <p className="text-xs font-medium text-muted-foreground">
-                  COP
-                </p>
-              </div>
-              
-              {/* Separador (Opcional, pero ayuda visualmente) */}
-              <div className="h-10 w-px bg-border"></div>
-
-              {/* Columna USD */}
-              <div className="flex flex-col items-center">
-                <p className="text-3xl font-bold tracking-tighter text-green-400">
-                  ${monthlyTotals.usd.toFixed(2)}
-                </p>
-                <p className="text-xs font-medium text-muted-foreground">
-                  USD
-                </p>
-              </div>
-
-            </div>
-          </CardContent>
-        </Card>
-        <div className="text-center">
-          <p className="text-sm text-muted-foreground">
-            Ingresos Acumulados: {formatCOP(accumulatedTotals.cop)} / {formatUSD(accumulatedTotals.usd)}
-          </p>
-        </div>
-        {progress >= 100 && (
-            <Card className="glassmorphism-card bg-ios-green/20 border-ios-green p-4 text-center">
-                <p className="font-bold text-ios-green animate-pulse">🎉✨ ¡FELICITACIONES! ¡META ALCANZADA! ✨🎉</p>
-            </Card>
-        )}
-      </div>
+      <IncomeDisplay 
+        monthlyTotals={monthlyTotals}
+        accumulatedTotals={accumulatedTotals}
+        progress={progress}
+      />
     </div>
   );
 };
 
 export default IncomeTab;
-
-    
