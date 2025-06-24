@@ -37,9 +37,6 @@ import { cn } from '@/lib/utils';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuGroup, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuPortal, DropdownMenuSubContent } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { v4 as uuidv4 } from 'uuid';
-import { AgreementTemplate } from '@/components/pdf/AgreementTemplate';
-import html2pdf from 'html2pdf.js';
-import ReactDOMClient from 'react-dom/client';
 
 
 const generateClientMessage = (item: WorkItem, packageTemplates: WorkPackageTemplate[]): string => {
@@ -250,32 +247,49 @@ const WorkTab = () => {
     const currentMonthKey = format(new Date(), 'yyyy-MM');
     const currentMonthTarget = appState.monthlyTargets[currentMonthKey] || 0;
 
-    const handleGeneratePdf = (item: WorkItem) => {
-        playSound('genericClick');
-        const container = document.createElement('div');
-        document.body.appendChild(container);
-    
-        const root = ReactDOMClient.createRoot(container);
-        root.render(<AgreementTemplate 
-            clientName={item.clientName} 
-            date={format(new Date(), 'MMMM d, yyyy')} 
-        />);
-      
-        setTimeout(() => {
-            const options = {
-                margin: 0,
-                filename: `Rights Of Use - ${item.clientName}.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
-            html2pdf().from(container).set(options).save().then(() => {
-                document.body.removeChild(container);
-                root.unmount();
-            });
-        }, 500); 
-    };
-    
+  const [generatingPdfId, setGeneratingPdfId] = useState<string | null>(null);
+
+  const handleGeneratePdf = async (item: WorkItem) => {
+    setGeneratingPdfId(item.id);
+    try {
+      const response = await fetch('/api/generate-pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clientName: item.clientName,
+          orderNumber: item.orderNumber,
+          date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`El servidor respondió con un error: ${errorText}`);
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Rights Of Use - ${item.clientName} - #${item.orderNumber}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+
+    } catch (error) {
+      console.error("Error al generar el contrato:", error);
+      toast({
+        variant: 'destructive',
+        title: 'Error de PDF',
+        description: 'No se pudo generar el contrato. Revisa la consola para más detalles.'
+      })
+    } finally {
+      setGeneratingPdfId(null);
+    }
+  };
+
+
     const handleOpenEditModal = (item: WorkItem) => {
       setSelectedItem(item);
       setIsModalOpen(true);
@@ -536,8 +550,13 @@ const WorkTab = () => {
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cerrar</AlertDialogCancel>
                         <AlertDialogAction onClick={() => {
+                          try {
                           navigator.clipboard.writeText(generateClientMessage(item, appState.workPackageTemplates));
                           toast({ title: "¡Copiado!", description: "Mensaje para cliente copiado al portapapeles." });
+                          } catch (err) {
+                             console.error("Error al copiar al portapapeles:", err);
+                             toast({ variant: "destructive", title: "Error al Copiar", description: "No se pudo copiar el mensaje." });
+                          }
                           playSound('genericClick');
                         }}>
                           Copiar Mensaje
@@ -545,8 +564,10 @@ const WorkTab = () => {
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
-                  <DropdownMenuItem onSelect={() => handleGeneratePdf(item)}>
+                  <DropdownMenuItem disabled={generatingPdfId === item.id} onSelect={() => handleGeneratePdf(item)}>
+                    {generatingPdfId === item.id ? 'Generando...' : (
                     <FileDown className="mr-2 h-4 w-4" />
+                    )}
                     <span>Descargar Contrato PDF</span>
                   </DropdownMenuItem>
                   <DropdownMenuSub>
@@ -772,7 +793,7 @@ const WorkTab = () => {
             );
           },
         }
-    ], [appState.workPackageTemplates, appState.contributions, handleDateUpdate, handleStatusUpdate, handlePackageUpdate, handleRevisionsUpdate, playSound, handleDeleteWorkItem, handleGeneratePdf, handleOpenEditModal, toast]);
+    ], [appState.workPackageTemplates, appState.contributions, handleDateUpdate, handleStatusUpdate, handlePackageUpdate, handleRevisionsUpdate, playSound, handleDeleteWorkItem, handleGeneratePdf, handleOpenEditModal, toast, generatingPdfId]);
 
     const table = useReactTable({
         data: sortedWorkItems,
@@ -1013,3 +1034,6 @@ export default WorkTab;
 
     
 
+
+
+    
