@@ -2,6 +2,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import * as ReactDOMClient from 'react-dom/client';
 import {
   ColumnDef,
   flexRender,
@@ -315,18 +316,36 @@ const WorkTab = () => {
     }, []);
 
     const handleGeneratePdf = (item: WorkItem) => {
-      const formattedDate = format(new Date(), 'MMMM d, yyyy');
-      const element = renderToString(<AgreementTemplate clientName={item.clientName} date={formattedDate} />);
+      // 1. Crear un div invisible y añadirlo al cuerpo del documento
+      const container = document.createElement('div');
+      container.style.position = 'absolute';
+      container.style.left = '-9999px'; // Lo mueve fuera de la pantalla
+      document.body.appendChild(container);
     
-      const options = {
-        margin: 0,
-        filename: `Rights Of Use - ${item.clientName} - #${item.orderNumber}.pdf`,
-        image: { type: 'jpeg', quality: 1.0 },
-        html2canvas: { scale: 2, useCORS: true },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-      };
+      // 2. Usar ReactDOM.createRoot para renderizar el componente en el div
+      // Este es el paso clave que asegura que el contenido esté listo
+      const root = ReactDOMClient.createRoot(container);
+      root.render(<AgreementTemplate 
+        clientName={item.clientName} 
+        date={format(new Date(), 'MMMM d, yyyy')} 
+      />);
     
-      html2pdf().from(element).set(options).save();
+      // 3. Darle un respiro al navegador para que complete el renderizado
+      setTimeout(() => {
+        const options = {
+          margin: 0,
+          filename: `Rights Of Use - ${item.clientName} - #${item.orderNumber}.pdf`,
+          image: { type: 'jpeg', quality: 1.0 },
+          html2canvas: { scale: 2, useCORS: true },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+    
+        // 4. Generar el PDF desde el contenedor y luego limpiarlo
+        html2pdf().from(container).set(options).save().then(() => {
+          document.body.removeChild(container);
+        });
+      }, 100); // Una pequeña demora de 100ms es usualmente suficiente
+      
       playSound('genericClick');
     };
     
@@ -753,32 +772,32 @@ const WorkTab = () => {
                       Tunebat
                     </Button>
                   </a>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button className="bg-amber-700 text-white hover:bg-amber-800 shadow-sm">
+                        <FileText className="mr-2 h-4 w-4" />
+                        Generar Contrato
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-56">
+                      <DropdownMenuLabel>Selecciona una Orden</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuGroup>
+                        {appState.workItems.length > 0 ? (
+                          appState.workItems.map((item) => (
+                            <DropdownMenuItem key={item.id} onSelect={() => handleGeneratePdf(item)}>
+                              <span>{item.clientName} - #{item.orderNumber}</span>
+                            </DropdownMenuItem>
+                          ))
+                        ) : (
+                          <DropdownMenuItem disabled>No hay órdenes</DropdownMenuItem>
+                        )}
+                      </DropdownMenuGroup>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </div>
               <div className="flex items-center gap-4">
-                 <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="outline">
-                        <FileText className="mr-2 h-4 w-4" />
-                        Generar Contrato
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-56">
-                        <DropdownMenuLabel>Selecciona una Orden</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuGroup>
-                        {appState.workItems.length > 0 ? (
-                            appState.workItems.map((item) => (
-                            <DropdownMenuItem key={item.id} onSelect={() => handleGeneratePdf(item)}>
-                                <span>{item.clientName} - #{item.orderNumber}</span>
-                            </DropdownMenuItem>
-                            ))
-                        ) : (
-                            <DropdownMenuItem disabled>No hay órdenes</DropdownMenuItem>
-                        )}
-                        </DropdownMenuGroup>
-                    </DropdownMenuContent>
-                </DropdownMenu>
                  <Button variant="outline" onClick={handleOpenPackageSettingsModal}>
                    <Settings className="mr-2 h-4 w-4" />
                    Set Packages
@@ -988,5 +1007,7 @@ const WorkTab = () => {
 };
 
 export default WorkTab;
+
+    
 
     
