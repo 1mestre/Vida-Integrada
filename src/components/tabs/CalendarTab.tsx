@@ -116,11 +116,6 @@ const CalendarTab = () => {
     });
   }, [setAppState]);
 
-  const selectAllow = useCallback((selectInfo: any) => {
-    const todayStr = new Date().toISOString().split('T')[0];
-    return selectInfo.startStr >= todayStr;
-  }, []);
-
   const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
   
   const todaysEvents = useMemo(() => 
@@ -150,7 +145,8 @@ const CalendarTab = () => {
                 onEventClick={handleEventClick}
                 onDateSelect={handleDateSelect}
                 onEventDrop={handleEventDrop}
-                selectAllow={selectAllow}
+                eventConstraint={{ start: new Date() }}
+                selectConstraint={{ start: new Date() }}
               />
             </CardContent>
           </Card>
