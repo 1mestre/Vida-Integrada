@@ -27,7 +27,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useAppState, WorkItem } from '@/context/AppStateContext';
-import { MessageSquare, Clipboard, TrendingUp, Trash2, Wrench, Link, Music, Flame, DollarSign, PlusCircle, CalendarIcon } from 'lucide-react';
+import { MessageSquare, Clipboard, TrendingUp, Trash2, Wrench, Link, Music, Settings, PlusCircle, CalendarIcon } from 'lucide-react';
 import WorkItemModal from '@/components/WorkItemModal';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
@@ -207,6 +207,11 @@ const WorkTab = () => {
     const currentMonthKey = format(new Date(), 'yyyy-MM');
     const currentMonthTarget = appState.monthlyTargets[currentMonthKey] || 0;
 
+    const keyOptions = [
+        'C / Am', 'G / Em', 'D / Bm', 'A / F#m', 'E / C#m', 'B / G#m',
+        'F# / D#m', 'Db / Bbm', 'Ab / Fm', 'Eb / Cm', 'Bb / Gm', 'F / Dm'
+    ];
+
     useEffect(() => {
         fetch('https://open.er-api.com/v6/latest/USD')
           .then(res => res.json())
@@ -248,6 +253,11 @@ const WorkTab = () => {
         setSelectedItem(null);
         setIsModalOpen(true);
     };
+    
+    const handleOpenPackageSettingsModal = () => {
+        playSound('genericClick');
+        setIsSettingsModalOpen(true);
+    };
 
     const handleAddIncome = () => {
         if (!amount || !exchangeRate) return;
@@ -281,27 +291,27 @@ const WorkTab = () => {
     };
 
     const handleStatusUpdate = (itemId: string, newStatus: WorkItem['deliveryStatus']) => {
-        setAppState(prevState => {
-          const statusToColumnMap: Record<WorkItem['deliveryStatus'], 'todo' | 'inprogress' | 'done'> = {
-            'Pending': 'todo',
-            'In Transit': 'inprogress',
-            'In Revision': 'inprogress',
-            'Delivered': 'done',
-            'Returned': 'done',
-          };
-  
-          const updatedWorkItems = prevState.workItems.map(item =>
-            item.id === itemId ? { ...item, deliveryStatus: newStatus } : item
-          );
-  
-          const updatedTasks = prevState.tasks.map(task =>
-            task.workItemId === itemId ? { ...task, column: statusToColumnMap[newStatus] } : task
-          );
-  
-          return { ...prevState, workItems: updatedWorkItems, tasks: updatedTasks };
-        });
+      setAppState(prevState => {
+        const statusToColumnMap: Record<WorkItem['deliveryStatus'], 'todo' | 'inprogress' | 'done'> = {
+          'Pending': 'todo',
+          'In Transit': 'inprogress',
+          'In Revision': 'inprogress',
+          'Delivered': 'done',
+          'Returned': 'done',
+        };
+
+        const updatedWorkItems = prevState.workItems.map(item =>
+          item.id === itemId ? { ...item, deliveryStatus: newStatus } : item
+        );
+
+        const updatedTasks = prevState.tasks.map(task =>
+          task.workItemId === itemId ? { ...task, column: statusToColumnMap[newStatus] } : task
+        );
+
+        return { ...prevState, workItems: updatedWorkItems, tasks: updatedTasks };
+      });
     };
-  
+
     const handleDateUpdate = (itemId: string, newDate: Date) => {
         const formattedDate = format(newDate, 'yyyy-MM-dd');
         const reminderDate = format(subDays(newDate, 1), 'yyyy-MM-dd');
@@ -317,6 +327,15 @@ const WorkTab = () => {
             
             return { ...prevState, workItems: updatedWorkItems, calendarEventsData: updatedEvents };
         });
+    };
+
+    const handleKeyUpdate = (itemId: string, newKey: string) => {
+      setAppState(prevState => ({
+        ...prevState,
+        workItems: prevState.workItems.map(item =>
+          item.id === itemId ? { ...item, key: newKey } : item
+        ),
+      }));
     };
 
     const financialSummary = useMemo(() => {
@@ -365,12 +384,12 @@ const WorkTab = () => {
             header: 'Entrega',
             cell: ({ row }) => {
                 const item = row.original;
-                const date = new Date(item.deliveryDate + 'T00:00:00');
+                const date = new Date(item.deliveryDate);
           
                 return (
                   <Popover>
                     <PopoverTrigger asChild>
-                      <Button variant="ghost" className="w-full justify-start text-left font-normal p-0 h-auto">
+                      <Button variant="ghost" className="w-full justify-start text-left font-normal">
                         <CalendarIcon className="mr-2 h-4 w-4" />
                         {format(date, "d 'de' MMMM, yyyy", { locale: es })}
                       </Button>
@@ -395,6 +414,28 @@ const WorkTab = () => {
         {
           accessorKey: 'key',
           header: 'Key',
+          cell: ({ row }) => {
+            const item = row.original;
+            return (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="w-full justify-start text-left font-normal px-2">
+                    {item.key}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                  {keyOptions.map(key => (
+                    <DropdownMenuItem
+                      key={key}
+                      onSelect={() => handleKeyUpdate(item.id, key)}
+                    >
+                      {key}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            );
+          },
         },
         {
           accessorKey: 'bpm',
@@ -459,7 +500,7 @@ const WorkTab = () => {
               </div>
             )
         },
-    ], [handleDeleteWorkItem, handleDateUpdate, handleStatusUpdate]);
+    ], [appState.workItems, keyOptions, handleKeyUpdate, handleDateUpdate, handleStatusUpdate]);
 
     const table = useReactTable({
         data: sortedWorkItems,
@@ -469,32 +510,32 @@ const WorkTab = () => {
     
     return (
         <div className="space-y-8">
-            <div className="flex items-center justify-between">
-                <div className="text-2xl font-bold tracking-tight flex items-center">
-                    FIVERR <Flame className="h-6 w-6 ml-2 text-orange-400" />
-                </div>
-                <div className="flex items-center gap-2">
-                    <a href="https://www.fiverr.com/seller_dashboard" target="_blank" rel="noopener noreferrer" onClick={() => playSound('genericClick')}>
-                        <Button className="bg-green-600 hover:bg-green-700 text-white shadow-sm">
-                            <Link className="mr-2 h-4 w-4" />
-                            Fiverr
-                        </Button>
-                    </a>
-                    <a href="https://tunebat.com/Analyzer" target="_blank" rel="noopener noreferrer" onClick={() => playSound('genericClick')}>
-                        <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm">
-                            <Music className="mr-2 h-4 w-4" />
-                            Tunebat
-                        </Button>
-                    </a>
-                    <Button onClick={() => { playSound('genericClick'); setIsSettingsModalOpen(true); }}>
-                        <Wrench className="mr-2 h-4 w-4" />
-                        Configurar Paquetes
-                    </Button>
-                    <Button onClick={handleOpenNewOrderModal}>
-                        <DollarSign className="mr-2 h-4 w-4" />
-                        Nueva Orden
-                    </Button>
-                </div>
+            <div className="flex items-center justify-between mb-4">
+              <h1 className="text-2xl font-bold tracking-tight">FIVERR📀</h1>
+              <div className="flex items-center gap-2">
+                <a href="https://www.fiverr.com/seller_dashboard" target="_blank" rel="noopener noreferrer" onClick={() => playSound('genericClick')}>
+                  <Button className="bg-green-600 hover:bg-green-700 text-white shadow-sm">
+                    <Link className="mr-2 h-4 w-4" />
+                    Fiverr
+                  </Button>
+                </a>
+                <a href="https://tunebat.com/Analyzer" target="_blank" rel="noopener noreferrer" onClick={() => playSound('genericClick')}>
+                  <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm">
+                    <Music className="mr-2 h-4 w-4" />
+                    Tunebat
+                  </Button>
+                </a>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 mb-4">
+              <Button variant="outline" onClick={handleOpenPackageSettingsModal}>
+                <Settings className="mr-2 h-4 w-4" />
+                Set Packages
+              </Button>
+              <Button onClick={handleOpenNewOrderModal}>
+                Nueva Orden🤑💵
+              </Button>
             </div>
 
             <Card className="glassmorphism-card">
@@ -649,11 +690,11 @@ const WorkTab = () => {
               </div>
               <div className="space-y-6">
                 <Card className="glassmorphism-card text-center p-6">
-                    <p className="text-sm text-muted-foreground">Ingreso Neto Total</p>
+                    <p className="text-sm text-muted-foreground">INGRESO PESOS</p>
                     <p className="text-4xl font-bold text-ios-green">{formatCOP(financialSummary.totalNetCOP)}</p>
                 </Card>
                 <Card className="glassmorphism-card text-center p-6">
-                    <p className="text-sm text-muted-foreground">Ingreso Neto Total (USD)</p>
+                    <p className="text-sm text-muted-foreground">INGRESO USD</p>
                     <p className="text-3xl font-semibold text-ios-blue">{formatUSD(financialSummary.totalNetUSD)}</p>
                 </Card>
                 <Card className="glassmorphism-card text-center p-6">
