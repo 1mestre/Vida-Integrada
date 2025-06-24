@@ -182,26 +182,23 @@ const FileNameToolsPopover = ({ item, toast, playSound }: { item: WorkItem; toas
                     <Button
                         className="bg-orange-500 hover:bg-orange-600 text-white w-full"
                         onClick={async () => {
-                            try {
-                              const params = new URLSearchParams({
-                                clientName: item.clientName,
-                                genre: item.genre,
-                                bpm: item.bpm,
-                                key: item.key,
-                              });
-                              await fetch(`http://localhost:12345/create-project?${params.toString()}`);
-                              playSound('genericClick');
-                              toast({
-                                title: "Proyecto Creado",
-                                description: "La automatización para crear el proyecto ha sido iniciada.",
-                              });
-                            } catch (error) {
-                              toast({
-                                variant: "destructive",
-                                title: "Error de Conexión",
-                                description: "No se pudo conectar con el agente local.",
-                              });
-                            }
+                          try {
+                            // Construye la URL con los datos como query params
+                            const params = new URLSearchParams({
+                              clientName: item.clientName, // Asume que 'item' tiene los datos de la orden
+                              genre: item.genre,
+                              bpm: item.bpm,
+                              key: item.key,
+                            });
+                            // LA RUTA CORRECTA ES /create-project
+                            await fetch(`http://localhost:12345/create-project?${params.toString()}`);
+                            playSound('genericClick'); 
+                            // Opcional: Notificación de éxito
+                            console.log("Orden de crear proyecto enviada al agente local.");
+                          } catch (error) {
+                            alert("Error: No se pudo conectar con el agente local.");
+                            console.error("Error al enviar la orden de crear proyecto:", error);
+                          }
                         }}
                     >
                         <FolderPlus className="mr-2 h-4 w-4" />
@@ -346,29 +343,72 @@ const WorkTab = () => {
     };
 
     const handleAddIncome = () => {
-        if (!amount || !exchangeRate) return;
-
-        playSound('pomodoroStart');
-        
-        const numericAmount = parseFloat(amount);
-        let newContribution;
-
+      // 1. Validar y convertir el input a un número de forma segura.
+      const rawAmount = parseFloat(amount);
+      if (isNaN(rawAmount) || rawAmount <= 0) {
+        toast({
+          variant: "destructive",
+          title: "Monto Inválido",
+          description: "Por favor, introduce un número positivo.",
+        });
+        console.error("Monto inválido introducido.");
+        return;
+      }
+      
+      setRateLoading(true);
+      
+      // 2. Obtener la tasa de cambio actual.
+      let currentRate = 4000; // Tasa de fallback
+      fetch('https://open.er-api.com/v6/latest/USD').then(res => res.json()).then(data => {
+        currentRate = data.rates.COP;
+      }).catch(error => {
+        console.error("No se pudo obtener la tasa de cambio, usando fallback.", error);
+      }).finally(() => {
+        let netUSD = 0;
+        let netCOP = 0;
+      
+        // 3. Aplicar la lógica de negocio correcta.
         if (appState.selectedInputCurrencyIngresos === 'USD') {
-            const fee = 3;
-            const percentageFee = 0.03;
-            if (numericAmount <= fee) return;
-            const netUSD = (numericAmount - fee) * (1 - percentageFee);
-            const netCOP = netUSD * exchangeRate;
-            newContribution = { id: new Date().toISOString(), date: new Date().toISOString(), netUSDValue: netUSD, netCOPValue: netCOP };
-        } else {
-            const netCOP = numericAmount;
-            const netUSD = netCOP / exchangeRate;
-            newContribution = { id: new Date().toISOString(), date: new Date().toISOString(), netUSDValue: netUSD, netCOPValue: netCOP };
+          const grossAmount = rawAmount;
+          netUSD = (grossAmount - 3) * 0.97;
+          netCOP = netUSD * currentRate;
+        } else { // Si el input es en COP
+          netCOP = rawAmount;
+          netUSD = netCOP / currentRate;
+        }
+      
+        // Asegurarse de que no estamos guardando NaN
+        if (isNaN(netUSD) || isNaN(netCOP)) {
+            console.error("Error en el cálculo, resultado es NaN. Revisar fórmula.");
+            toast({
+              variant: "destructive",
+              title: "Error de Cálculo",
+              description: "No se pudo procesar el ingreso. El resultado era inválido.",
+            });
+            setRateLoading(false);
+            return;
         }
         
-        setAppState({ contributions: [newContribution, ...appState.contributions] });
+        playSound('pomodoroStart');
+      
+        const newContribution = {
+          id: new Date().toISOString(),
+          date: new Date().toISOString(),
+          netUSDValue: netUSD,
+          netCOPValue: netCOP,
+        };
+      
+        // 4. Actualizar el estado de la aplicación.
+        setAppState(prevState => ({
+          contributions: [newContribution, ...prevState.contributions],
+        }));
+        
+        // Limpiar el formulario después de guardar.
         setAmount('');
+        setRateLoading(false);
+      });
     };
+
 
     const handleDeleteIncome = (id: string) => {
         playSound('deleteItem');
