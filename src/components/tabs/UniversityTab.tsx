@@ -5,7 +5,7 @@ import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAppState, UniversityTask, KanbanTask, CalendarEvent, TimetableEvent } from '@/context/AppStateContext';
 import { Button } from '@/components/ui/button';
-import { BookCopy, PlusCircle, Trash2 } from 'lucide-react';
+import { ClipboardList, PlusCircle, School, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useSound } from '@/context/SoundContext';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -148,21 +148,83 @@ const UniversityTab = () => {
   return (
     <>
       <div className="space-y-8">
+        <Card className="glassmorphism-card">
+            <CardHeader>
+                <CardTitle className="flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                        <ClipboardList className="text-primary"/>
+                        Tareas Universitarias
+                    </div>
+                    <Button onClick={() => { playSound('genericClick'); setSelectedTask(null); setIsTaskModalOpen(true); }}>
+                        <PlusCircle className="mr-2 h-4 w-4"/>
+                        Añadir Tarea Académica
+                    </Button>
+                </CardTitle>
+            </CardHeader>
+            <CardContent>
+                <Accordion type="multiple" className="w-full space-y-2">
+                    {Object.entries(tasksBySubject).map(([subject, tasks]) => (
+                        <AccordionItem value={subject} key={subject} className="bg-background/20 rounded-lg border px-4">
+                            <AccordionTrigger className="hover:no-underline">{subject} ({tasks.length})</AccordionTrigger>
+                            <AccordionContent>
+                                <div className="space-y-4 pt-2">
+                                    {tasks.map(task => (
+                                        <div key={task.id} className="p-3 rounded-md bg-secondary/50 border border-border">
+                                            <div className="flex justify-between items-start gap-4">
+                                                <div>
+                                                    <p className="font-semibold">{task.title}</p>
+                                                    <p className="text-sm text-muted-foreground">{task.description}</p>
+                                                    <p className="text-sm text-muted-foreground">
+                                                        Vence: {format(new Date(task.dueDate + 'T00:00:00'), 'PPP', { locale: es })}
+                                                    </p>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                   <Select
+                                                        value={task.status}
+                                                        onValueChange={(newStatus) => handleStatusChange(task, newStatus as UniversityTask['status'])}
+                                                    >
+                                                        <SelectTrigger className={`w-[140px] capitalize ${statusColors[task.status]}`}>
+                                                            <SelectValue />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            {statusOptions.map(opt => (
+                                                                <SelectItem key={opt} value={opt} className="capitalize">{opt}</SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                    <Button variant="destructive" size="icon" className="h-9 w-9" onClick={() => handleDeleteTask(task.id)}>
+                                                        <Trash2 className="h-4 w-4"/>
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </AccordionContent>
+                        </AccordionItem>
+                    ))}
+                </Accordion>
+                {appState.universityTasks.length === 0 && (
+                    <p className="text-muted-foreground text-center py-4">No hay tareas pendientes.</p>
+                )}
+            </CardContent>
+        </Card>
+        
         <Card className="glassmorphism-card overflow-hidden">
           <CardHeader>
             <CardTitle className="flex justify-between items-center">
-              <span className="flex-1"></span>
-              <span className="flex-1 text-center">🎓 Horario Universitario</span>
-              <div className="flex-1 flex justify-end">
-                <Button onClick={() => { 
-                  playSound('genericClick'); 
-                  setSelectedTimetableEvent(null);
-                  setIsTimetableModalOpen(true);
-                }}>
-                  <PlusCircle className="mr-2 h-4 w-4"/>
-                  Añadir Evento
-                </Button>
+              <div className="flex items-center gap-2">
+                  <School className="text-primary"/>
+                  Horario Universitario
               </div>
+              <Button onClick={() => { 
+                playSound('genericClick'); 
+                setSelectedTimetableEvent(null);
+                setIsTimetableModalOpen(true);
+              }}>
+                <PlusCircle className="mr-2 h-4 w-4"/>
+                Añadir Evento
+              </Button>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -259,68 +321,6 @@ const UniversityTab = () => {
               </Accordion>
             </div>
           </CardContent>
-        </Card>
-        
-        <Card className="glassmorphism-card">
-            <CardHeader>
-                <CardTitle className="flex justify-between items-center">
-                    <div className="flex items-center gap-2">
-                        <BookCopy className="text-primary"/>
-                        Tareas Universitarias
-                    </div>
-                    <Button onClick={() => { playSound('genericClick'); setSelectedTask(null); setIsTaskModalOpen(true); }}>
-                        <PlusCircle className="mr-2 h-4 w-4"/>
-                        Añadir Tarea Académica
-                    </Button>
-                </CardTitle>
-            </CardHeader>
-            <CardContent>
-                <Accordion type="multiple" className="w-full space-y-2">
-                    {Object.entries(tasksBySubject).map(([subject, tasks]) => (
-                        <AccordionItem value={subject} key={subject} className="bg-background/20 rounded-lg border px-4">
-                            <AccordionTrigger className="hover:no-underline">{subject} ({tasks.length})</AccordionTrigger>
-                            <AccordionContent>
-                                <div className="space-y-4 pt-2">
-                                    {tasks.map(task => (
-                                        <div key={task.id} className="p-3 rounded-md bg-secondary/50 border border-border">
-                                            <div className="flex justify-between items-start gap-4">
-                                                <div>
-                                                    <p className="font-semibold">{task.title}</p>
-                                                    <p className="text-sm text-muted-foreground">{task.description}</p>
-                                                    <p className="text-sm text-muted-foreground">
-                                                        Vence: {format(new Date(task.dueDate + 'T00:00:00'), 'PPP', { locale: es })}
-                                                    </p>
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                   <Select
-                                                        value={task.status}
-                                                        onValueChange={(newStatus) => handleStatusChange(task, newStatus as UniversityTask['status'])}
-                                                    >
-                                                        <SelectTrigger className={`w-[140px] capitalize ${statusColors[task.status]}`}>
-                                                            <SelectValue />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            {statusOptions.map(opt => (
-                                                                <SelectItem key={opt} value={opt} className="capitalize">{opt}</SelectItem>
-                                                            ))}
-                                                        </SelectContent>
-                                                    </Select>
-                                                    <Button variant="destructive" size="icon" className="h-9 w-9" onClick={() => handleDeleteTask(task.id)}>
-                                                        <Trash2 className="h-4 w-4"/>
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </AccordionContent>
-                        </AccordionItem>
-                    ))}
-                </Accordion>
-                {appState.universityTasks.length === 0 && (
-                    <p className="text-muted-foreground text-center py-4">No hay tareas pendientes.</p>
-                )}
-            </CardContent>
         </Card>
       </div>
 
