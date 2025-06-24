@@ -7,13 +7,11 @@ import { useToast } from "@/hooks/use-toast";
 import { v4 as uuidv4 } from 'uuid';
 import { format } from 'date-fns';
 
-interface Contribution {
+export interface Contribution {
   id: string;
   date: string;
-  netUSD: number;
-  rate: number;
-  netCOP: number;
-  grossUSD?: number;
+  netUSDValue: number;
+  netCOPValue: number;
 }
 
 export interface TimetableEvent {
@@ -135,7 +133,7 @@ const initialAppState: AppState = {
       exclusiveLicense: false,
       vocalProduction: false,
       vocalChainPreset: false,
-      colorClassName: 'bg-teal-600 hover:bg-teal-700',
+      colorClassName: 'bg-red-600 hover:bg-red-700',
     },
     {
       id: uuidv4(),
@@ -151,7 +149,7 @@ const initialAppState: AppState = {
       exclusiveLicense: true,
       vocalProduction: false,
       vocalChainPreset: false,
-      colorClassName: 'bg-sky-600 hover:bg-sky-700',
+      colorClassName: 'bg-blue-600 hover:bg-blue-700',
     },
     {
       id: uuidv4(),
@@ -167,7 +165,7 @@ const initialAppState: AppState = {
       exclusiveLicense: true,
       vocalProduction: false,
       vocalChainPreset: false,
-      colorClassName: 'bg-purple-600 hover:bg-purple-700',
+      colorClassName: 'bg-green-600 hover:bg-green-700',
     }
   ],
 };
@@ -201,6 +199,13 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
           const data = docSnap.data();
           
           // --- Comprehensive Sanitization ---
+          const sanitizedContributions = (data.contributions || []).map((c: any): Contribution => ({
+            id: c.id || uuidv4(),
+            date: c.date || new Date().toISOString(),
+            netUSDValue: c.netUSDValue ?? c.netUSD ?? 0, // Handles old data structure
+            netCOPValue: c.netCOPValue ?? c.netCOP ?? 0, // Handles old data structure
+          }));
+
           const sanitizedWorkItems = (data.workItems || []).map((item: Partial<WorkItem>): WorkItem => {
             const defaults: Omit<WorkItem, 'id'> = {
               clientName: '', orderNumber: '', deliveryDate: format(new Date(), 'yyyy-MM-dd'),
@@ -247,7 +252,7 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
           });
 
           const sanitizedState: AppState = {
-            contributions: data.contributions || initialAppState.contributions,
+            contributions: sanitizedContributions,
             monthlyTargets: data.monthlyTargets || initialAppState.monthlyTargets,
             selectedInputCurrencyIngresos: data.selectedInputCurrencyIngresos || initialAppState.selectedInputCurrencyIngresos,
             timetableData: data.timetableData || initialAppState.timetableData,

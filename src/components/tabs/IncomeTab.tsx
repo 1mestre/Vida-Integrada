@@ -7,12 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
-import { useAppState } from '@/context/AppStateContext';
+import { useAppState, type Contribution } from '@/context/AppStateContext';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { PlusCircle, TrendingUp, Trash2 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useSound } from '@/context/SoundContext';
+import { v4 as uuidv4 } from 'uuid';
 
 const formatCOP = (value: number) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(value);
 const formatUSD = (value: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
@@ -70,6 +71,7 @@ const IncomeTab = () => {
   const currentMonthTarget = appState.monthlyTargets[currentMonthKey] || 0;
 
   useEffect(() => {
+    setRateLoading(true);
     fetch('https://open.er-api.com/v6/latest/USD')
       .then(res => res.json())
       .then(data => {
@@ -82,49 +84,52 @@ const IncomeTab = () => {
       });
   }, []);
 
-  const handleAddIncome = () => {
-    if (!amount || !exchangeRate) return;
-
-    playSound('pomodoroStart'); // Success sound
+  const handleAddIncome = async () => {
+    if (!amount) return;
+    setRateLoading(true);
     
+    // 1. Get the current exchange rate before doing anything else
+    const currentRate = await fetch('https://open.er-api.com/v6/latest/USD')
+        .then(res => res.json())
+        .then(data => data.rates.COP || 4000)
+        .catch(() => 4000);
+    
+    setExchangeRate(currentRate);
+    setRateLoading(false);
+    playSound('pomodoroStart');
+    
+    let netUSD = 0;
+    let netCOP = 0;
     const numericAmount = parseFloat(amount);
-    let newContribution;
 
     if (appState.selectedInputCurrencyIngresos === 'USD') {
-      const grossAmount = numericAmount;
-      const fee = 3; // $3 flat fee
-      const percentageFee = 0.03; // 3% commission
-
-      if (grossAmount <= fee) return; // Cannot process if amount is less than flat fee
-
-      // Apply formula: (Gross - Flat Fee) * (1 - Percentage Fee)
-      const netUSD = (grossAmount - fee) * (1 - percentageFee);
-      const netCOP = netUSD * exchangeRate;
-      
-      newContribution = { 
-        id: new Date().toISOString(), 
-        date: new Date().toISOString(), 
-        netUSD, 
-        rate: exchangeRate, 
-        netCOP,
-        grossUSD: grossAmount // Store the original gross amount
-      };
-
-    } else { // Currency is COP
-      const netCOP = numericAmount;
-      const netUSD = netCOP / exchangeRate;
-      newContribution = { 
-        id: new Date().toISOString(), 
-        date: new Date().toISOString(), 
-        netUSD, 
-        rate: exchangeRate, 
-        netCOP 
-      };
+        const grossAmount = numericAmount;
+        // 2. Apply the formula to get the net USD
+        netUSD = (grossAmount - 3) * 0.97;
+        // 3. "Freeze" the value in COP using the rate from that moment
+        netCOP = netUSD * currentRate;
+    } else { // If the input is in COP
+        // 2. The COP value is what was entered
+        netCOP = numericAmount;
+        // 3. "Freeze" the value in USD using the rate from that moment
+        netUSD = netCOP / currentRate;
     }
+
+    const newContribution: Contribution = {
+        id: uuidv4(),
+        date: new Date().toISOString(),
+        netUSDValue: netUSD,
+        netCOPValue: netCOP,
+    };
     
-    setAppState({ contributions: [newContribution, ...appState.contributions] });
+    // 4. Update application state
+    setAppState(prevState => ({
+        contributions: [newContribution, ...prevState.contributions],
+    }));
+
     setAmount('');
   };
+
 
   const handleDeleteIncome = (id: string) => {
     playSound('deleteItem');
@@ -133,15 +138,14 @@ const IncomeTab = () => {
   };
   
   const { monthlyTotals, accumulatedTotals, progress } = useMemo(() => {
-    const accumulatedCOP = appState.contributions.reduce((sum, c) => sum + c.netCOP, 0);
-    const accumulatedUSD = appState.contributions.reduce((sum, c) => sum + c.netUSD, 0);
+    const monthlyContributions = appState.contributions.filter(c => c.date.startsWith(currentMonthKey));
 
-    const monthlyCOP = appState.contributions
-      .filter(c => c.date.startsWith(currentMonthKey))
-      .reduce((sum, c) => sum + c.netCOP, 0);
+    const monthlyCOP = monthlyContributions.reduce((sum, c) => sum + c.netCOPValue, 0);
+    const monthlyUSD = monthlyContributions.reduce((sum, c) => sum + c.netUSDValue, 0);
     
-    const monthlyUSD = exchangeRate ? monthlyCOP / exchangeRate : 0;
-
+    const accumulatedCOP = appState.contributions.reduce((sum, c) => sum + c.netCOPValue, 0);
+    const accumulatedUSD = appState.contributions.reduce((sum, c) => sum + c.netUSDValue, 0);
+    
     const monthlyProgress = currentMonthTarget > 0 ? (monthlyCOP / currentMonthTarget) * 100 : 0;
 
     return {
@@ -149,7 +153,7 @@ const IncomeTab = () => {
         accumulatedTotals: { cop: accumulatedCOP, usd: accumulatedUSD },
         progress: monthlyProgress
     };
-  }, [appState.contributions, currentMonthKey, currentMonthTarget, exchangeRate]);
+  }, [appState.contributions, currentMonthKey, currentMonthTarget]);
 
   const monthTimeProgress = useMemo(() => {
     const today = new Date();
@@ -207,7 +211,7 @@ const IncomeTab = () => {
             </div>
             <Button onClick={handleAddIncome} disabled={rateLoading || !amount} className="w-full">
               <PlusCircle className="mr-2 h-4 w-4" />
-              {rateLoading ? 'Cargando tasa...' : 'Añadir Ingreso'}
+              {rateLoading ? 'Calculando...' : 'Añadir Ingreso'}
             </Button>
             <p className="text-xs text-center text-muted-foreground">Tasa de cambio actual (USD a COP): {rateLoading ? '...' : exchangeRate?.toFixed(2)}</p>
           </CardContent>
@@ -222,9 +226,9 @@ const IncomeTab = () => {
                             {appState.contributions.map(c => (
                                 <li key={c.id} className="flex items-center justify-between text-sm border-b border-border/50 pb-2">
                                     <div>
-                                        <div className="font-medium text-ios-green">{formatCOP(c.netCOP)}</div>
+                                        <div className="font-medium text-ios-green">{formatCOP(c.netCOPValue)}</div>
                                         <div className="text-xs text-muted-foreground">
-                                            {format(new Date(c.date), 'dd MMM yyyy', { locale: es })} - {formatUSD(c.netUSD)}
+                                            {format(new Date(c.date), 'dd MMM yyyy', { locale: es })} - {formatUSD(c.netUSDValue)}
                                         </div>
                                     </div>
                                     <Button 
@@ -249,7 +253,7 @@ const IncomeTab = () => {
                             {Object.entries(appState.monthlyTargets).reverse().map(([key, target]) => {
                                 const monthIncome = appState.contributions
                                     .filter(c => c.date.startsWith(key))
-                                    .reduce((sum, c) => sum + c.netCOP, 0);
+                                    .reduce((sum, c) => sum + c.netCOPValue, 0);
                                 const achieved = monthIncome >= target;
                                 return (
                                     <li key={key} className="text-sm border-b border-border/50 pb-2">
