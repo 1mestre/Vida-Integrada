@@ -19,7 +19,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useAppState, WorkItem, WorkPackageTemplate, type Contribution } from '@/context/AppStateContext';
-import { MessageSquare, TrendingUp, Trash2, Wrench, Link, Music, Settings, PlusCircle, PlayCircle, FileText, FileDown } from 'lucide-react';
+import { TrendingUp, Settings, PlusCircle, PlayCircle, FileText, FileDown, Wrench, Music, Link, MoreVertical, Edit, MessageSquare, Trash2 } from 'lucide-react';
 import WorkItemModal from '@/components/WorkItemModal';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
@@ -34,11 +34,11 @@ import PackageSettingsModal from '@/components/PackageSettingsModal';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuGroup } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuGroup, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuPortal, DropdownMenuSubContent } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { v4 as uuidv4 } from 'uuid';
 
-// Pega esta función completa para reemplazar la versión anterior.
+
 const generateClientMessage = (item: WorkItem, packageTemplates: WorkPackageTemplate[]): string => {
     const isMultiple = item.remakeType.includes('Multiple');
     let message = `Heyyy ${item.clientName}! 👋👋\n\n`;
@@ -130,80 +130,6 @@ const generateClientMessage = (item: WorkItem, packageTemplates: WorkPackageTemp
     }
 
     return message;
-};
-
-const FileNameToolsPopover = ({ item, toast, playSound }: { item: WorkItem; toast: (options: any) => void; playSound: (soundName: string) => void; }) => {
-    const [copySuccess, setCopySuccess] = React.useState('');
-    const filenames = generateFileNames(item);
-
-    const labels: { [key: string]: string } = {
-        stems: 'STEMS',
-        wav: 'WAV',
-        project: 'FLP'
-    };
-
-    const handleCopy = (text: string, type: string) => {
-        navigator.clipboard.writeText(text).then(() => {
-            setCopySuccess(type);
-            toast({ title: "¡Copiado!", description: `Nombre de archivo para ${labels[type]} copiado.` });
-            setTimeout(() => setCopySuccess(''), 2000);
-        }, (err) => {
-            console.error('No se pudo copiar el texto: ', err);
-            toast({ variant: "destructive", title: "Error", description: "No se pudo copiar el nombre del archivo." });
-        });
-    };
-
-    return (
-        <Popover>
-            <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon">
-                    <Wrench className="h-4 w-4 text-muted-foreground" />
-                </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-80">
-                <div className="grid gap-4">
-                    <div className="space-y-2">
-                        <h4 className="font-medium leading-none">Herramientas de Proyecto</h4>
-                        <p className="text-sm text-muted-foreground">
-                           Automatiza tareas de creación y nombrado de archivos.
-                        </p>
-                    </div>
-                    <div className="grid gap-3">
-                        {Object.entries(filenames).map(([key, value]) => (
-                            <div key={key} className="flex items-center justify-between">
-                                <span className="font-semibold text-sm">{labels[key] || key.toUpperCase()}</span>
-                                <Button
-                                    size="sm"
-                                    onClick={() => handleCopy(value, key)}
-                                    className="w-24"
-                                >
-                                    {copySuccess === key ? '¡Copiado!' : 'Copiar'}
-                                </Button>
-                            </div>
-                        ))}
-                    </div>
-                    <Button
-                      className="bg-orange-500 hover:bg-orange-600 text-white w-full mt-4"
-                      onClick={async () => {
-                        try {
-                          await fetch(`http://localhost:12345/open-fl`);
-                          playSound('genericClick');
-                        } catch (error) {
-                          toast({
-                            variant: "destructive",
-                            title: "Error de Conexión",
-                            description: "No se pudo conectar con el agente local.",
-                          });
-                        }
-                      }}
-                    >
-                      <PlayCircle className="mr-2 h-4 w-4" />
-                      Abrir FL Studio
-                    </Button>
-                </div>
-            </PopoverContent>
-        </Popover>
-    );
 };
 
 const generateFileNames = (item: WorkItem) => {
@@ -564,52 +490,111 @@ const WorkTab = () => {
 
     const columns: ColumnDef<WorkItem>[] = useMemo(() => [
         {
-          id: 'message',
-          header: () => <div className="text-center">Mensaje</div>,
+          id: 'actions',
+          header: () => <div className="text-center">Acciones</div>,
           cell: ({ row }) => {
             const item = row.original;
             const generatedMessage = generateClientMessage(item, appState.workPackageTemplates);
+            const filenames = generateFileNames(item);
+
+            const copyToClipboard = (text: string, label: string) => {
+              navigator.clipboard.writeText(text);
+              toast({ title: "¡Copiado!", description: `${label} copiado al portapapeles.` });
+              playSound('genericClick');
+            };
         
             return (
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="ghost" size="icon">
-                    <MessageSquare className="h-4 w-4 text-primary" />
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent className="max-w-3xl">
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Mensaje Personalizado para {item.clientName}</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Este es el mensaje generado basado en los detalles actuales de la orden.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <div className="max-h-[60vh] overflow-y-auto p-4 bg-muted rounded-md">
-                    <pre className="text-xs whitespace-pre-wrap font-mono">
-                      {generatedMessage}
-                    </pre>
-                  </div>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cerrar</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => {
-                        navigator.clipboard.writeText(generatedMessage);
-                        toast({ title: "Copiado", description: "Mensaje copiado al portapapeles." });
-                      }}>
-                      Copiar Mensaje
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+              <div className="flex justify-center items-center">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="h-8 w-8 p-0">
+                      <span className="sr-only">Abrir menú</span>
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel>Acciones de la Orden</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onSelect={() => { setSelectedItem(item); setIsModalOpen(true); }}>
+                      <Edit className="mr-2 h-4 w-4" />
+                      <span>Editar / Ver Detalles</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => copyToClipboard(generatedMessage, 'Mensaje para cliente')}>
+                      <MessageSquare className="mr-2 h-4 w-4" />
+                      <span>Copiar Mensaje Cliente</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => handleGeneratePdf(item)}>
+                      <FileDown className="mr-2 h-4 w-4" />
+                      <span>Descargar Contrato PDF</span>
+                    </DropdownMenuItem>
+        
+                    <DropdownMenuSub>
+                      <DropdownMenuSubTrigger>
+                        <Wrench className="mr-2 h-4 w-4" />
+                        <span>Nombrar Archivos</span>
+                      </DropdownMenuSubTrigger>
+                      <DropdownMenuPortal>
+                        <DropdownMenuSubContent>
+                          <DropdownMenuItem onSelect={() => copyToClipboard(filenames.wav, 'Nombre de archivo WAV')}>
+                            <span>Copiar Nombre WAV</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onSelect={() => copyToClipboard(filenames.stems, 'Nombre de archivo STEMS')}>
+                            <span>Copiar Nombre STEMS</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onSelect={() => copyToClipboard(filenames.project, 'Nombre de archivo FLP')}>
+                            <span>Copiar Nombre FLP</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onSelect={async () => {
+                              try {
+                                await fetch(`http://localhost:12345/open-fl`);
+                                playSound('genericClick');
+                              } catch (error) {
+                                toast({ variant: "destructive", title: "Error de Conexión", description: "No se pudo conectar con el agente local." });
+                              }
+                            }}
+                          >
+                            <PlayCircle className="mr-2 h-4 w-4" />
+                            <span>Abrir FL Studio</span>
+                          </DropdownMenuItem>
+                        </DropdownMenuSubContent>
+                      </DropdownMenuPortal>
+                    </DropdownMenuSub>
+        
+                    <DropdownMenuSeparator />
+        
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <DropdownMenuItem
+                                onSelect={(e) => e.preventDefault()}
+                                className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 text-destructive focus:text-destructive"
+                            >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                <span>Eliminar Orden</span>
+                            </DropdownMenuItem>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>¿Estás absolutamente seguro?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    Esta acción no se puede deshacer. Esto eliminará permanentemente la orden de trabajo,
+                                    la tarea del kanban y el evento del calendario asociado.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDeleteWorkItem(item)}>
+                                    Sí, eliminar orden
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             );
-          },
-        },
-        {
-          id: 'tools',
-          header: () => <div className="text-center">Tools</div>,
-          cell: ({ row }) => {
-            const item = row.original;
-            return <div className="text-center"><FileNameToolsPopover item={item} toast={toast} playSound={playSound} /></div>;
-          },
+          }
         },
         { 
             accessorKey: 'clientName', 
@@ -754,27 +739,7 @@ const WorkTab = () => {
             header: () => <div className="text-center">Género</div>,
             cell: ({ row }) => <div className="text-center">{row.getValue('genre')}</div>
         },
-        {
-            id: 'edit',
-            header: () => <div className="text-center">Acciones</div>,
-            cell: ({ row }) => (
-              <div className="flex gap-1 justify-center">
-                <Button variant="outline" size="sm" onClick={() => {
-                    setSelectedItem(row.original);
-                    setIsModalOpen(true);
-                }}>
-                    Editar
-                </Button>
-                 <Button variant="destructive" size="icon" className="h-8 w-8" onClick={() => handleDeleteWorkItem(row.original)}>
-                    <Trash2 className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleGeneratePdf(row.original)}>
-                    <FileDown className="h-4 w-4 text-green-500" />
-                </Button>
-              </div>
-            )
-        },
-    ], [appState.workItems, appState.workPackageTemplates, handleDateUpdate, handleStatusUpdate, handlePackageUpdate, handleRevisionsUpdate, toast, playSound, handleGeneratePdf]);
+    ], [appState.workItems, appState.workPackageTemplates, handleDateUpdate, handleStatusUpdate, handlePackageUpdate, handleRevisionsUpdate, toast, playSound, handleGeneratePdf, setAppState, setIsModalOpen, setSelectedItem]);
 
     const table = useReactTable({
         data: sortedWorkItems,
