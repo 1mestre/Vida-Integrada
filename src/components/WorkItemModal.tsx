@@ -244,15 +244,15 @@ const WorkItemModal: React.FC<WorkItemModalProps> = ({ isOpen, onClose, item }) 
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold border-b pb-2">Detalles del Cliente y Orden</h3>
                  <div>
-                  <Label htmlFor="clientName">Nombre Cliente</Label>
+                  <Label htmlFor="clientName">👤 Nombre Cliente</Label>
                   <Controller name="clientName" control={control} rules={{ required: true }} render={({ field }) => <Input id="clientName" {...field} />} />
                 </div>
                 <div>
-                  <Label htmlFor="orderNumber">Número de Orden</Label>
+                  <Label htmlFor="orderNumber">📄 Número de Orden</Label>
                   <Controller name="orderNumber" control={control} rules={{ required: true }} render={({ field }) => <Input id="orderNumber" {...field} />} />
                 </div>
                  <div>
-                  <Label htmlFor="remakeType">Tipo de Remake</Label>
+                  <Label htmlFor="remakeType">🎛️ Tipo de Remake</Label>
                   <Controller name="remakeType" control={control} render={({ field }) => (
                     <Select onValueChange={field.onChange} value={field.value}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
@@ -262,7 +262,7 @@ const WorkItemModal: React.FC<WorkItemModalProps> = ({ isOpen, onClose, item }) 
                 </div>
                 {isMultiple && (
                   <div className="space-y-2">
-                    <Label htmlFor="quantity">Cantidad de Entregables ({watch('quantity') || 1})</Label>
+                    <Label htmlFor="quantity">🔢 Cantidad de Entregables ({watch('quantity') || 1})</Label>
                     <Controller
                       name="quantity"
                       control={control}
@@ -281,7 +281,7 @@ const WorkItemModal: React.FC<WorkItemModalProps> = ({ isOpen, onClose, item }) 
                   </div>
                 )}
                 <div>
-                  <Label htmlFor="deliveryDate">Fecha de Entrega</Label>
+                  <Label htmlFor="deliveryDate">🗓️ Fecha de Entrega</Label>
                    <Controller
                     name="deliveryDate" control={control} rules={{ required: true }}
                     render={({ field }) => (
@@ -298,25 +298,31 @@ const WorkItemModal: React.FC<WorkItemModalProps> = ({ isOpen, onClose, item }) 
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                    <div>
-                      <Label htmlFor="genre">{isMultiple ? "Géneros (separados por coma)" : "Género"}</Label>
+                      <Label htmlFor="genre">{isMultiple ? "🎶 Géneros (separados por coma)" : "🎶 Género"}</Label>
                       <Controller name="genre" control={control} render={({ field }) => <Input id="genre" {...field} />} />
                   </div>
                   <div>
-                    <Label htmlFor="bpm">{isMultiple ? "BPMs (separados por coma)" : "BPM"}</Label>
+                    <Label htmlFor="bpm">{isMultiple ? "⏱️ BPMs (separados por coma)" : "⏱️ BPM"}</Label>
                     <Controller name="bpm" control={control} render={({ field }) => <Input id="bpm" {...field} />} />
                   </div>
                 </div>
                  <div>
-                  <Label htmlFor="key">{isMultiple ? "Tonalidades" : "Tonalidad (Key)"}</Label>
-                  <Controller name="key" control={control} render={({ field }) => (
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>{keyOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}</SelectContent>
-                    </Select>
-                  )} />
+                    <Label htmlFor="key">{isMultiple ? "🎹 Tonalidades" : "🎹 Tonalidad (Key)"}</Label>
+                    {isMultiple ? (
+                        <Controller name="key" control={control} render={({ field }) => 
+                            <Input id="key" {...field} placeholder="Tonalidades (separadas por coma ,)" />
+                        } />
+                    ) : (
+                        <Controller name="key" control={control} render={({ field }) => (
+                            <Select onValueChange={field.onChange} value={field.value}>
+                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectContent>{keyOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}</SelectContent>
+                            </Select>
+                        )} />
+                    )}
                 </div>
                  <div>
-                    <Label htmlFor="deliveryStatus">Estado de Entrega</Label>
+                    <Label htmlFor="deliveryStatus">🚚 Estado de Entrega</Label>
                     <Controller name="deliveryStatus" control={control} render={({ field }) => (
                     <Select onValueChange={field.onChange} value={field.value}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
@@ -328,9 +334,9 @@ const WorkItemModal: React.FC<WorkItemModalProps> = ({ isOpen, onClose, item }) 
 
               {/* Columna Derecha: Paquete y Entregables */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold border-b pb-2">Detalles del Paquete</h3>
+                <h3 className="text-lg font-semibold border-b pb-2">📦 Detalles del Paquete</h3>
                 <div>
-                    <Label htmlFor="packageTemplateId">Plantilla de Paquete</Label>
+                    <Label htmlFor="packageTemplateId">🏷️ Plantilla de Paquete</Label>
                     <Controller name="packageTemplateId" control={control}
                         render={({ field }) => (
                             <Select onValueChange={field.onChange} value={field.value}>
@@ -346,26 +352,26 @@ const WorkItemModal: React.FC<WorkItemModalProps> = ({ isOpen, onClose, item }) 
                 </div>
                  <div className="grid grid-cols-2 gap-4">
                     <div>
-                        <Label htmlFor="price">Precio (USD)</Label>
+                        <Label htmlFor="price">💰 Precio (USD)</Label>
                         <Controller name="price" control={control} render={({ field }) => <Input id="price" type="number" {...field} onChange={e => field.onChange(parseFloat(e.target.value))}/>} />
                     </div>
                     <div>
-                        <Label htmlFor="revisionsRemaining">Revisiones</Label>
+                        <Label htmlFor="revisionsRemaining">🔄 Revisiones</Label>
                         <Controller name="revisionsRemaining" control={control} render={({ field }) => <Input id="revisionsRemaining" type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10))}/>} />
                     </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                     <div>
-                        <Label htmlFor="songLength">Duración (seg)</Label>
+                        <Label htmlFor="songLength">⏳ Duración (seg)</Label>
                         <Controller name="songLength" control={control} render={({ field }) => <Input id="songLength" type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10))}/>} />
                     </div>
                     <div>
-                        <Label htmlFor="numberOfInstruments"># Instrumentos</Label>
+                        <Label htmlFor="numberOfInstruments">🎸 # Instrumentos</Label>
                         <Controller name="numberOfInstruments" control={control} render={({ field }) => <Input id="numberOfInstruments" type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value, 10))}/>} />
                     </div>
                 </div>
 
-                <h3 className="text-lg font-semibold border-b pb-2 pt-4">Entregables</h3>
+                <h3 className="text-lg font-semibold border-b pb-2 pt-4">🎁 Entregables</h3>
                 <div className="space-y-2">
                     <DeliverableSwitch name="masterAudio" label="Audio Masterizado" />
                     <DeliverableSwitch name="separateFiles" label="Archivos Separados (STEMS)" />

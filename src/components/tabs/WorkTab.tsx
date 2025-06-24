@@ -358,6 +358,35 @@ const WorkTab = () => {
         ),
       }));
     }, [setAppState]);
+    
+    const handlePackageUpdate = useCallback((itemId: string, newPackageName: string) => {
+        const template = appState.workPackageTemplates.find(t => t.name === newPackageName);
+        if (!template) return;
+
+        setAppState(prevState => {
+            const updatedWorkItems = prevState.workItems.map(item => {
+                if (item.id === itemId) {
+                    return {
+                        ...item,
+                        packageName: template.name,
+                        price: template.price,
+                        revisionsRemaining: template.revisions,
+                        songLength: template.songLength,
+                        numberOfInstruments: template.numberOfInstruments,
+                        quantity: template.quantity || 1,
+                        separateFiles: template.separateFiles,
+                        masterAudio: template.masterAudio,
+                        projectFileDelivery: template.projectFileDelivery,
+                        exclusiveLicense: template.exclusiveLicense,
+                        vocalProduction: template.vocalProduction,
+                        vocalChainPreset: template.vocalChainPreset,
+                    };
+                }
+                return item;
+            });
+            return { ...prevState, workItems: updatedWorkItems };
+        });
+    }, [appState.workPackageTemplates, setAppState]);
 
     const financialSummary = useMemo(() => {
         const totalNetCOP = appState.contributions.reduce((sum, c) => sum + c.netCOP, 0);
@@ -466,11 +495,30 @@ const WorkTab = () => {
             accessorKey: 'packageName', 
             header: 'Paquete',
             cell: ({ row }) => {
-                const packageName = row.getValue('packageName') as string;
+                const item = row.original;
+                const packageOptions = appState.workPackageTemplates.map(p => p.name);
+
                 return (
-                  <Badge className={cn(packageColorMap[packageName] || 'bg-gray-500')}>
-                    {packageName}
-                  </Badge>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="p-0 h-auto">
+                        <Badge className={cn("cursor-pointer", packageColorMap[item.packageName])}>
+                          {item.packageName}
+                        </Badge>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      {packageOptions.map(pkgName => (
+                        <DropdownMenuItem
+                          key={pkgName}
+                          onSelect={() => handlePackageUpdate(item.id, pkgName)}
+                        >
+                          <span className={cn('h-2 w-2 rounded-full mr-2', packageColorMap[pkgName])} />
+                          <span>{pkgName}</span>
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 );
             }
         },
@@ -526,7 +574,7 @@ const WorkTab = () => {
               </div>
             )
         },
-    ], [appState.workItems, keyOptions, handleDateUpdate, handleStatusUpdate, handleKeyUpdate]);
+    ], [appState.workItems, keyOptions, appState.workPackageTemplates, handleDateUpdate, handleStatusUpdate, handleKeyUpdate, handlePackageUpdate]);
 
     const table = useReactTable({
         data: sortedWorkItems,
