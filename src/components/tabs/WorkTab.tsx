@@ -72,60 +72,57 @@ const generateClientMessage = (item: WorkItem, packageTemplates: WorkPackageTemp
         message += `🎁 EXCLUSIVE GIFT: Custom vocal chain preset made for ${isMultiple ? `these ${item.genre} vibes` : `this ${item.genre} vibe`} 🎙️🎙️\n(Appreciate you being chill to work with, let's keep the collabs going!!) 🤝🤝\n\n`;
     }
     
-    // === Bloque 3: Oferta de "Upsell" (Inteligente, Completa y Diferencial) ===
-    // 1. Ordenar plantillas por precio para identificar roles
+    // === Bloque 3: Oferta de "Upsell" (Inteligente, Diferencial y a Prueba de Contradicciones) ===
     const sortedPkgs = [...packageTemplates].sort((a, b) => a.price - b.price);
     const cheapestPkg = sortedPkgs[0];
     const middlePkg = sortedPkgs.length > 1 ? sortedPkgs[1] : null;
-    const highestPkg = sortedPkgs[sortedPkgs.length - 1]; // Siempre el último
-
+    const highestPkg = sortedPkgs[sortedPkgs.length - 1];
     let upsellSection = "";
 
-    // Función auxiliar para comparar beneficios
-    const getDifferentialFeatures = (higherPkg: WorkPackageTemplate, lowerPkg: WorkItem | WorkPackageTemplate): string[] => {
+    // Función auxiliar para comparar beneficios entre un paquete superior y la ORDEN ACTUAL
+    const getDifferentialFeatures = (higherPkg: WorkPackageTemplate, currentItem: WorkItem): string[] => {
         const features: string[] = [];
-        if (higherPkg.masterAudio && !lowerPkg.masterAudio) features.push("• Professional mixing/mastering 🎛️🎚️");
-        if (higherPkg.separateFiles && !lowerPkg.separateFiles) features.push("• Full STEMS 💎");
-        if (higherPkg.projectFileDelivery && !lowerPkg.projectFileDelivery) features.push("• FLP Project File 🎚️🎚️");
-        if (higherPkg.exclusiveLicense && !lowerPkg.exclusiveLicense) features.push("• Exclusive license (100% yours) 📜");
-        if (higherPkg.vocalProduction && !lowerPkg.vocalProduction) features.push("• Vocal Production ✨🎙️");
+        // Solo se añade si el paquete superior lo tiene Y el item actual NO lo tiene
+        if (higherPkg.masterAudio && !currentItem.masterAudio) features.push("• Professional mixing/mastering 🎛️🎚️");
+        if (higherPkg.separateFiles && !currentItem.separateFiles) features.push("• Full STEMS 💎");
+        if (higherPkg.projectFileDelivery && !currentItem.projectFileDelivery) features.push("• FLP Project File 🎚️🎚️");
+        if (higherPkg.exclusiveLicense && !currentItem.exclusiveLicense) features.push("• Exclusive license (100% yours) 📜");
+        if (higherPkg.vocalProduction && !currentItem.vocalProduction) features.push("• Vocal Production ✨🎙️");
         return features;
     };
     
-    const currentPackageTemplate = sortedPkgs.find(p => p.name === item.packageName);
-
-    // Solo mostrar la oferta si el cliente NO tiene el paquete más alto
-    if (currentPackageTemplate && highestPkg && currentPackageTemplate.id !== highestPkg.id) {
+    // Solo mostrar la oferta si el cliente NO tiene todos los beneficios del paquete más alto
+    if (highestPkg && !(item.exclusiveLicense && item.projectFileDelivery && item.separateFiles)) {
         let upsellOffers: string[] = [];
         
         // CASO A: El paquete actual es el más barato
         if (item.packageName === cheapestPkg?.name) {
             // Oferta a Paquete Intermedio
             if (middlePkg) {
-                const diff = middlePkg.price - cheapestPkg.price;
-                if (diff > 0) {
-                    let offer = `• ${cheapestPkg.name} ($${cheapestPkg.price}) → ${middlePkg.name} ($${middlePkg.price}): +$${diff}\n`;
-                    const features = getDifferentialFeatures(middlePkg, cheapestPkg);
-                    if (features.length > 0) offer += `  And get:\n  ${features.join('\n  ')}`;
+                const features = getDifferentialFeatures(middlePkg, item);
+                if (features.length > 0) {
+                    const diff = middlePkg.price - item.price;
+                    let offer = `• ${item.packageName} ($${item.price}) → ${middlePkg.name} ($${middlePkg.price}): +$${diff}\n`;
+                    offer += `  And get:\n  ${features.join('\n  ')}`;
                     upsellOffers.push(offer);
                 }
             }
             // Oferta a Paquete Más Caro
-            const diffToHighest = highestPkg.price - cheapestPkg.price;
-            if (diffToHighest > 0) {
-                let offer = `• ${cheapestPkg.name} ($${cheapestPkg.price}) → ${highestPkg.name} ($${highestPkg.price}): +$${diffToHighest}\n`;
-                const features = getDifferentialFeatures(highestPkg, cheapestPkg);
-                if (features.length > 0) offer += `  And get:\n  ${features.join('\n  ')}`;
+            const featuresToHighest = getDifferentialFeatures(highestPkg, item);
+            if (featuresToHighest.length > 0) {
+                const diff = highestPkg.price - item.price;
+                let offer = `• ${item.packageName} ($${item.price}) → ${highestPkg.name} ($${highestPkg.price}): +$${diff}\n`;
+                offer += `  And get:\n  ${featuresToHighest.join('\n  ')}`;
                 upsellOffers.push(offer);
             }
         }
         // CASO B: El paquete actual es el intermedio
-        else if (middlePkg && item.packageName === middlePkg.name) {
-             const diff = highestPkg.price - middlePkg.price;
-             if (diff > 0) {
-                let offer = `• ${middlePkg.name} ($${middlePkg.price}) → ${highestPkg.name} ($${highestPkg.price}): +$${diff}\n`;
-                const features = getDifferentialFeatures(highestPkg, middlePkg);
-                if (features.length > 0) offer += `  And get:\n  ${features.join('\n  ')}`;
+        else if (item.packageName === middlePkg?.name) {
+             const features = getDifferentialFeatures(highestPkg, item);
+             if (features.length > 0) {
+                const diff = highestPkg.price - item.price;
+                let offer = `• ${item.packageName} ($${item.price}) → ${highestPkg.name} ($${highestPkg.price}): +$${diff}\n`;
+                offer += `  And get:\n  ${features.join('\n  ')}`;
                 upsellOffers.push(offer);
              }
         }
@@ -998,3 +995,4 @@ const WorkTab = () => {
 export default WorkTab;
 
     
+
