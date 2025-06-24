@@ -12,13 +12,6 @@ export const AgreementTemplate: React.FC<AgreementTemplateProps> = ({ clientName
       width: '210mm', height: '297mm', position: 'relative', overflow: 'hidden',
       backgroundColor: 'white', fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif"
     }}>
-      {/* Background Texture */}
-      <div style={{
-        position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
-        backgroundImage: "url('https://www.transparenttextures.com/patterns/light-paper-fibers.png')",
-        opacity: 0.5, zIndex: 0
-      }}></div>
-
       {/* Shapes Decorativas */}
       <div style={{ position: 'absolute', top: 0, right: 0, width: '100%', height: '200px', overflow: 'hidden', zIndex: 1 }}>
         <div style={{ position: 'absolute', top: '-100px', right: '-150px', width: '400px', height: '300px', backgroundColor: '#28a745', transform: 'rotate(20deg)', borderRadius: '30%' }}></div>
