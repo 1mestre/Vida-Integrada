@@ -1,6 +1,3 @@
-
-export const runtime = 'nodejs'; // Forzar el runtime de Node.js para acceder a process.env
-
 // src/app/api/generate-pdf/route.ts
 import { NextResponse } from 'next/server';
 
@@ -63,18 +60,19 @@ export async function POST(request: Request) {
     const html = getContractHtml(clientName, date);
     const apiUrl = 'https://api.apiflash.com/v1/htmltopdf';
 
+    const params = new URLSearchParams();
+    params.append('access_key', accessKey);
+    params.append('html', html);
+    params.append('format', 'A4');
+    params.append('margin', '0');
+    params.append('delay', '3');
+
     const apiResponse = await fetch(apiUrl, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: JSON.stringify({
-        access_key: accessKey,
-        html: html,
-        format: 'A4',
-        margin: 0,
-        delay: 3,
-      }),
+      body: params,
     });
 
     if (!apiResponse.ok) {
