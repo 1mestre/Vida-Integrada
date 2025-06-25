@@ -19,7 +19,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useAppState, WorkItem, WorkPackageTemplate, type Contribution } from '@/context/AppStateContext';
-import { TrendingUp, Settings, PlusCircle, Wrench, Music, Link, Edit, MessageSquare, Trash2 } from 'lucide-react';
+import { TrendingUp, Settings, PlusCircle, Wrench, Music, Link, Edit, MessageSquare, Trash2, FileText } from 'lucide-react';
 import WorkItemModal from '@/components/WorkItemModal';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
@@ -152,16 +152,6 @@ const generateClientMessage = (item: WorkItem, packageTemplates: WorkPackageTemp
     return message;
 };
 
-const generateFileNames = (item: WorkItem) => {
-    const packageNameUC = item.packageName.toUpperCase();
-
-    return {
-        stems: `✩Separate Audio Tracks (STEMS) ${packageNameUC} ${item.key} ${item.bpm} BPM - ${item.clientName}✩`,
-        wav: `♬WAV FILE • ${item.genre} • ${packageNameUC} • ${item.key} • ${item.bpm} BPM - ${item.clientName}♬`,
-        project: `♪FLP PROJECT • ${item.genre}• ${packageNameUC} • ${item.key}• ${item.bpm} BPM - ${item.clientName} ♪`
-    };
-};
-
 const statusColorMap: Record<WorkItem['deliveryStatus'], string> = {
   'Pending': 'bg-yellow-500 hover:bg-yellow-600 text-white',
   'In Transit': 'bg-blue-500 hover:bg-blue-600 text-white',
@@ -270,11 +260,12 @@ const WorkTab = () => {
     
     const handleDeleteWorkItem = (itemToDelete: WorkItem) => {
         playSound('deleteItem');
-        setAppState({
-            workItems: appState.workItems.filter(item => item.id !== itemToDelete.id),
-            tasks: appState.tasks.filter(task => task.workItemId !== itemToDelete.id),
-            calendarEventsData: appState.calendarEventsData.filter(event => event.id !== `event-${itemToDelete.id}`)
-        });
+        setAppState(prevState => ({
+          ...prevState,
+          workItems: prevState.workItems.filter(item => item.id !== itemToDelete.id),
+          tasks: prevState.tasks.filter(task => task.workItemId !== itemToDelete.id),
+          calendarEventsData: prevState.calendarEventsData.filter(event => event.id !== `event-${itemToDelete.id}`)
+        }));
     };
     
     const handleOpenNewOrderModal = () => {
@@ -469,6 +460,161 @@ const WorkTab = () => {
         return (today.getDate() / endOfMonth.getDate()) * 100;
     }, []);
 
+    const handleGenerateContract = (item: WorkItem) => {
+        const formattedDate = format(new Date(item.deliveryDate + 'T00:00:00'), "do 'de' MMMM 'de' yyyy", { locale: es });
+        const contractHtml = `
+            <!DOCTYPE html>
+            <html lang="es">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Acuerdo de Transferencia de Derechos - ${item.clientName}</title>
+                <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Poppins:ital,wght@0,400;0,700;1,400&family=Dancing+Script:wght@400;700&display=swap" rel="stylesheet" />
+                <style>
+                    body { margin: 0; background-color: #f0f0f0; }
+                    .pdf-page-container {
+                        width: 210mm;
+                        min-height: 297mm;
+                        position: relative;
+                        background-color: #e8e5df;
+                        background-image: url("https://www.transparenttextures.com/patterns/light-paper-fibers.png");
+                        font-family: 'Poppins', sans-serif;
+                        padding: 20mm;
+                        box-sizing: border-box;
+                        color: #333333;
+                        margin: 20px auto;
+                        overflow: hidden;
+                        box-shadow: 0 0 10px rgba(0,0,0,0.15);
+                    }
+                    .main-content-wrapper {
+                        padding-bottom: 70mm;
+                        position: relative;
+                        z-index: 5;
+                    }
+                    .signature-font {
+                        font-family: 'Dancing Script', cursive;
+                    }
+                    .fiverr-logo-container {
+                        position: absolute;
+                        top: 20mm;
+                        right: 20mm;
+                        width: 50mm;
+                        height: auto;
+                        z-index: 10;
+                        display: flex;
+                        justify-content: flex-end;
+                    }
+                    .fiverr-logo-img {
+                        height: 15mm;
+                        width: auto;
+                        filter: invert(40%) sepia(90%) saturate(1000%) hue-rotate(80deg) brightness(30%) contrast(100%);
+                    }
+                    .svg-graphics-corner {
+                        position: absolute;
+                        width: 200px;
+                        height: 200px;
+                        overflow: hidden;
+                        z-index: 0;
+                    }
+                    .top-left-graphics { top: 0; left: 0; transform: scaleY(-1); }
+                    .bottom-left-graphics { bottom: 0; left: 0; }
+                    .bottom-right-graphics { bottom: 0; right: 0; transform: scaleX(-1); }
+                    header {
+                        margin-top: 45mm;
+                        color: #105652;
+                        font-family: 'Montserrat', sans-serif;
+                        text-align: center;
+                        margin-bottom: 15mm;
+                    }
+                    .contact-info {
+                        position: absolute;
+                        bottom: 55mm;
+                        left: 50%;
+                        transform: translateX(-50%);
+                        text-align: center;
+                        font-family: 'Poppins', sans-serif;
+                        font-size: 11pt;
+                        color: #555555;
+                        width: fit-content;
+                        z-index: 5;
+                    }
+                    .contact-info p { margin: 2px 0; }
+                    .signature-section {
+                        position: absolute;
+                        bottom: 20mm;
+                        left: 25mm;
+                        right: 25mm;
+                        display: flex;
+                        justify-content: space-between;
+                        font-size: 10pt;
+                        z-index: 5;
+                    }
+                    .signature-block {
+                        flex: 0 0 45%;
+                        text-align: center;
+                    }
+                    .signature-block hr {
+                        border: none;
+                        border-top: 1px solid #333;
+                        width: 80%;
+                        margin: 5px auto 0 auto;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="pdf-page-container">
+                    <div class="svg-graphics-corner top-left-graphics"><svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M0 0 C 100 0, 200 100, 200 200 L 0 200 Z" fill="#1d5a2d" opacity="0.4"/><path d="M0 0 C 80 0, 160 80, 160 160 L 0 160 Z" fill="#105652" opacity="0.4"/><path d="M0 0 C 60 0, 120 60, 120 120 L 0 120 Z" fill="#588157" opacity="0.4"/></svg></div>
+                    <div class="svg-graphics-corner bottom-left-graphics"><svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M0 0 C 100 0, 200 100, 200 200 L 0 200 Z" fill="#1d5a2d" opacity="0.4"/><path d="M0 0 C 80 0, 160 80, 160 160 L 0 160 Z" fill="#105652" opacity="0.4"/><path d="M0 0 C 60 0, 120 60, 120 120 L 0 120 Z" fill="#588157" opacity="0.4"/></svg></div>
+                    <div class="svg-graphics-corner bottom-right-graphics"><svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M0 0 C 100 0, 200 100, 200 200 L 0 200 Z" fill="#1d5a2d" opacity="0.4"/><path d="M0 0 C 80 0, 160 80, 160 160 L 0 160 Z" fill="#105652" opacity="0.4"/><path d="M0 0 C 60 0, 120 60, 120 120 L 0 120 Z" fill="#588157" opacity="0.4"/></svg></div>
+                    <div class="fiverr-logo-container"><img src="https://cdn.worldvectorlogo.com/logos/fiverr-2.svg" alt="Fiverr Logo" class="fiverr-logo-img" /></div>
+                    <div class="main-content-wrapper">
+                        <header>
+                            <h1 style="font-size: 30pt; font-weight: bold; margin: 0; letter-spacing: 1px;">RIGHTS OF USE</h1>
+                            <h1 style="font-size: 30pt; font-weight: bold; margin: 0; letter-spacing: 1px;">TRANSFER AGREEMENT</h1>
+                            <p style="font-size: 12pt; margin-top: 5px; letter-spacing: 2px; color: #1d5a2d;">FIVERR INSTRUMENTAL REMAKE SERVICE</p>
+                        </header>
+                        <hr style="border: none; border-top: 1px solid #105652; margin: 15mm 0;" />
+                        <table style="width: 100%; border-collapse: collapse; font-size: 10pt; margin-bottom: 15mm;">
+                            <tbody>
+                                <tr><td style="padding: 8px 0;"><strong>Services from</strong></td><td style="padding: 8px 0;">@danodals</td><td style="padding: 8px 0;"><strong>Contact</strong></td></tr>
+                                <tr><td style="padding: 8px 0;"><strong>Date</strong></td><td style="padding: 8px 0;">${formattedDate}</td><td style="padding: 8px 0;">danodalbeats@gmail.com</td></tr>
+                            </tbody>
+                        </table>
+                        <h3 style="font-size: 15.18pt; color: #105652; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-bottom: 10mm; font-weight: bold;">Digital Services Contract</h3>
+                        <p style="font-size: 9pt; lineHeight: 1.6; color: #555555; text-align: justify;">Rights of Use Transfer Agreement (Fiverr Remake Service @danodals) Sebastián Mestre, with Fiverr username @danodals, agree to transfer all exclusive usage rights of the music(s), instrumental(s), or beat(s) produced to <strong style="color: #105652;">@${item.clientName}</strong> under the following terms:</p>
+                        <div style="margin-top: 10mm; font-size: 9pt; color: #555555;">
+                            <p style="margin-top: 8px;"><strong>• Purpose:</strong> This agreement aims to transfer the exclusive usage rights of the beat/instrumental created by Sebastián Mestre.</p>
+                            <p style="margin-top: 8px;"><strong>• Scope of Transfer:</strong> The client acquires full commercial usage rights over the work, including the right to modify, distribute, and sell it without restrictions, while respecting the moral rights of the author.</p>
+                            <p style="margin-top: 8px;"><strong>• Exclusivity Guarantee:</strong> The beat/instrumental transferred is 100% exclusive to the client, ensuring it will not be resold or distributed to third parties by Sebastián Mestre.</p>
+                            <p style="margin-top: 8px;"><strong>• Payment and Contract Completion:</strong> Upon full payment of the project on Fiverr, the client receives complete usage rights of the work.</p>
+                            <p style="margin-top: 8px;"><strong>• Duration:</strong> The transfer of rights is indefinite, with no time or territory restrictions.</p>
+                        </div>
+                    </div>
+                    <div class="contact-info">
+                        <p>fiverr.com/danodals</p><p>(+57) 3223238670</p><p>Bogotá, Colombia</p>
+                    </div>
+                    <div class="signature-section">
+                        <div class="signature-block"><p class="signature-font" style="font-size: 40pt; margin: 0 0 5px 0; line-height: 1;">Dano</p><hr style="border: none; border-top: 1px solid #333; width: 80%; margin: 0 auto;" /><p style="margin-top: 5px;">Danodals Beats</p></div>
+                        <div class="signature-block"><div style="width: 150px; height: 50px; margin: 0 auto;"></div><hr style="border: none; border-top: 1px solid #333; width: 80%; margin: 0 auto;" /><p style="margin-top: 5px;">CLIENT'S SIGNATURE</p></div>
+                    </div>
+                </div>
+            </body>
+            </html>
+        `;
+    
+        const newTab = window.open();
+        if (newTab) {
+            newTab.document.write(contractHtml);
+            newTab.document.close();
+            playSound('genericClick');
+        } else {
+            toast({
+                variant: "destructive",
+                title: "Error al abrir",
+                description: "No se pudo abrir la nueva pestaña. Revisa si tu navegador está bloqueando pop-ups.",
+            });
+        }
+    };
 
     const columns: ColumnDef<WorkItem>[] = useMemo(() => [
         {
@@ -686,6 +832,14 @@ const WorkTab = () => {
             const item = row.original;
             return (
               <div className="flex items-center justify-end gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleGenerateContract(item)}
+                >
+                  <FileText className="mr-2 h-4 w-4" />
+                  Contrato
+                </Button>
                 <Button
                   variant="outline"
                   size="sm"
@@ -945,10 +1099,3 @@ const WorkTab = () => {
 export default WorkTab;
 
     
-
-
-
-    
-
-
-
