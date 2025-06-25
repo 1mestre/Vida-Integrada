@@ -461,7 +461,9 @@ const WorkTab = () => {
     }, []);
 
     const handleGenerateContract = (item: WorkItem) => {
-        const formattedDate = format(new Date(item.deliveryDate + 'T00:00:00'), "do 'de' MMMM 'de' yyyy", { locale: es });
+        const date = format(new Date(item.deliveryDate + 'T00:00:00'), "do 'de' MMMM 'de' yyyy", { locale: es });
+        const clientName = item.clientName;
+        
         const contractTemplateHtml = `
 <!DOCTYPE html>
 <html lang="es">
@@ -485,8 +487,7 @@ const WorkTab = () => {
             color: #333333;
             margin: 0 auto; /* Centra el contenedor en la página */
             overflow: hidden;
-            /* Estos estilos son cruciales para la impresión a PDF desde el navegador */
-            print-color-adjust: exact; /* Asegura que los colores de fondo se impriman */
+            print-color-adjust: exact;
             -webkit-print-color-adjust: exact;
         }
         .main-content-wrapper {
@@ -496,23 +497,21 @@ const WorkTab = () => {
             z-index: 5;
         }
         .signature-font {
-            font-family: 'Dancing Script', cursive; /* Fuente específica para la firma */
+            font-family: 'Dancing Script', cursive;
         }
-        .fiverr-logo-container { /* Contenedor para el logo de Fiverr */
+        .fiverr-logo-container {
             position: absolute;
             top: 20mm;
             right: 20mm;
-            width: 50mm; /* Ajusta el ancho para el logo */
+            width: 50mm;
             height: auto;
-            z-index: 10; /* Asegura que el logo esté en la parte superior */
+            z-index: 10;
             display: flex;
-            justify-content: flex-end; /* Alinea el logo a la derecha dentro de su contenedor */
+            justify-content: flex-end;
         }
-        .fiverr-logo-img { /* Estilos para la imagen del logo SVG */
-            height: 15mm; /* Altura del SVG */
+        .fiverr-logo-img {
+            height: 15mm;
             width: auto;
-            /* Aplica un filtro CSS para intentar darle un tono verde al logo.
-            Se ajusta el brillo a 30% para un verde más oscuro. */
             filter: invert(40%) sepia(90%) saturate(1000%) hue-rotate(80deg) brightness(30%) contrast(100%);
         }
         .svg-graphics-corner {
@@ -520,12 +519,12 @@ const WorkTab = () => {
             width: 200px;
             height: 200px;
             overflow: hidden;
-            z-index: 0; /* Envía los gráficos al fondo */
+            z-index: 0;
         }
         .top-left-graphics {
             top: 0;
             left: 0;
-            transform: scaleY(-1); /* Voltea el SVG verticalmente para la esquina superior izquierda */
+            transform: scaleY(-1);
         }
         .bottom-left-graphics {
             bottom: 0;
@@ -534,50 +533,50 @@ const WorkTab = () => {
         .bottom-right-graphics {
             bottom: 0;
             right: 0;
-            transform: scaleX(-1); /* Voltea el SVG horizontalmente para la esquina inferior derecha */
+            transform: scaleX(-1);
         }
         header {
             /* Ajustado margin-top para dar más espacio arriba del contenido */
             margin-top: 35mm; /* Antes 45mm, para permitir más espacio superior */
             color: #105652;
-            font-family: 'Montserrat', sans-serif; /* Fuente para el encabezado */
+            font-family: 'Montserrat', sans-serif;
             text-align: center;
             margin-bottom: 15mm;
         }
         .contact-info {
             position: absolute;
-            bottom: 55mm; /* Posición desde la parte inferior de la página */
+            bottom: 55mm;
             left: 50%;
-            transform: translateX(-50%); /* Centra horizontalmente */
+            transform: translateX(-50%);
             text-align: center;
             font-family: 'Poppins', sans-serif;
             font-size: 11pt;
             color: #555555;
-            width: fit-content; /* Ajusta el ancho al contenido */
+            width: fit-content;
             z-index: 5;
         }
         .contact-info p {
-            margin: 2px 0; /* Margen pequeño para los párrafos de contacto */
+            margin: 2px 0;
         }
         .signature-section {
             position: absolute;
-            bottom: 20mm; /* Posición de la sección de firma desde la parte inferior */
+            bottom: 20mm;
             left: 25mm;
             right: 25mm;
-            display: flex; /* Usa flexbox para alinear las firmas */
-            justify-content: space-between; /* Distribuye el espacio entre las firmas */
+            display: flex;
+            justify-content: space-between;
             font-size: 10pt;
             z-index: 5;
         }
         .signature-block {
-            flex: 0 0 45%; /* Cada bloque de firma ocupa el 45% del espacio */
+            flex: 0 0 45%;
             text-align: center;
         }
         .signature-block hr {
             border: none;
-            border-top: 1px solid #333; /* Línea de la firma */
+            border-top: 1px solid #333;
             width: 80%;
-            margin: 5px auto 0 auto; /* Centra la línea */
+            margin: 5px auto 0 auto;
         }
 
         /* Estilos específicos para impresión */
@@ -690,15 +689,12 @@ const WorkTab = () => {
         </div>
     </div>
 </body>
-</html>`;
+</html>
+`;
     
-        const personalizedHtml = contractTemplateHtml
-            .replace(/\$\{date\}/g, formattedDate)
-            .replace(/\$\{clientName\}/g, item.clientName);
-
         const newTab = window.open();
         if (newTab) {
-            newTab.document.write(personalizedHtml);
+            newTab.document.write(contractTemplateHtml);
             newTab.document.close();
             playSound('genericClick');
         } else {
@@ -709,6 +705,7 @@ const WorkTab = () => {
             });
         }
     };
+    
 
     const columns: ColumnDef<WorkItem>[] = useMemo(() => [
         {
@@ -948,6 +945,7 @@ const WorkTab = () => {
                   onClick={() => handleDeleteWorkItem(item)}
                 >
                   <Trash2 className="h-4 w-4" />
+                  Borrar
                 </Button>
               </div>
             );
@@ -1191,6 +1189,8 @@ const WorkTab = () => {
 };
 
 export default WorkTab;
+
+    
 
     
 
