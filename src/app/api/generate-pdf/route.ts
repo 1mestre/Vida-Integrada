@@ -58,7 +58,7 @@ export async function POST(request: Request) {
     const params = new URLSearchParams({
       access_key: accessKey,
       url: targetUrl,
-      format: 'pdf', // Probando si 'pdf' es un formato válido como sugeriste.
+      format: 'png', // FIX: Usando un formato de imagen válido (png).
       delay: '3',
     });
     
@@ -71,13 +71,13 @@ export async function POST(request: Request) {
       throw new Error(`ApiFlash API error (${apiResponse.status}): ${errorText}`);
     }
 
-    const pdfBuffer = await apiResponse.arrayBuffer();
+    const imageBuffer = await apiResponse.arrayBuffer();
 
-    return new NextResponse(pdfBuffer, {
+    return new NextResponse(imageBuffer, {
       status: 200,
       headers: {
-        'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="TEST - ${clientName} - #${orderNumber}.pdf"`,
+        'Content-Type': 'image/png', // FIX: Content-Type ahora es image/png.
+        'Content-Disposition': `attachment; filename="TEST - ${clientName} - #${orderNumber}.png"`, // FIX: El archivo ahora es .png.
       },
     });
 
