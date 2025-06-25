@@ -1,3 +1,4 @@
+export const runtime = 'nodejs';
 // src/app/api/generate-pdf/route.ts
 import { NextResponse } from 'next/server';
 
