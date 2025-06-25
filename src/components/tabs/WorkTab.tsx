@@ -19,7 +19,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useAppState, WorkItem, WorkPackageTemplate, type Contribution } from '@/context/AppStateContext';
-import { TrendingUp, Settings, PlusCircle, Wrench, Music, Link, Edit, MessageSquare, Trash2 } from 'lucide-react';
+import { TrendingUp, Settings, PlusCircle, Wrench, Music, Link, Edit, MessageSquare, Trash2, Download } from 'lucide-react';
 import WorkItemModal from '@/components/WorkItemModal';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
@@ -278,6 +278,53 @@ const WorkTab = () => {
         playSound('genericClick');
         setIsSettingsModalOpen(true);
     };
+
+    const handleGenerateContract = async (item: WorkItem) => {
+        try {
+          const response = await fetch('/api/generate-pdf', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              clientName: item.clientName,
+              date: format(new Date(item.deliveryDate + 'T00:00:00'), 'd \'de\' MMMM \'de\' yyyy', { locale: es }),
+              orderNumber: item.orderNumber,
+            }),
+          });
+    
+          if (response.ok) {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Rights Of Use - ${item.clientName} - #${item.orderNumber}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+            toast({
+              title: "Éxito",
+              description: "El contrato se ha descargado exitosamente."
+            });
+          } else {
+            const errorData = await response.json();
+            console.error('Error al generar el contrato PDF:', errorData.error);
+            toast({
+              variant: "destructive",
+              title: "Error al generar contrato",
+              description: errorData.error || "No se pudo generar el PDF.",
+            });
+          }
+        } catch (error) {
+          console.error('Error de red al generar el contrato:', error);
+          toast({
+            variant: "destructive",
+            title: "Error de Red",
+            description: "No se pudo comunicar con el servidor para generar el PDF.",
+          });
+        }
+      };
 
     const handleAddIncome = async () => {
       const rawAmount = parseFloat(amount);
@@ -677,6 +724,14 @@ const WorkTab = () => {
             return (
               <div className="flex items-center justify-end gap-2">
                 <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleGenerateContract(item)}
+                >
+                    <Download className="mr-2 h-4 w-4" />
+                    Contrato
+                </Button>
+                <Button
                   variant="outline"
                   size="sm"
                   onClick={() => handleOpenEditModal(item)}
@@ -695,7 +750,7 @@ const WorkTab = () => {
             );
           },
         }
-    ], [appState.workPackageTemplates, appState.contributions, handleDateUpdate, handleStatusUpdate, handlePackageUpdate, handleRevisionsUpdate, playSound, handleDeleteWorkItem, handleOpenEditModal, toast]);
+    ], [appState.workPackageTemplates, appState.contributions, handleDateUpdate, handleStatusUpdate, handlePackageUpdate, handleRevisionsUpdate, playSound, handleDeleteWorkItem, handleOpenEditModal, toast, handleGenerateContract]);
 
     const table = useReactTable({
         data: sortedWorkItems,
