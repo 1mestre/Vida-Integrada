@@ -1,5 +1,5 @@
 
-// VERSION FINAL 2.1 - Activación de ApiFlash
+// VERSION FINAL 2.1 - Activación de ApiFlashHh
 import { NextResponse } from 'next/server';
 
 // Función que contiene tu plantilla HTML exacta.
