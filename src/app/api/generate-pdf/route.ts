@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server';
 import ReactDOMServer from 'react-dom/server';
 import { AgreementTemplate } from '@/components/pdf/AgreementTemplate';
+import React from 'react';
 
 export const runtime = 'nodejs';
 
@@ -24,9 +25,9 @@ const getContractHtml = (clientName: string, date: string) => {
     .signature-block hr { border: none; border-top: 1px solid #333; width: 80%; margin: 5px auto 0 auto; }
   `;
 
-  // Render the React component to an HTML string
+  // Render the React component to an HTML string using React.createElement
   const componentHtml = ReactDOMServer.renderToStaticMarkup(
-    <AgreementTemplate clientName={clientName} date={date} />
+    React.createElement(AgreementTemplate, { clientName, date })
   );
 
   // Wrap the component HTML in a full document structure with necessary headers
