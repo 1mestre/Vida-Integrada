@@ -2,7 +2,6 @@
 export const runtime = 'nodejs'; // Forzar el runtime de Node.js para acceder a process.env
 
 // src/app/api/generate-pdf/route.ts
-// VERSION DE PRUEBA: Usando URL pública para validar la conexión con ApiFlash
 import { NextResponse } from 'next/server';
 
 // Función que contiene tu plantilla HTML exacta.
@@ -51,33 +50,45 @@ const getContractHtml = (clientName: string, date: string): string => {
 
 export async function POST(request: Request) {
   try {
-    const { clientName, orderNumber } = await request.json();
+    const { clientName, orderNumber, date } = await request.json();
     const accessKey = "bc729acfd64d45a3a3dbe7bcf79fa220";
-    const targetUrl = 'https://google.com'; // Usando una URL pública y estable para la prueba.
 
-    const params = new URLSearchParams({
-      access_key: accessKey,
-      url: targetUrl,
-      format: 'png', // FIX: Usando un formato de imagen válido (png).
-      delay: '3',
+    if (!accessKey) {
+      throw new Error('ApiFlash access key is not configured.');
+    }
+    if (!clientName || !orderNumber || !date) {
+      return new NextResponse('Client name, order number, and date are required', { status: 400 });
+    }
+
+    const html = getContractHtml(clientName, date);
+    const apiUrl = 'https://api.apiflash.com/v1/htmltopdf';
+
+    const apiResponse = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        access_key: accessKey,
+        html: html,
+        format: 'A4',
+        margin: 0,
+        delay: 3,
+      }),
     });
-    
-    const apiUrl = `https://api.apiflash.com/v1/urltoimage?${params.toString()}`;
-
-    const apiResponse = await fetch(apiUrl); // Simple GET request
 
     if (!apiResponse.ok) {
       const errorText = await apiResponse.text();
       throw new Error(`ApiFlash API error (${apiResponse.status}): ${errorText}`);
     }
 
-    const imageBuffer = await apiResponse.arrayBuffer();
+    const pdfBuffer = await apiResponse.arrayBuffer();
 
-    return new NextResponse(imageBuffer, {
+    return new NextResponse(pdfBuffer, {
       status: 200,
       headers: {
-        'Content-Type': 'image/png', // FIX: Content-Type ahora es image/png.
-        'Content-Disposition': `attachment; filename="TEST - ${clientName} - #${orderNumber}.png"`, // FIX: El archivo ahora es .png.
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="Rights Of Use - ${clientName} - #${orderNumber}.pdf"`,
       },
     });
 
