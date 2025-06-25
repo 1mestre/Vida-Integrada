@@ -271,18 +271,18 @@ const WorkTab = () => {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `Rights Of Use - ${item.clientName} - #${item.orderNumber}.pdf`;
+      a.download = `test-screenshot-for-${item.clientName}-${item.orderNumber}.png`;
       document.body.appendChild(a);
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
 
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error al generar el contrato:", error);
       toast({
         variant: 'destructive',
-        title: 'Error de PDF',
-        description: 'No se pudo generar el contrato. Revisa la consola para más detalles.'
+        title: 'Error de Screenshot',
+        description: 'No se pudo generar la captura. Revisa la consola para más detalles.'
       })
     } finally {
       setGeneratingPdfId(null);
@@ -775,7 +775,7 @@ const WorkTab = () => {
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
-                      <AlertDialogTitle>¿Estás absolutamente seguro?</AlertDialogTitle>
+                      <AlertDialogTitle>¿Estás absolutely seguro?</AlertDialogTitle>
                       <AlertDialogDescription>
                           Esta acción no se puede deshacer. Esto eliminará permanentemente la orden de trabajo,
                           la tarea del kanban y el evento del calendario asociado.
