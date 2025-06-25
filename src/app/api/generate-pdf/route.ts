@@ -1,3 +1,4 @@
+
 // Ruta: src/app/api/generate-pdf/route.ts
 import { NextResponse } from 'next/server';
 import { renderToString } from 'react-dom/server';
