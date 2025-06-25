@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 export const runtime = 'nodejs';
 
 // Reusable function to get the full HTML content for the contract
+// This function is self-contained and does not use React or JSX.
 const getContractHtml = (clientName: string, date: string) => {
   // These styles are necessary for ApiFlash to render the component correctly.
   const cssStyles = `
