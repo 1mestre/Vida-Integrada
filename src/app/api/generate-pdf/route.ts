@@ -1,5 +1,5 @@
 // src/app/api/generate-pdf/route.ts
-// VERSIÓN DE DIAGNÓSTICO FINAL
+// VERSIÓN DE DIAGNÓSTICO FINALLLL
 import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
