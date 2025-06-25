@@ -1,4 +1,4 @@
-
+// src/app/api/generate-pdf/route.ts
 // VERSION FINAL 2.1 - Activación de ApiFlashHh
 import { NextResponse } from 'next/server';
 
@@ -61,19 +61,18 @@ export async function POST(request: Request) {
     const html = getContractHtml(clientName, date); // Esta función no cambia
 
     // --- INICIO DE LA CORRECCIÓN CLAVE ---
-    const apiUrl = 'https://api.apiflash.com/v1/htmltopdf'; // URL base del endpoint
+    const apiUrl = 'https://api.apiflash.com/v1/urltoimage'; // URL base del endpoint
 
     const apiResponse = await fetch(apiUrl, {
       method: 'POST', // Usamos el método POST
       headers: {
         'Content-Type': 'application/json',
-        // La clave de API se pasa como un header de autorización
-        'x-api-key': accessKey,
       },
-      // El cuerpo contiene solo el HTML y las opciones, sin la clave
+      // El cuerpo contiene la clave, el html y todas las opciones
       body: JSON.stringify({
+        access_key: accessKey,
         html: html,
-        format: 'A4',
+        format: 'pdf', // <-- Cambio clave
         margin: 0,
         delay: 3, // Damos 3s para que carguen fuentes, texturas, etc.
       }),
