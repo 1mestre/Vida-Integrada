@@ -1,3 +1,4 @@
+
 export const runtime = 'nodejs'; // Forzar el runtime de Node.js para acceder a process.env
 
 // src/app/api/generate-pdf/route.ts
@@ -51,35 +52,32 @@ const getContractHtml = (clientName: string, date: string): string => {
 export async function POST(request: Request) {
   try {
     const { clientName, orderNumber, date } = await request.json();
-    const accessKey = process.env.APIFLASH_ACCESS_KEY;
+    const accessKey = "bc729acfd64d45a3a3dbe7bcf79fa220";
 
     if (!accessKey) {
-      throw new Error('ApiFlash access key is not configured in Vercel environment variables.');
+      throw new Error('ApiFlash access key is not configured.');
     }
     if (!clientName || !orderNumber || !date) {
       return new NextResponse('Client name, order number and date are required', { status: 400 });
     }
 
-    const html = getContractHtml(clientName, date); // Esta función no cambia
+    const html = getContractHtml(clientName, date); // This function does not change
 
-    // --- INICIO DE LA CORRECCIÓN CLAVE ---
-    const apiUrl = 'https://api.apiflash.com/v1/urltoimage'; // URL base del endpoint
+    const apiUrl = 'https://api.apiflash.com/v1/urltoimage';
 
     const apiResponse = await fetch(apiUrl, {
-      method: 'POST', // Usamos el método POST
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      // El cuerpo contiene la clave, el html y todas las opciones
       body: JSON.stringify({
         access_key: accessKey,
         html: html,
-        format: 'pdf', // <-- Cambio clave
+        format: 'pdf',
         margin: 0,
-        delay: 3, // Damos 3s para que carguen fuentes, texturas, etc.
+        delay: 3,
       }),
     });
-    // --- FIN DE LA CORRECCIÓN ---
 
     if (!apiResponse.ok) {
       const errorText = await apiResponse.text();
