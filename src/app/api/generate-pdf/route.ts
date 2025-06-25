@@ -2,7 +2,7 @@
 export const runtime = 'nodejs'; // Forzar el runtime de Node.js para acceder a process.env
 
 // src/app/api/generate-pdf/route.ts
-// VERSION FINAL 2.1 - Activación de ApiFlashHh
+// VERSION DE PRUEBA: Usando URL pública para validar la conexión con ApiFlash
 import { NextResponse } from 'next/server';
 
 // Función que contiene tu plantilla HTML exacta.
@@ -51,33 +51,20 @@ const getContractHtml = (clientName: string, date: string): string => {
 
 export async function POST(request: Request) {
   try {
-    const { clientName, orderNumber, date } = await request.json();
+    const { clientName, orderNumber } = await request.json();
     const accessKey = "bc729acfd64d45a3a3dbe7bcf79fa220";
+    const targetUrl = 'https://google.com'; // Usando una URL pública y estable para la prueba.
 
-    if (!accessKey) {
-      throw new Error('ApiFlash access key is not configured.');
-    }
-    if (!clientName || !orderNumber || !date) {
-      return new NextResponse('Client name, order number and date are required', { status: 400 });
-    }
-
-    const html = getContractHtml(clientName, date); // This function does not change
-
-    const apiUrl = 'https://api.apiflash.com/v1/urltoimage';
-
-    const apiResponse = await fetch(apiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        access_key: accessKey,
-        html: html,
-        format: 'pdf',
-        margin: 0,
-        delay: 3,
-      }),
+    const params = new URLSearchParams({
+      access_key: accessKey,
+      url: targetUrl,
+      format: 'pdf', // Probando si 'pdf' es un formato válido como sugeriste.
+      delay: '3',
     });
+    
+    const apiUrl = `https://api.apiflash.com/v1/urltoimage?${params.toString()}`;
+
+    const apiResponse = await fetch(apiUrl); // Simple GET request
 
     if (!apiResponse.ok) {
       const errorText = await apiResponse.text();
@@ -90,7 +77,7 @@ export async function POST(request: Request) {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="Rights Of Use - ${clientName} - #${orderNumber}.pdf"`,
+        'Content-Disposition': `attachment; filename="TEST - ${clientName} - #${orderNumber}.pdf"`,
       },
     });
 
