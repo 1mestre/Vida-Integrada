@@ -258,7 +258,11 @@ const WorkTab = () => {
         body: JSON.stringify({
           clientName: item.clientName,
           orderNumber: item.orderNumber,
-          date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+          date: new Date(item.deliveryDate + 'T00:00:00').toLocaleDateString('es-CO', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          })
         }),
       });
 
@@ -271,7 +275,7 @@ const WorkTab = () => {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `test-screenshot-for-${item.clientName}-${item.orderNumber}.png`;
+      a.download = `Contract - ${item.clientName} - #${item.orderNumber}.png`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -568,7 +572,7 @@ const WorkTab = () => {
                     {generatingPdfId === item.id ? 'Generando...' : (
                     <FileDown className="mr-2 h-4 w-4" />
                     )}
-                    <span>Descargar Contrato PDF</span>
+                    <span>Descargar Contrato</span>
                   </DropdownMenuItem>
                   <DropdownMenuSub>
                     <DropdownMenuSubTrigger>

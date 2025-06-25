@@ -1,31 +1,39 @@
-// src/app/api/generate-pdf/route.ts
-import { NextResponse } from 'next/server';
 
-// This function is not used in the diagnostic version but is kept for future restoration.
-const getContractHtml = (clientName: string, date: string): string => {
-  return `...`; // HTML content omitted for brevity
-};
+// src/app/api/generate-pdf/route.ts
+export const runtime = 'nodejs';
+import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
   try {
-    const { clientName, orderNumber } = await request.json();
+    const { clientName, orderNumber, date } = await request.json();
     const accessKey = "bc729acfd64d45a3a3dbe7bcf79fa220";
-    
-    // --- DIAGNOSTIC LOGIC ---
-    // Instead of using local HTML, we use a public URL to test the API.
-    const urlToScreenshot = 'https://google.com';
-    
-    const params = new URLSearchParams();
-    params.append('access_key', accessKey);
-    params.append('url', urlToScreenshot);
-    params.append('format', 'png'); // We request a PNG image for this test.
 
-    const apiUrl = `https://api.apiflash.com/v1/urltoimage?${params.toString()}`;
+    if (!clientName || !orderNumber || !date) {
+        return new NextResponse('Client name, order number, and date are required', { status: 400 });
+    }
+    
+    // Determine the base URL dynamically for Vercel or use a localhost fallback.
+    const host = request.headers.get('host');
+    const protocol = host?.includes('localhost') ? 'http' : 'https';
+    const baseUrl = `${protocol}://${host}`;
 
-    const apiResponse = await fetch(apiUrl, {
-      method: 'GET', // The urltoimage endpoint often works best with GET.
+    // Construct the public URL for the contract preview page.
+    const contractUrl = new URL(`/pdf-preview/${orderNumber}`, baseUrl);
+    contractUrl.searchParams.set('clientName', clientName);
+    contractUrl.searchParams.set('date', date);
+    
+    // Construct the ApiFlash URL.
+    const apiFlashUrl = new URL('https://api.apiflash.com/v1/urltoimage');
+    apiFlashUrl.searchParams.set('access_key', accessKey);
+    apiFlashUrl.searchParams.set('url', contractUrl.toString());
+    apiFlashUrl.searchParams.set('format', 'png');
+    apiFlashUrl.searchParams.set('full_page', 'true');
+    apiFlashUrl.searchParams.set('delay', '2'); // Wait for fonts/images to load
+    apiFlashUrl.searchParams.set('no_ads', 'true');
+
+    const apiResponse = await fetch(apiFlashUrl.toString(), {
+      method: 'GET',
     });
-    // --- END DIAGNOSTIC LOGIC ---
 
     if (!apiResponse.ok) {
       const errorText = await apiResponse.text();
@@ -34,12 +42,11 @@ export async function POST(request: Request) {
 
     const imageBuffer = await apiResponse.arrayBuffer();
 
-    // We return an image instead of a PDF for this test.
     return new NextResponse(imageBuffer, {
       status: 200,
       headers: {
         'Content-Type': 'image/png',
-        'Content-Disposition': `attachment; filename="test-screenshot-for-${clientName}-${orderNumber}.png"`,
+        'Content-Disposition': `attachment; filename="Contract - ${clientName} - #${orderNumber}.png"`,
       },
     });
 
