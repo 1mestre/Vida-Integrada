@@ -19,7 +19,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useAppState, WorkItem, WorkPackageTemplate, type Contribution } from '@/context/AppStateContext';
-import { TrendingUp, Settings, PlusCircle, FileDown, Wrench, Music, Link, Edit, MessageSquare, Trash2 } from 'lucide-react';
+import { TrendingUp, Settings, PlusCircle, Wrench, Music, Link, Edit, MessageSquare, Trash2 } from 'lucide-react';
 import WorkItemModal from '@/components/WorkItemModal';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
@@ -246,54 +246,6 @@ const WorkTab = () => {
   
     const currentMonthKey = format(new Date(), 'yyyy-MM');
     const currentMonthTarget = appState.monthlyTargets[currentMonthKey] || 0;
-
-  const [generatingPdfId, setGeneratingPdfId] = useState<string | null>(null);
-
-  const handleGeneratePdf = async (item: WorkItem) => {
-    setGeneratingPdfId(item.id);
-    try {
-      const response = await fetch('/api/generate-pdf', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          clientName: item.clientName,
-          orderNumber: item.orderNumber,
-          date: new Date(item.deliveryDate + 'T00:00:00').toLocaleDateString('es-CO', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-          }),
-          baseUrl: window.location.origin,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`El servidor respondió con un error: ${errorText}`);
-      }
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `Contract - ${item.clientName} - #${item.orderNumber}.png`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
-
-    } catch (error: any) {
-      console.error("Error al generar el contrato:", error);
-      toast({
-        variant: 'destructive',
-        title: 'Error de Screenshot',
-        description: 'No se pudo generar la captura. Revisa la consola para más detalles.'
-      })
-    } finally {
-      setGeneratingPdfId(null);
-    }
-  };
-
 
     const handleOpenEditModal = (item: WorkItem) => {
       setSelectedItem(item);
@@ -569,12 +521,6 @@ const WorkTab = () => {
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
-                  <DropdownMenuItem disabled={generatingPdfId === item.id} onSelect={() => handleGeneratePdf(item)}>
-                    {generatingPdfId === item.id ? 'Generando...' : (
-                    <FileDown className="mr-2 h-4 w-4" />
-                    )}
-                    <span>Descargar Contrato</span>
-                  </DropdownMenuItem>
                   <DropdownMenuSub>
                     <DropdownMenuSubTrigger>
                       <Wrench className="mr-2 h-4 w-4" />
@@ -798,7 +744,7 @@ const WorkTab = () => {
             );
           },
         }
-    ], [appState.workPackageTemplates, appState.contributions, handleDateUpdate, handleStatusUpdate, handlePackageUpdate, handleRevisionsUpdate, playSound, handleDeleteWorkItem, handleGeneratePdf, handleOpenEditModal, toast, generatingPdfId]);
+    ], [appState.workPackageTemplates, appState.contributions, handleDateUpdate, handleStatusUpdate, handlePackageUpdate, handleRevisionsUpdate, playSound, handleDeleteWorkItem, handleOpenEditModal, toast]);
 
     const table = useReactTable({
         data: sortedWorkItems,
@@ -1042,4 +988,5 @@ export default WorkTab;
 
 
     
+
 
