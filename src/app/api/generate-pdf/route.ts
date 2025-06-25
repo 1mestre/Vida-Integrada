@@ -130,10 +130,13 @@ const getContractHtml = (clientName: string, date: string) => {
 export async function POST(request: Request) {
   try {
     const { clientName, orderNumber, date } = await request.json();
-    const accessKey = "bc729acfd64d45a3a3dbe7bcf79fa220";
+    const accessKey = process.env.APIFLASH_ACCESS_KEY || "bc729acfd64d45a3a3dbe7bcf79fa220";
 
     if (!clientName || !orderNumber || !date) {
         return new NextResponse('Client name, order number, and date are required', { status: 400 });
+    }
+    if (!accessKey) {
+        return new NextResponse('ApiFlash access key is not configured', { status: 500 });
     }
     
     // Generate the full contract HTML on the server
