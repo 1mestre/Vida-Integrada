@@ -1,3 +1,5 @@
+export const runtime = 'nodejs'; // Forzar el runtime de Node.js para acceder a process.env
+
 // src/app/api/generate-pdf/route.ts
 // VERSION FINAL 2.1 - Activación de ApiFlashHh
 import { NextResponse } from 'next/server';
