@@ -262,7 +262,8 @@ const WorkTab = () => {
             year: 'numeric',
             month: 'long',
             day: 'numeric',
-          })
+          }),
+          baseUrl: window.location.origin,
         }),
       });
 
@@ -1041,3 +1042,4 @@ export default WorkTab;
 
 
     
+

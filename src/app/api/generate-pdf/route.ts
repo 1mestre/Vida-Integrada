@@ -5,19 +5,14 @@ import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
   try {
-    const { clientName, orderNumber, date } = await request.json();
+    const { clientName, orderNumber, date, baseUrl } = await request.json();
     const accessKey = "bc729acfd64d45a3a3dbe7bcf79fa220";
 
-    if (!clientName || !orderNumber || !date) {
-        return new NextResponse('Client name, order number, and date are required', { status: 400 });
+    if (!clientName || !orderNumber || !date || !baseUrl) {
+        return new NextResponse('Client name, order number, date, and baseUrl are required', { status: 400 });
     }
     
-    // Determine the base URL dynamically for Vercel or use a localhost fallback.
-    const host = request.headers.get('host');
-    const protocol = host?.includes('localhost') ? 'http' : 'https';
-    const baseUrl = `${protocol}://${host}`;
-
-    // Construct the public URL for the contract preview page.
+    // Construct the public URL for the contract preview page using the baseUrl from the client.
     const contractUrl = new URL(`/pdf-preview/${orderNumber}`, baseUrl);
     contractUrl.searchParams.set('clientName', clientName);
     contractUrl.searchParams.set('date', date);
