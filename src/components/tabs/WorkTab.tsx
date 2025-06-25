@@ -35,7 +35,6 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuGroup, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuPortal, DropdownMenuSubContent } from '@/components/ui/dropdown-menu';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { v4 as uuidv4 } from 'uuid';
 
 
@@ -485,42 +484,22 @@ const WorkTab = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                        <MessageSquare className="mr-2 h-4 w-4" />
-                        <span>Mensaje Cliente</span>
-                      </DropdownMenuItem>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent className="max-w-3xl">
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Mensaje Personalizado para {item.clientName}</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Revisa el mensaje generado. Puedes copiarlo al portapapeles.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <div className="max-h-[60vh] overflow-y-auto p-4 bg-muted rounded-md border">
-                        <pre className="text-xs whitespace-pre-wrap font-mono">
-                          {generateClientMessage(item, appState.workPackageTemplates)}
-                        </pre>
-                      </div>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cerrar</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => {
+                    <DropdownMenuItem
+                        onSelect={(e) => {
+                          e.preventDefault();
                           try {
-                          navigator.clipboard.writeText(generateClientMessage(item, appState.workPackageTemplates));
-                          toast({ title: "¡Copiado!", description: "Mensaje para cliente copiado al portapapeles." });
+                            navigator.clipboard.writeText(generateClientMessage(item, appState.workPackageTemplates));
+                            toast({ title: "¡Copiado!", description: "Mensaje para cliente copiado al portapapeles." });
                           } catch (err) {
-                             console.error("Error al copiar al portapapeles:", err);
-                             toast({ variant: "destructive", title: "Error al Copiar", description: "No se pudo copiar el mensaje." });
+                            console.error("Error al copiar al portapapeles:", err);
+                            toast({ variant: "destructive", title: "Error al Copiar", description: "No se pudo copiar el mensaje." });
                           }
                           playSound('genericClick');
-                        }}>
-                          Copiar Mensaje
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                        }}
+                    >
+                        <MessageSquare className="mr-2 h-4 w-4" />
+                        <span>Copiar Mensaje Cliente</span>
+                    </DropdownMenuItem>
                   <DropdownMenuSub>
                     <DropdownMenuSubTrigger>
                       <Wrench className="mr-2 h-4 w-4" />
@@ -715,31 +694,13 @@ const WorkTab = () => {
                   <Edit className="mr-2 h-4 w-4" />
                   Editar
                 </Button>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button
-                      variant="destructive"
-                      size="icon"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>¿Estás absolutely seguro?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                          Esta acción no se puede deshacer. Esto eliminará permanentemente la orden de trabajo,
-                          la tarea del kanban y el evento del calendario asociado.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => handleDeleteWorkItem(item)}>
-                          Sí, eliminar orden
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+                <Button
+                  variant="destructive"
+                  size="icon"
+                  onClick={() => handleDeleteWorkItem(item)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
               </div>
             );
           },
@@ -988,5 +949,6 @@ export default WorkTab;
 
 
     
+
 
 
