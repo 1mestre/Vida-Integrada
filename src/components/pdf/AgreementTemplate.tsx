@@ -1,4 +1,3 @@
-
 // src/components/pdf/AgreementTemplate.tsx
 import React from 'react';
 
@@ -9,13 +8,14 @@ interface AgreementTemplateProps {
 }
 
 // The main functional component for the contract template.
+// NOTE: This component is now just for potential in-app previews.
+// The actual PNG generation uses a self-contained HTML string in the API route.
 export const AgreementTemplate: React.FC<AgreementTemplateProps> = ({ clientName, date }) => {
   return (
     <div className="pdf-page-container">
       {/* The main content wrapper provides padding for the signature/footer area. */}
       <div className="main-content-wrapper">
-        <header>
-          {/* Header titles with inline styles for precise control */}
+        <header style={{ marginTop: '45mm', color: '#105652', fontFamily: "'Montserrat', sans-serif", textAlign: 'center', marginBottom: '15mm' }}>
           <h1 style={{fontSize: '30pt', fontWeight: 'bold', margin: '0', letterSpacing: '1px'}}>RIGHTS OF USE</h1>
           <h1 style={{fontSize: '30pt', fontWeight: 'bold', margin: '0', letterSpacing: '1px'}}>TRANSFER AGREEMENT</h1>
           <p style={{fontSize: '12pt', marginTop: '5px', letterSpacing: '2px', color: '#1d5a2d'}}>FIVERR INSTRUMENTAL REMAKE SERVICE</p>
