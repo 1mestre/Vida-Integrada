@@ -217,10 +217,10 @@ export async function POST(req: Request) {
 
     // 2. Iniciamos el navegador invisible
     const browser = await puppeteer.launch({
-      args: [...chromium.args, '--hide-scrollbars', '--disable-web-security'],
+      args: chromium.args,
       defaultViewport: chromium.defaultViewport,
       executablePath: await chromium.executablePath(),
-      headless: 'new', // Use the new recommended headless mode
+      headless: chromium.headless,
       ignoreHTTPSErrors: true,
     });
 
