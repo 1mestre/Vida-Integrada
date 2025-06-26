@@ -154,6 +154,7 @@ export async function POST(req: Request) {
       ),
       headless: chromium.headless,
       ignoreHTTPSErrors: true,
+      timeout: 0,
     });
 
     // 3. Renderizamos el HTML y creamos el PDF
