@@ -279,52 +279,83 @@ const WorkTab = () => {
         setIsSettingsModalOpen(true);
     };
 
-    const handleGenerateContract = async (item: WorkItem) => {
-        try {
-          const response = await fetch('/api/generate-pdf', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              clientName: item.clientName,
-              date: format(new Date(item.deliveryDate + 'T00:00:00'), 'd \'de\' MMMM \'de\' yyyy', { locale: es }),
-              orderNumber: item.orderNumber,
-            }),
-          });
+    const handleGenerateContract = useCallback(async (item: WorkItem) => {
+      toast({
+        title: "Generando contrato...",
+        description: "Por favor espera mientras se genera el PDF.",
+      });
     
-          if (response.ok) {
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `Rights Of Use - ${item.clientName} - #${item.orderNumber}.pdf`;
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            window.URL.revokeObjectURL(url);
-            toast({
-              title: "Éxito",
-              description: "El contrato se ha descargado exitosamente."
-            });
-          } else {
+      try {
+        const requestData = {
+          clientName: item.clientName,
+          date: format(new Date(item.deliveryDate + 'T00:00:00'), 'd \'de\' MMMM \'de\' yyyy', { locale: es }),
+          orderNumber: item.orderNumber,
+        };
+    
+        const response = await fetch('/api/generate-pdf', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(requestData),
+        });
+    
+        if (!response.ok) {
+          let errorMessage = 'Error desconocido del servidor';
+          try {
             const errorData = await response.json();
-            console.error('Error al generar el contrato PDF:', errorData.error);
-            toast({
-              variant: "destructive",
-              title: "Error al generar contrato",
-              description: errorData.error || "No se pudo generar el PDF.",
-            });
+            errorMessage = errorData.error || `Error ${response.status}: ${response.statusText}`;
+          } catch {
+            errorMessage = `Error ${response.status}: ${response.statusText}`;
           }
-        } catch (error) {
-          console.error('Error de red al generar el contrato:', error);
-          toast({
-            variant: "destructive",
-            title: "Error de Red",
-            description: "No se pudo comunicar con el servidor para generar el PDF.",
-          });
+          throw new Error(errorMessage);
         }
-      };
+    
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/pdf')) {
+          throw new Error('La respuesta del servidor no es un archivo PDF válido');
+        }
+    
+        const blob = await response.blob();
+        if (blob.size === 0) {
+          throw new Error('El archivo PDF generado está vacío');
+        }
+    
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `contrato-${item.orderNumber}-${item.clientName.replace(/\s+/g, '-')}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+    
+        toast({
+          title: "Contrato generado",
+          description: "El contrato PDF ha sido descargado exitosamente.",
+          variant: "default",
+        });
+    
+      } catch (error) {
+        console.error('Error al generar contrato:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+        toast({
+          variant: "destructive",
+          title: "Error al generar contrato",
+          description: `No se pudo generar el PDF: ${errorMessage}`,
+        });
+      }
+    }, [toast]);
+
+    const generateFileNames = (item: WorkItem) => {
+        const safeClientName = item.clientName.replace(/[^a-zA-Z0-9 -]/g, '').trim();
+        const baseName = `${safeClientName} - ${item.genre} ${item.bpm}bpm ${item.key.replace(' / ', '_')}`;
+        return {
+            wav: `${baseName}.wav`,
+            stems: `${baseName} (STEMS).zip`,
+            project: `${baseName}.flp`,
+        };
+    };
 
     const handleAddIncome = async () => {
       const rawAmount = parseFloat(amount);
@@ -750,7 +781,7 @@ const WorkTab = () => {
             );
           },
         }
-    ], [appState.workPackageTemplates, appState.contributions, handleDateUpdate, handleStatusUpdate, handlePackageUpdate, handleRevisionsUpdate, playSound, handleDeleteWorkItem, handleOpenEditModal, toast, handleGenerateContract]);
+    ], [appState.workPackageTemplates, handleDateUpdate, handleStatusUpdate, handlePackageUpdate, handleRevisionsUpdate, playSound, handleDeleteWorkItem, handleOpenEditModal, toast, handleGenerateContract, appState.workPackageTemplates]);
 
     const table = useReactTable({
         data: sortedWorkItems,
