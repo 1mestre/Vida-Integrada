@@ -1,3 +1,4 @@
+
 // Ruta: src/app/api/generate-pdf/route.ts
 import { NextResponse } from 'next/server';
 import chromium from '@sparticuz/chromium-min';
@@ -7,6 +8,7 @@ import puppeteer from 'puppeteer-core';
 export const runtime = 'nodejs';
 
 // Helper function to generate the HTML string, avoiding JSX in this file.
+// This version is simplified to be self-contained and avoid external network requests for debugging.
 const getAgreementHtml = (clientName: string, date: string): string => {
   return `
   <!DOCTYPE html>
@@ -15,16 +17,13 @@ const getAgreementHtml = (clientName: string, date: string): string => {
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>Acuerdo de Transferencia de Derechos de Uso</title>
-      <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Poppins:ital,wght@0,400;0,700;1,400&family=Dancing+Script:wght@400;700&display=swap" rel="stylesheet" />
-  
       <style>
           .pdf-page-container {
               width: 210mm;
               min-height: 297mm;
               position: relative;
-              background-color: #e8e5df;
-              background-image: url("https://www.transparenttextures.com/patterns/light-paper-fibers.png");
-              font-family: 'Poppins', sans-serif;
+              background-color: #e8e5df; /* Removed background-image */
+              font-family: sans-serif; /* Using safe font */
               padding: 20mm;
               box-sizing: border-box;
               color: #333333;
@@ -39,22 +38,10 @@ const getAgreementHtml = (clientName: string, date: string): string => {
               z-index: 5;
           }
           .signature-font {
-              font-family: 'Dancing Script', cursive;
+              font-family: cursive; /* Safe fallback */
           }
           .fiverr-logo-container {
-              position: absolute;
-              top: 20mm;
-              right: 20mm;
-              width: 50mm;
-              height: auto;
-              z-index: 10;
-              display: flex;
-              justify-content: flex-end;
-          }
-          .fiverr-logo-img {
-              height: 15mm;
-              width: auto;
-              filter: invert(40%) sepia(90%) saturate(1000%) hue-rotate(80deg) brightness(30%) contrast(100%);
+              display: none; /* Hide logo container for debugging */
           }
           .svg-graphics-corner {
               position: absolute;
@@ -80,7 +67,7 @@ const getAgreementHtml = (clientName: string, date: string): string => {
           header {
               margin-top: 35mm;
               color: #105652;
-              font-family: 'Montserrat', sans-serif;
+              font-family: sans-serif; /* Safe font */
               text-align: center;
               margin-bottom: 15mm;
           }
@@ -90,7 +77,7 @@ const getAgreementHtml = (clientName: string, date: string): string => {
               left: 50%;
               transform: translateX(-50%);
               text-align: center;
-              font-family: 'Poppins', sans-serif;
+              font-family: sans-serif; /* Safe font */
               font-size: 11pt;
               color: #555555;
               width: fit-content;
@@ -135,7 +122,6 @@ const getAgreementHtml = (clientName: string, date: string): string => {
                   box-shadow: none !important;
                   border: none !important;
                   background-color: #e8e5df !important;
-                  background-image: url("https://www.transparenttextures.com/patterns/light-paper-fibers.png") !important;
                   -webkit-print-color-adjust: exact !important;
                   color-adjust: exact !important;
               }
@@ -166,7 +152,7 @@ const getAgreementHtml = (clientName: string, date: string): string => {
               </svg>
           </div>
           <div class="fiverr-logo-container">
-              <img src="https://cdn.worldvectorlogo.com/logos/fiverr-2.svg" alt="Fiverr Logo" class="fiverr-logo-img" />
+              <!-- Logo removed for debugging -->
           </div>
           <div class="main-content-wrapper">
               <header>
@@ -181,7 +167,7 @@ const getAgreementHtml = (clientName: string, date: string): string => {
                           <td style="padding: 8px 0;"><strong>Services from</strong></td><td style="padding: 8px 0;">@danodals</td><td style="padding: 8px 0;"><strong>Contact</strong></td>
                       </tr>
                       <tr>
-                          <td style="padding: 8px 0;"><strong>Date</strong></td><td style="padding: 8px 0; font-family: 'Montserrat', sans-serif;">${date}</td><td style="padding: 8px 0;">danodalbeats@gmail.com</td>
+                          <td style="padding: 8px 0;"><strong>Date</strong></td><td style="padding: 8px 0; font-family: sans-serif;">${date}</td><td style="padding: 8px 0;">danodalbeats@gmail.com</td>
                       </tr>
                   </tbody>
               </table>
