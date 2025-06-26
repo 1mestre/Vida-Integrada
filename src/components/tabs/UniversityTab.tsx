@@ -37,10 +37,9 @@ const UniversityTab = () => {
     return [...new Set(subjects)];
   }, [appState.timetableData]);
 
-  const handleSaveTask = (taskData: Omit<UniversityTask, 'id' | 'status'> & { color: string }) => {
-    const { color, ...uniTaskData } = taskData;
+  const handleSaveTask = (taskData: Omit<UniversityTask, 'id' | 'status'>) => {
     const newUniversityTask: UniversityTask = {
-      ...uniTaskData,
+      ...taskData,
       id: `uni-task-${uuidv4()}`,
       status: 'pendiente',
     };
@@ -50,7 +49,7 @@ const UniversityTab = () => {
       content: newUniversityTask.title,
       column: 'todo' as const,
       universityTaskId: newUniversityTask.id,
-      color: color,
+      // No color property needed; it will be styled in TaskManager
     };
 
     const newCalendarEvent: CalendarEvent = {

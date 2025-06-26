@@ -18,25 +18,16 @@ import { Calendar } from './ui/calendar';
 import { cn } from '@/lib/utils';
 import { useSound } from '@/context/SoundContext';
 
-const colorPalette = {
-  'Teal Profundo': { bg: 'bg-teal-800', text: 'text-white' },
-  'Azul': { bg: 'bg-blue-600', text: 'text-white' },
-  'Rojo': { bg: 'bg-red-600', text: 'text-white' },
-  'Púrpura': { bg: 'bg-purple-600', text: 'text-white' },
-  'Dorado Arena': { bg: 'bg-yellow-700', text: 'text-white' },
-  'Blanco': { bg: 'bg-neutral-100', text: 'text-black' },
-};
-
 interface UniversityTaskModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: Omit<UniversityTask, 'id' | 'status'> & { color: string }) => void;
+  onSubmit: (data: Omit<UniversityTask, 'id' | 'status'>) => void;
   subjects: string[];
   task?: UniversityTask | null;
 }
 
 const UniversityTaskModal: React.FC<UniversityTaskModalProps> = ({ isOpen, onClose, onSubmit, subjects, task }) => {
-  const { control, handleSubmit, reset, formState: { errors } } = useForm<Omit<UniversityTask, 'id' | 'status'> & { color: string }>();
+  const { control, handleSubmit, reset, formState: { errors } } = useForm<Omit<UniversityTask, 'id' | 'status'>>();
   const { playSound } = useSound();
 
   useEffect(() => {
@@ -46,13 +37,12 @@ const UniversityTaskModal: React.FC<UniversityTaskModalProps> = ({ isOpen, onClo
         title: '',
         description: '',
         dueDate: format(new Date(), 'yyyy-MM-dd'),
-        color: Object.keys(colorPalette)[0],
       };
-      reset(task ? { ...task, color: Object.keys(colorPalette)[0] } : defaultValues);
+      reset(task || defaultValues);
     }
   }, [isOpen, task, reset, subjects]);
 
-  const handleFormSubmit = (data: Omit<UniversityTask, 'id' | 'status'> & { color: string }) => {
+  const handleFormSubmit = (data: Omit<UniversityTask, 'id' | 'status'>) => {
     playSound('pomodoroStart');
     onSubmit(data);
     onClose();
@@ -107,33 +97,6 @@ const UniversityTaskModal: React.FC<UniversityTaskModalProps> = ({ isOpen, onClo
             </div>
 
             <div>
-              <Label htmlFor="color">Color de la Tarea</Label>
-              <Controller
-                name="color"
-                control={control}
-                rules={{ required: 'El color es obligatorio' }}
-                render={({ field }) => (
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Elige un color..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(colorPalette).map(([name, { bg }]) => (
-                        <SelectItem key={name} value={name}>
-                          <div className="flex items-center gap-2">
-                            <span className={cn('h-3 w-3 rounded-full', bg)} />
-                            <span>{name}</span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-              {errors.color && <p className="text-sm text-red-500 mt-1">{errors.color.message}</p>}
-            </div>
-            
-            <div>
                 <Label htmlFor="dueDate">Fecha de Entrega</Label>
                  <Controller
                   name="dueDate"
@@ -171,7 +134,6 @@ const UniversityTaskModal: React.FC<UniversityTaskModalProps> = ({ isOpen, onClo
                 />
                 {errors.dueDate && <p className="text-sm text-red-500 mt-1">{errors.dueDate.message}</p>}
             </div>
-
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>

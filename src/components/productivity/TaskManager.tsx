@@ -172,17 +172,20 @@ const TaskManager: React.FC<TaskManagerProps> = ({ handleResetDayTasks, handleRe
         <div className="space-y-2">
           <AnimatePresence>
               {tasksInColumn.map(task => {
-                  const taskColor = task.color;
-                  let finalColorClasses = 'bg-secondary'; // default
-          
-                  if (taskColor) {
-                      if (colorPalette[taskColor as keyof typeof colorPalette]) {
-                          // It's a key from our new palette
-                          const styles = colorPalette[taskColor as keyof typeof colorPalette];
-                          finalColorClasses = `${styles.bg} ${styles.text}`;
-                      } else {
-                          // It's an old-style raw class string
-                          finalColorClasses = taskColor;
+                  const uniTask = task.universityTaskId ? appState.universityTasks.find(ut => ut.id === task.universityTaskId) : null;
+                  
+                  let finalColorClasses = 'bg-secondary';
+                  if (uniTask) {
+                      finalColorClasses = 'bg-purple-950 text-purple-200 border border-purple-800';
+                  } else {
+                      const taskColor = task.color;
+                      if (taskColor) {
+                          if (colorPalette[taskColor as keyof typeof colorPalette]) {
+                              const styles = colorPalette[taskColor as keyof typeof colorPalette];
+                              finalColorClasses = `${styles.bg} ${styles.text}`;
+                          } else {
+                              finalColorClasses = taskColor;
+                          }
                       }
                   }
 
@@ -201,7 +204,14 @@ const TaskManager: React.FC<TaskManagerProps> = ({ handleResetDayTasks, handleRe
                           )}
                       >
                           <div className="flex items-center gap-2 flex-1 min-w-0">
-                            <span className="truncate">{task.content}</span>
+                            {uniTask ? (
+                                <div className="flex flex-col flex-1 min-w-0">
+                                    <span className="text-xs font-semibold opacity-70 truncate">{uniTask.subject}</span>
+                                    <span className="truncate">{task.content}</span>
+                                </div>
+                            ) : (
+                                <span className="truncate">{task.content}</span>
+                            )}
                           </div>
 
                           <Button variant="ghost" size="icon" className="h-6 w-6 flex-shrink-0" onClick={() => handleDeleteTask(task.id)}>
