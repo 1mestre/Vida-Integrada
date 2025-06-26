@@ -220,7 +220,7 @@ export async function POST(req: Request) {
       args: chromium.args,
       defaultViewport: chromium.defaultViewport,
       executablePath: await chromium.executablePath(
-        `https://github.com/Sparticuz/chromium/releases/download/v123.0.1/chromium-v123.0.1-sbr.tar`
+        `https://github.com/Sparticuz/chromium/releases/download/v123.0.1/chromium-v123.0.1-sbr.tar.br`
       ),
       headless: chromium.headless,
       ignoreHTTPSErrors: true,
