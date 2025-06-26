@@ -240,7 +240,7 @@ export async function POST(req: Request) {
 
     // 3. Renderizamos el HTML y creamos el PDF
     const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: 'load' });
+    await page.setContent(html, { waitUntil: 'networkidle0' });
 
     const pdfBuffer = await page.pdf({
       format: 'A4',
