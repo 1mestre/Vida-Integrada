@@ -219,8 +219,11 @@ export async function POST(req: Request) {
     const browser = await puppeteer.launch({
       args: chromium.args,
       defaultViewport: chromium.defaultViewport,
-      executablePath: await chromium.executablePath(),
+      executablePath: await chromium.executablePath(
+        `https://github.com/Sparticuz/chromium/releases/download/v123.0.1/chromium-v123.0.1-pack.tar`
+      ),
       headless: chromium.headless,
+      ignoreHTTPSErrors: true,
     });
 
     // 3. Renderizamos el HTML y creamos el PDF
