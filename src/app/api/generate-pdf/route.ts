@@ -1,7 +1,7 @@
 
 // Ruta: src/app/api/generate-pdf/route.ts
 import { NextResponse } from 'next/server';
-import chromium from '@sparticuz/chromium-min';
+import chromium from '@sparticuz/chromium';
 import puppeteer from 'puppeteer-core';
 
 // Importante: le decimos a Vercel que use el entorno Node.js, que es más compatible.
