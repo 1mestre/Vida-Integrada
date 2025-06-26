@@ -245,8 +245,7 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     console.error('Error generating PDF:', error);
-    return NextResponse.json({ error: 'No se pudo generar el PDF.' }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ error: `Detalle del servidor: ${errorMessage}` }, { status: 500 });
   }
 }
-
-    
