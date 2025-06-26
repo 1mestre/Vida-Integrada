@@ -220,7 +220,7 @@ export async function POST(req: Request) {
       args: [...chromium.args, '--hide-scrollbars', '--disable-web-security'],
       defaultViewport: chromium.defaultViewport,
       executablePath: await chromium.executablePath(),
-      headless: chromium.headless,
+      headless: 'new', // Use the new recommended headless mode
       ignoreHTTPSErrors: true,
     });
 
