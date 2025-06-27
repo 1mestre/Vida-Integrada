@@ -5,8 +5,8 @@ runConfig:
   # maxInstances: 100
   # concurrency: 80
   # cpu: 1
-  memoryMiB: 1024
-  timeoutSeconds: 300
+  memoryMiB: 512
+  # timeoutSeconds: 60
 
 # Environment variables and secrets.
 # env:

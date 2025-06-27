@@ -2,6 +2,8 @@
 "use client";
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import * as ReactDOMClient from 'react-dom/client';
+import html2pdf from 'html2pdf.js';
 import {
   ColumnDef,
   flexRender,
@@ -19,7 +21,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useAppState, WorkItem, WorkPackageTemplate, type Contribution } from '@/context/AppStateContext';
-import { TrendingUp, Settings, PlusCircle, Wrench, Music, Link, Edit, MessageSquare, Trash2, Download, FileText } from 'lucide-react';
+import { TrendingUp, Settings, PlusCircle, Wrench, Music, Link, Edit, MessageSquare, Trash2, FileText } from 'lucide-react';
 import WorkItemModal from '@/components/WorkItemModal';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
@@ -36,6 +38,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { cn } from '@/lib/utils';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuGroup, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuPortal, DropdownMenuSubContent } from '@/components/ui/dropdown-menu';
 import { v4 as uuidv4 } from 'uuid';
+import AgreementTemplate from '@/components/pdf/AgreementTemplate';
 
 
 const generateClientMessage = (item: WorkItem, packageTemplates: WorkPackageTemplate[]): string => {
@@ -279,73 +282,54 @@ const WorkTab = () => {
         setIsSettingsModalOpen(true);
     };
 
-    const handleGenerateContract = useCallback(async (item: WorkItem) => {
+    const handleGenerateContract = (item: WorkItem) => {
       toast({
         title: "Generando contrato...",
-        description: "Por favor espera mientras se genera el PDF.",
+        description: "El renderizado se está realizando en tu navegador.",
       });
-    
-      try {
-        const requestData = {
-          clientName: item.clientName,
-          date: format(new Date(item.deliveryDate + 'T00:00:00'), 'd \'de\' MMMM \'de\' yyyy', { locale: es }),
-          orderNumber: item.orderNumber,
+  
+      const container = document.createElement('div');
+      container.style.position = 'absolute';
+      container.style.left = '-9999px';
+      document.body.appendChild(container);
+  
+      const root = ReactDOMClient.createRoot(container);
+      const contractData = {
+        clientName: item.clientName,
+        date: format(new Date(item.deliveryDate + 'T00:00:00'), "d 'de' MMMM 'de' yyyy", { locale: es }),
+      };
+      root.render(React.createElement(AgreementTemplate, contractData));
+  
+      setTimeout(() => {
+        const opt = {
+          margin: 0,
+          filename: `Rights Of Use - ${item.clientName} - #${item.orderNumber}.pdf`,
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
-    
-        const response = await fetch('/api/generate-pdf', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(requestData),
-        });
-    
-        if (!response.ok) {
-          let errorMessage = 'Error desconocido del servidor';
-          try {
-            const errorData = await response.json();
-            errorMessage = errorData.error || `Error ${response.status}: ${response.statusText}`;
-          } catch {
-            errorMessage = `Error ${response.status}: ${response.statusText}`;
+  
+        html2pdf().from(container).set(opt).save().then(() => {
+          root.unmount();
+          document.body.removeChild(container);
+          toast({
+            title: "Contrato generado",
+            description: "El PDF se ha descargado.",
+          });
+        }).catch(err => {
+          console.error("Error generating PDF with html2pdf:", err);
+          root.unmount();
+          if (document.body.contains(container)) {
+            document.body.removeChild(container);
           }
-          throw new Error(errorMessage);
-        }
-    
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/pdf')) {
-          throw new Error('La respuesta del servidor no es un archivo PDF válido');
-        }
-    
-        const blob = await response.blob();
-        if (blob.size === 0) {
-          throw new Error('El archivo PDF generado está vacío');
-        }
-    
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `contrato-${item.orderNumber}-${item.clientName.replace(/\s+/g, '-')}.pdf`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-    
-        toast({
-          title: "Contrato generado",
-          description: "El contrato PDF ha sido descargado exitosamente.",
-          variant: "default",
+          toast({
+            variant: 'destructive',
+            title: 'Error al generar PDF',
+            description: 'Ocurrió un problema durante la creación del archivo.',
+          });
         });
-    
-      } catch (error) {
-        console.error('Error al generar contrato:', error);
-        const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
-        toast({
-          variant: "destructive",
-          title: "Error al generar contrato",
-          description: `No se pudo generar el PDF: ${errorMessage}`,
-        });
-      }
-    }, [toast]);
+      }, 500);
+    };
 
     const generateFileNames = (item: WorkItem) => {
         const safeClientName = item.clientName.replace(/[^a-zA-Z0-9 -]/g, '').trim();
@@ -759,7 +743,7 @@ const WorkTab = () => {
                     size="sm"
                     onClick={() => handleGenerateContract(item)}
                 >
-                    <Download className="mr-2 h-4 w-4" />
+                    <FileText className="mr-2 h-4 w-4" />
                     Contrato
                 </Button>
                 <Button
@@ -781,7 +765,7 @@ const WorkTab = () => {
             );
           },
         }
-    ], [appState.workPackageTemplates, handleDateUpdate, handleStatusUpdate, handlePackageUpdate, handleRevisionsUpdate, playSound, handleDeleteWorkItem, handleOpenEditModal, toast, handleGenerateContract, appState.workPackageTemplates]);
+    ], [appState.workPackageTemplates, handleDateUpdate, handleStatusUpdate, handlePackageUpdate, handleRevisionsUpdate, playSound, handleDeleteWorkItem, handleOpenEditModal, toast, handleGenerateContract]);
 
     const table = useReactTable({
         data: sortedWorkItems,
