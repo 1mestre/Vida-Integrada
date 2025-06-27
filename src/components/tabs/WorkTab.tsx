@@ -3,7 +3,8 @@
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import * as ReactDOMClient from 'react-dom/client';
-import html2pdf from 'html2pdf.js';
+import jsPDF from 'jspdf';
+import domtoimage from 'dom-to-image-more';
 import {
   ColumnDef,
   flexRender,
@@ -21,7 +22,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useAppState, WorkItem, WorkPackageTemplate, type Contribution } from '@/context/AppStateContext';
-import { TrendingUp, Settings, PlusCircle, Wrench, Music, Link, Edit, MessageSquare, Trash2, FileText } from 'lucide-react';
+import { TrendingUp, Settings, PlusCircle, Wrench, Music, Link, Edit, MessageSquare, Trash2, FileText, Loader2 } from 'lucide-react';
 import WorkItemModal from '@/components/WorkItemModal';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
@@ -38,7 +39,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { cn } from '@/lib/utils';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuGroup, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuPortal, DropdownMenuSubContent } from '@/components/ui/dropdown-menu';
 import { v4 as uuidv4 } from 'uuid';
-import AgreementTemplate from '@/components/pdf/AgreementTemplate';
+import { AgreementTemplate } from '@/components/pdf/AgreementTemplate';
 
 
 const generateClientMessage = (item: WorkItem, packageTemplates: WorkPackageTemplate[]): string => {
@@ -235,6 +236,7 @@ const WorkTab = () => {
     const [exchangeRate, setExchangeRate] = useState<number | null>(null);
     const [rateLoading, setRateLoading] = useState(true);
     const [amount, setAmount] = useState('');
+    const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   
     const currentMonthKey = format(new Date(), 'yyyy-MM');
     const currentMonthTarget = appState.monthlyTargets[currentMonthKey] || 0;
@@ -281,54 +283,73 @@ const WorkTab = () => {
         playSound('genericClick');
         setIsSettingsModalOpen(true);
     };
-
-    const handleGenerateContract = (item: WorkItem) => {
-      toast({
-        title: "Generando contrato...",
-        description: "El renderizado se está realizando en tu navegador.",
-      });
-  
-      const container = document.createElement('div');
-      container.style.position = 'absolute';
-      container.style.left = '-9999px';
-      document.body.appendChild(container);
-  
-      const root = ReactDOMClient.createRoot(container);
-      const contractData = {
-        clientName: item.clientName,
-        date: format(new Date(item.deliveryDate + 'T00:00:00'), "d 'de' MMMM 'de' yyyy", { locale: es }),
-      };
-      root.render(React.createElement(AgreementTemplate, contractData));
-  
-      setTimeout(() => {
-        const opt = {
-          margin: 0,
-          filename: `Rights Of Use - ${item.clientName} - #${item.orderNumber}.pdf`,
-          image: { type: 'jpeg', quality: 0.98 },
-          html2canvas: { scale: 2, useCORS: true },
-          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        };
-  
-        html2pdf().from(container).set(opt).save().then(() => {
-          root.unmount();
-          document.body.removeChild(container);
-          toast({
-            title: "Contrato generado",
-            description: "El PDF se ha descargado.",
-          });
-        }).catch(err => {
-          console.error("Error generating PDF with html2pdf:", err);
-          root.unmount();
-          if (document.body.contains(container)) {
-            document.body.removeChild(container);
-          }
-          toast({
-            variant: 'destructive',
-            title: 'Error al generar PDF',
-            description: 'Ocurrió un problema durante la creación del archivo.',
-          });
+    
+    const handleGenerateContract = async (item: WorkItem) => {
+        setIsGeneratingPdf(true);
+        toast({
+            title: "Generando contrato...",
+            description: "Este proceso puede tardar unos segundos.",
         });
-      }, 500);
+
+        const container = document.createElement('div');
+        container.style.position = 'fixed';
+        container.style.left = '0px';
+        container.style.top = '0px';
+        container.style.width = '21cm'; 
+        container.style.zIndex = '-9999';
+        container.style.opacity = '0';
+        document.body.appendChild(container);
+
+        const templateElement = React.createElement(AgreementTemplate, {
+            clientName: item.clientName,
+            date: format(new Date(item.deliveryDate + 'T00:00:00'), "d 'de' MMMM 'de' yyyy", { locale: es }),
+        });
+        const root = ReactDOMClient.createRoot(container);
+        root.render(templateElement);
+
+        await new Promise(resolve => setTimeout(resolve, 1500));
+
+        try {
+            const node = container;
+            if (!node) {
+                throw new Error("El nodo del contrato no pudo ser creado.");
+            }
+
+            const dataUrl = await domtoimage.toPng(node, {
+                quality: 1.0,
+                width: node.scrollWidth,
+                height: node.scrollHeight,
+                bgcolor: '#ffffff',
+            });
+
+            const pdf = new jsPDF({
+                orientation: 'p',
+                unit: 'px',
+                format: 'a4',
+            });
+
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = pdf.internal.pageSize.getHeight();
+
+            pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight);
+            pdf.save(`Rights Of Use - ${item.clientName} - #${item.orderNumber}.pdf`);
+
+            toast({
+                title: "¡Contrato Generado!",
+                description: "La descarga ha comenzado.",
+            });
+        } catch (error) {
+            console.error('Error al generar el PDF:', error);
+            toast({
+                variant: 'destructive',
+                title: 'Error al generar PDF',
+                description: 'No se pudo crear la imagen del contrato.',
+            });
+        } finally {
+            root.unmount();
+            document.body.removeChild(container);
+            setIsGeneratingPdf(false);
+        }
     };
 
     const generateFileNames = (item: WorkItem) => {
@@ -742,9 +763,14 @@ const WorkTab = () => {
                     variant="outline"
                     size="sm"
                     onClick={() => handleGenerateContract(item)}
+                    disabled={isGeneratingPdf}
                 >
-                    <FileText className="mr-2 h-4 w-4" />
-                    Contrato
+                  {isGeneratingPdf ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                      <FileText className="mr-2 h-4 w-4" />
+                  )}
+                  {isGeneratingPdf ? 'Generando...' : 'Contrato'}
                 </Button>
                 <Button
                   variant="outline"
@@ -765,7 +791,7 @@ const WorkTab = () => {
             );
           },
         }
-    ], [appState.workPackageTemplates, handleDateUpdate, handleStatusUpdate, handlePackageUpdate, handleRevisionsUpdate, playSound, handleDeleteWorkItem, handleOpenEditModal, toast, handleGenerateContract]);
+    ], [appState.workPackageTemplates, handleDateUpdate, handleStatusUpdate, handlePackageUpdate, handleRevisionsUpdate, playSound, handleDeleteWorkItem, handleOpenEditModal, toast, handleGenerateContract, isGeneratingPdf]);
 
     const table = useReactTable({
         data: sortedWorkItems,
