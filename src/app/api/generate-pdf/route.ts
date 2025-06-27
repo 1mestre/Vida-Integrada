@@ -8,7 +8,7 @@ import puppeteer from 'puppeteer-core';
 export const runtime = 'nodejs';
 
 // Helper function to generate the HTML string, avoiding JSX in this file.
-// This version is simplified to be self-contained and avoid external network requests for debugging.
+// This version is self-contained and professionally styled.
 const getAgreementHtml = (clientName: string, date: string): string => {
   return `
   <!DOCTYPE html>
@@ -145,13 +145,11 @@ export async function POST(req: Request) {
     // 1. Generate the HTML string using the helper function
     const html = getAgreementHtml(clientName, date);
 
-    // 2. Iniciamos el navegador invisible
+    // 2. Iniciamos el navegador invisible, dejando que la librería maneje la ruta del ejecutable.
     const browser = await puppeteer.launch({
       args: chromium.args,
       defaultViewport: chromium.defaultViewport,
-      executablePath: await chromium.executablePath(
-        `https://github.com/Sparticuz/chromium/releases/download/v123.0.1/chromium-v123.0.1-sbr.tar.br`
-      ),
+      executablePath: await chromium.executablePath(),
       headless: chromium.headless,
       ignoreHTTPSErrors: true,
       timeout: 0,
