@@ -2,9 +2,6 @@
 "use client";
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import * as ReactDOMClient from 'react-dom/client';
-import jsPDF from 'jspdf';
-import domtoimage from 'dom-to-image-more';
 import {
   ColumnDef,
   flexRender,
@@ -39,7 +36,6 @@ import { Calendar } from "@/components/ui/calendar";
 import { cn } from '@/lib/utils';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuGroup, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuPortal, DropdownMenuSubContent } from '@/components/ui/dropdown-menu';
 import { v4 as uuidv4 } from 'uuid';
-import { AgreementTemplate } from '@/components/pdf/AgreementTemplate';
 
 
 const generateClientMessage = (item: WorkItem, packageTemplates: WorkPackageTemplate[]): string => {
@@ -288,66 +284,48 @@ const WorkTab = () => {
         setIsGeneratingPdf(true);
         toast({
             title: "Generando contrato...",
-            description: "Este proceso puede tardar unos segundos.",
+            description: "Enviando a la imprenta digital. Esto puede tardar unos segundos.",
         });
-
-        const container = document.createElement('div');
-        container.style.position = 'fixed';
-        container.style.left = '0px';
-        container.style.top = '0px';
-        container.style.width = '21cm'; 
-        container.style.zIndex = '-9999';
-        container.style.opacity = '0';
-        document.body.appendChild(container);
-
-        const templateElement = React.createElement(AgreementTemplate, {
-            clientName: item.clientName,
-            date: format(new Date(item.deliveryDate + 'T00:00:00'), "d 'de' MMMM 'de' yyyy", { locale: es }),
-        });
-        const root = ReactDOMClient.createRoot(container);
-        root.render(templateElement);
-
-        await new Promise(resolve => setTimeout(resolve, 1500));
 
         try {
-            const node = container;
-            if (!node) {
-                throw new Error("El nodo del contrato no pudo ser creado.");
+            const response = await fetch('/api/generate-pdf', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    clientName: item.clientName,
+                    orderNumber: item.orderNumber,
+                    date: format(new Date(item.deliveryDate + 'T00:00:00'), "MMMM d, yyyy", { locale: es }),
+                }),
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Error del servidor: ${errorText || response.statusText}`);
             }
 
-            const dataUrl = await domtoimage.toPng(node, {
-                quality: 1.0,
-                width: node.scrollWidth,
-                height: node.scrollHeight,
-                bgcolor: '#ffffff',
-            });
-
-            const pdf = new jsPDF({
-                orientation: 'p',
-                unit: 'px',
-                format: 'a4',
-            });
-
-            const pdfWidth = pdf.internal.pageSize.getWidth();
-            const pdfHeight = pdf.internal.pageSize.getHeight();
-
-            pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight);
-            pdf.save(`Rights Of Use - ${item.clientName} - #${item.orderNumber}.pdf`);
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Rights Of Use - ${item.clientName} - #${item.orderNumber}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
 
             toast({
                 title: "¡Contrato Generado!",
                 description: "La descarga ha comenzado.",
             });
-        } catch (error) {
+
+        } catch (error: any) {
             console.error('Error al generar el PDF:', error);
             toast({
                 variant: 'destructive',
                 title: 'Error al generar PDF',
-                description: 'No se pudo crear la imagen del contrato.',
+                description: error.message || 'No se pudo conectar con el servicio de generación de PDF.',
             });
         } finally {
-            root.unmount();
-            document.body.removeChild(container);
             setIsGeneratingPdf(false);
         }
     };
