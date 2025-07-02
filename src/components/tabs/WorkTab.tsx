@@ -541,68 +541,67 @@ const WorkTab = () => {
                         <MessageSquare className="mr-2 h-4 w-4" />
                         <span>Mensaje Cliente</span>
                     </DropdownMenuItem>
-                  <DropdownMenuSub>
-                    <DropdownMenuSubTrigger>
-                      <Edit className="mr-2 h-4 w-4" />
-                      <span>Nombrar Archivos</span>
-                    </DropdownMenuSubTrigger>
-                    <DropdownMenuPortal>
-                      <DropdownMenuSubContent>
-                        <DropdownMenuSub>
-                            <DropdownMenuSubTrigger>✩ WAV</DropdownMenuSubTrigger>
-                            <DropdownMenuPortal>
-                                <DropdownMenuSubContent>
-                                    <DropdownMenuItem onSelect={() => handleCopyToClipboard(`✩ (JUST INSTRUMENTAL) ${baseName} ✩`)}>
-                                    Instrumental
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onSelect={() => handleCopyToClipboard(`✩ (VOCALS + INSTRUMENTAL) ${baseName} ✩`)}>
-                                    Vocal + Inst
-                                    </DropdownMenuItem>
-                                </DropdownMenuSubContent>
-                            </DropdownMenuPortal>
-                        </DropdownMenuSub>
-                        <DropdownMenuItem onSelect={() => handleCopyToClipboard(`♪ (STEMS / SEPARATED INSTRUMENT TRACKS) ${baseName} ♪`)}>
-                          ♪ STEMS
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => handleCopyToClipboard(`♬ (PROJECT FLP) ${baseName} ♬`)}>
-                          ♬ FLP
-                        </DropdownMenuItem>
-                      </DropdownMenuSubContent>
-                    </DropdownMenuPortal>
-                  </DropdownMenuSub>
-                  <DropdownMenuItem onSelect={() => handleGenerateContract(item)}>
-                    {isGeneratingPdf ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileText className="mr-2 h-4 w-4" />}
-                    <span>Contrato</span>
-                  </DropdownMenuItem>
-                   <DropdownMenuItem
-                    onSelect={() => {
-                      try {
-                        const fileName = 'vocal_preset.fst';
-                        const downloadUrl = `/${fileName}`;
-                        const downloadFileName = `${item.clientName} ${item.genre} Vocal Chain BY @DANODALS on Fiverr.fst`;
+                    <DropdownMenuSub>
+                        <DropdownMenuSubTrigger>
+                            <Edit className="mr-2 h-4 w-4" />
+                            <span>Nombrar Archivos</span>
+                        </DropdownMenuSubTrigger>
+                        <DropdownMenuPortal>
+                            <DropdownMenuSubContent>
+                                <DropdownMenuSub>
+                                    <DropdownMenuSubTrigger>✩ WAV</DropdownMenuSubTrigger>
+                                    <DropdownMenuPortal>
+                                        <DropdownMenuSubContent>
+                                            <DropdownMenuItem onSelect={() => handleCopyToClipboard(`✩ (JUST INSTRUMENTAL) ${baseName} ✩`)}>
+                                            Instrumental
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem onSelect={() => handleCopyToClipboard(`✩ (VOCALS + INSTRUMENTAL) ${baseName} ✩`)}>
+                                            Vocal + Inst
+                                            </DropdownMenuItem>
+                                        </DropdownMenuSubContent>
+                                    </DropdownMenuPortal>
+                                </DropdownMenuSub>
+                                <DropdownMenuItem onSelect={() => handleCopyToClipboard(`♪ (STEMS / SEPARATED INSTRUMENT TRACKS) ${baseName} ♪`)}>
+                                ♪ STEMS
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => handleCopyToClipboard(`♬ (PROJECT FLP) ${baseName} ♬`)}>
+                                ♬ FLP
+                                </DropdownMenuItem>
+                            </DropdownMenuSubContent>
+                        </DropdownMenuPortal>
+                    </DropdownMenuSub>
+                    <DropdownMenuItem onSelect={() => handleGenerateContract(item)}>
+                        {isGeneratingPdf ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileText className="mr-2 h-4 w-4" />}
+                        <span>Contrato</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                        onSelect={() => {
+                          try {
+                            const fileId = '1UN9N5MWO3tj5iimjLKGpLgH0Tj-Z9j5u';
+                            const downloadUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
+                            const downloadFileName = `${item.clientName} ${item.genre} Vocal Chain BY @DANODALS on Fiverr.fst`;
 
-                        // Create a temporary anchor element and trigger download
-                        const a = document.createElement('a');
-                        a.href = downloadUrl;
-                        a.download = downloadFileName;
-                        document.body.appendChild(a);
-                        a.click();
-                        document.body.removeChild(a);
-                        
-                        toast({ title: '¡Descarga iniciada!' });
-                      } catch (error: any) {
-                        console.error('Error al iniciar la descarga del FST:', error);
-                        toast({
-                          variant: 'destructive',
-                          title: 'Error de descarga',
-                          description: 'No se pudo iniciar la descarga. Revisa la consola para más detalles.',
-                        });
-                      }
-                    }}
-                  >
-                    <Gift className="mr-2 h-4 w-4" />
-                    <span>VocalFst🎁</span>
-                  </DropdownMenuItem>
+                            const a = document.createElement('a');
+                            a.href = downloadUrl;
+                            a.download = downloadFileName;
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            
+                            toast({ title: '¡Descarga iniciada!' });
+                          } catch (error: any) {
+                            console.error('Error al iniciar la descarga del FST:', error);
+                            toast({
+                              variant: 'destructive',
+                              title: 'Error de descarga',
+                              description: 'No se pudo iniciar la descarga. Revisa la consola para más detalles.',
+                            });
+                          }
+                        }}
+                    >
+                        <Gift className="mr-2 h-4 w-4" />
+                        <span>VocalFst🎁</span>
+                    </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             );
