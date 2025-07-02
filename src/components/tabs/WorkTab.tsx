@@ -574,47 +574,34 @@ const WorkTab = () => {
                     {isGeneratingPdf ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileText className="mr-2 h-4 w-4" />}
                     <span>Contrato</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onSelect={async () => {
-                      toast({ title: 'Preparando descarga...' });
+                   <DropdownMenuItem
+                    onSelect={() => {
                       try {
-                        const params = new URLSearchParams({
-                          clientName: item.clientName,
-                          genre: item.genre,
-                        });
-                        const response = await fetch(`/api/download-vocal-preset?${params.toString()}`);
-
-                        if (!response.ok) {
-                            const errorText = await response.text();
-                            throw new Error(`Error del servidor (${response.status}): ${errorText}`);
-                        }
-
-                        const blob = await response.blob();
-                        const url = window.URL.createObjectURL(blob);
-                        const a = document.createElement('a');
-                        
-                        // The filename is now set by the server in Content-Disposition, but we can suggest it here too.
+                        const fileName = 'vocal_preset.fst';
+                        const downloadUrl = `/${fileName}`;
                         const downloadFileName = `${item.clientName} ${item.genre} Vocal Chain BY @DANODALS on Fiverr.fst`;
-                        a.href = url;
-                        a.download = downloadFileName; 
+
+                        // Create a temporary anchor element and trigger download
+                        const a = document.createElement('a');
+                        a.href = downloadUrl;
+                        a.download = downloadFileName;
                         document.body.appendChild(a);
                         a.click();
-                        a.remove();
-                        window.URL.revokeObjectURL(url);
+                        document.body.removeChild(a);
                         
                         toast({ title: '¡Descarga iniciada!' });
                       } catch (error: any) {
-                        console.error('Error al descargar el archivo FST:', error);
+                        console.error('Error al iniciar la descarga del FST:', error);
                         toast({
                           variant: 'destructive',
                           title: 'Error de descarga',
-                          description: error.message || 'No se pudo iniciar la descarga. Revisa la consola.',
+                          description: 'No se pudo iniciar la descarga. Revisa la consola para más detalles.',
                         });
                       }
                     }}
                   >
-                      <Gift className="mr-2 h-4 w-4" />
-                      <span>VocalFst🎁</span>
+                    <Gift className="mr-2 h-4 w-4" />
+                    <span>VocalFst🎁</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
