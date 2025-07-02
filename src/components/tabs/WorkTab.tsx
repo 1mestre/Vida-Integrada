@@ -575,34 +575,40 @@ const WorkTab = () => {
                     <span>Contrato</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    onSelect={() => {
+                    onSelect={async () => {
                       toast({ title: 'Preparando descarga...' });
                       try {
-                        const sourceFileName = 'Danodals - Remake Vocal Chain (FL).fst';
+                        const params = new URLSearchParams({
+                          clientName: item.clientName,
+                          genre: item.genre,
+                        });
+                        const response = await fetch(`/api/download-vocal-preset?${params.toString()}`);
+
+                        if (!response.ok) {
+                            const errorText = await response.text();
+                            throw new Error(`Error del servidor (${response.status}): ${errorText}`);
+                        }
+
+                        const blob = await response.blob();
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        
+                        // The filename is now set by the server in Content-Disposition, but we can suggest it here too.
                         const downloadFileName = `${item.clientName} ${item.genre} Vocal Chain BY @DANODALS on Fiverr.fst`;
-                
-                        // Create a link element
-                        const link = document.createElement('a');
+                        a.href = url;
+                        a.download = downloadFileName; 
+                        document.body.appendChild(a);
+                        a.click();
+                        a.remove();
+                        window.URL.revokeObjectURL(url);
                         
-                        // Point the href to the static file in the public folder.
-                        link.href = `/${sourceFileName}`;
-                        
-                        // The download attribute tells the browser to download the file
-                        // and suggests the new filename.
-                        link.download = downloadFileName;
-                        
-                        // Append to the body, click, and then remove
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
-                        
-                        toast({ title: '¡Descarga iniciada!', description: downloadFileName });
+                        toast({ title: '¡Descarga iniciada!' });
                       } catch (error: any) {
-                        console.error('Error al iniciar la descarga del archivo FST:', error);
+                        console.error('Error al descargar el archivo FST:', error);
                         toast({
                           variant: 'destructive',
                           title: 'Error de descarga',
-                          description: error.message || 'No se pudo iniciar la descarga. Revisa la consola para más detalles.',
+                          description: error.message || 'No se pudo iniciar la descarga. Revisa la consola.',
                         });
                       }
                     }}
