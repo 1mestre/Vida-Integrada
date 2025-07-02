@@ -164,6 +164,12 @@ const revisionColorMap: { [key: number]: string } = {
 const formatCOP = (value: number) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(value);
 const formatUSD = (value: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
 
+const generateFileNames = (item: WorkItem) => {
+    const safeClientName = item.clientName.replace(/[^a-zA-Z0-9 -]/g, '').trim();
+    const keyFormatted = item.key.replace(/\s*\/\s*/g, '_').replace(/#/g, 'sharp');
+    const baseName = `${safeClientName} - ${item.genre} ${item.bpm}bpm ${keyFormatted}`;
+    return baseName;
+};
 
 // Componente especializado para la celda de fecha editable
 const EditableDateCell = ({
@@ -323,19 +329,6 @@ const WorkTab = () => {
         } finally {
             setIsGeneratingPdf(false);
         }
-    };
-
-    const generateFileNames = (item: WorkItem) => {
-        const safeClientName = item.clientName.replace(/[^a-zA-Z0-9 -]/g, '').trim();
-        const keyFormatted = item.key.replace(/\s*\/\s*/g, '_').replace(/#/g, 'sharp');
-        const baseName = `${safeClientName} - ${item.genre} ${item.bpm}bpm ${keyFormatted}`;
-
-        return {
-            instrumental: `✩♬♪ (JUST INSTRUMENTAL) ${baseName} ✩♬♪`,
-            stems: `✩♬♪ (STEMS SEPARATED INSTRUMENT TRACKS) ${baseName} ✩♬♪`,
-            project: `✩♬♪ (PROJECT FLP) ${baseName} ✩♬♪`,
-            vocals: `✩♬♪ (VOCALS + INSTRUMENTAL) ${baseName} ✩♬♪`,
-        };
     };
 
     const handleCopyToClipboard = (text: string) => {
@@ -537,7 +530,7 @@ const WorkTab = () => {
           header: 'Tools',
           cell: ({ row }) => {
             const item = row.original;
-            const fileNames = generateFileNames(item);
+            const baseName = generateFileNames(item);
             return (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -557,17 +550,26 @@ const WorkTab = () => {
                     </DropdownMenuSubTrigger>
                     <DropdownMenuPortal>
                       <DropdownMenuSubContent>
-                        <DropdownMenuItem onSelect={() => handleCopyToClipboard(fileNames.instrumental)}>
-                          ✩♬♪ Instrumental
+                        <DropdownMenuSub>
+                            <DropdownMenuSubTrigger>
+                                ✩ WAV
+                            </DropdownMenuSubTrigger>
+                            <DropdownMenuPortal>
+                                <DropdownMenuSubContent>
+                                    <DropdownMenuItem onSelect={() => handleCopyToClipboard(`✩ (JUST INSTRUMENTAL) ${baseName} ✩`)}>
+                                    Instrumental
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onSelect={() => handleCopyToClipboard(`✩ (VOCALS + INSTRUMENTAL) ${baseName} ✩`)}>
+                                    Vocal + Inst
+                                    </DropdownMenuItem>
+                                </DropdownMenuSubContent>
+                            </DropdownMenuPortal>
+                        </DropdownMenuSub>
+                        <DropdownMenuItem onSelect={() => handleCopyToClipboard(`♪ (STEMS SEPARATED INSTRUMENT TRACKS) ${baseName} ♪`)}>
+                          ♪ STEMS
                         </DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => handleCopyToClipboard(fileNames.stems)}>
-                          ✩♬♪ STEMS
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => handleCopyToClipboard(fileNames.project)}>
-                          ✩♬♪ Proyecto FLP
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onSelect={() => handleCopyToClipboard(fileNames.vocals)}>
-                          ✩♬♪ Vocals+Inst
+                        <DropdownMenuItem onSelect={() => handleCopyToClipboard(`♬ (PROJECT FLP) ${baseName} ♬`)}>
+                          ♬ FLP
                         </DropdownMenuItem>
                       </DropdownMenuSubContent>
                     </DropdownMenuPortal>
