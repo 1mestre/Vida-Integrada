@@ -578,11 +578,11 @@ const WorkTab = () => {
                     onSelect={async () => {
                       toast({ title: 'Preparando descarga...' });
                       try {
-                        const fileName = 'Danodals - Remake Vocal Chain.fst';
+                        const fileName = 'Danodals - Remake Vocal Chain (FL).fst';
                         const encodedFileName = encodeURIComponent(fileName);
                         const response = await fetch(`/${encodedFileName}`);
                         if (!response.ok) {
-                          throw new Error(`No se encontró el archivo (Error ${response.status})`);
+                          throw new Error(`No se encontró "${fileName}" (Error ${response.status})`);
                         }
                         const blob = await response.blob();
                         const url = window.URL.createObjectURL(blob);
@@ -594,12 +594,12 @@ const WorkTab = () => {
                         document.body.removeChild(link);
                         window.URL.revokeObjectURL(url);
                         toast({ title: '¡Descarga iniciada!', description: link.download });
-                      } catch (error) {
+                      } catch (error: any) {
                         console.error('Error al descargar el archivo FST:', error);
                         toast({
                           variant: 'destructive',
                           title: 'Error de descarga',
-                          description: 'No se pudo encontrar o descargar el archivo del preset vocal. Asegúrate de que esté en la carpeta /public.',
+                          description: error.message || 'No se pudo encontrar o descargar el archivo del preset vocal. Asegúrate de que esté en la carpeta /public.',
                         });
                       }
                     }}
