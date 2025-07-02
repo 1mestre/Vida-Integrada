@@ -33,7 +33,7 @@ import { useSound } from '@/context/SoundContext';
 import PackageSettingsModal from '@/components/PackageSettingsModal';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from "@/components/ui/calendar";
-import { cn } from '@/lib/utils';
+import { cn } from "@/lib/utils";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuPortal, DropdownMenuSubContent } from '@/components/ui/dropdown-menu';
 import { v4 as uuidv4 } from 'uuid';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -575,31 +575,34 @@ const WorkTab = () => {
                     <span>Contrato</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    onSelect={async () => {
+                    onSelect={() => {
                       toast({ title: 'Preparando descarga...' });
                       try {
-                        const fileName = 'Danodals - Remake Vocal Chain (FL).fst';
-                        const encodedFileName = encodeURIComponent(fileName);
-                        const response = await fetch(`/${encodedFileName}`);
-                        if (!response.ok) {
-                          throw new Error(`No se encontró "${fileName}" (Error ${response.status})`);
-                        }
-                        const blob = await response.blob();
-                        const url = window.URL.createObjectURL(blob);
+                        const sourceFileName = 'Danodals - Remake Vocal Chain (FL).fst';
+                        const downloadFileName = `${item.clientName} ${item.genre} Vocal Chain BY @DANODALS on Fiverr.fst`;
+                
+                        // Create a link element
                         const link = document.createElement('a');
-                        link.href = url;
-                        link.download = `${item.clientName} ${item.genre} Vocal Chain BY @DANODALS on Fiverr.fst`;
+                        
+                        // Point the href to the static file in the public folder.
+                        link.href = `/${sourceFileName}`;
+                        
+                        // The download attribute tells the browser to download the file
+                        // and suggests the new filename.
+                        link.download = downloadFileName;
+                        
+                        // Append to the body, click, and then remove
                         document.body.appendChild(link);
                         link.click();
                         document.body.removeChild(link);
-                        window.URL.revokeObjectURL(url);
-                        toast({ title: '¡Descarga iniciada!', description: link.download });
+                        
+                        toast({ title: '¡Descarga iniciada!', description: downloadFileName });
                       } catch (error: any) {
-                        console.error('Error al descargar el archivo FST:', error);
+                        console.error('Error al iniciar la descarga del archivo FST:', error);
                         toast({
                           variant: 'destructive',
                           title: 'Error de descarga',
-                          description: error.message || 'No se pudo encontrar o descargar el archivo del preset vocal. Asegúrate de que esté en la carpeta /public.',
+                          description: error.message || 'No se pudo iniciar la descarga. Revisa la consola para más detalles.',
                         });
                       }
                     }}
