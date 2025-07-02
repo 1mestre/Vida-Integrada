@@ -578,7 +578,7 @@ const WorkTab = () => {
                     onSelect={async () => {
                       toast({ title: 'Preparando descarga...' });
                       try {
-                        const fileName = 'Danodals - Remake Vocal Chain (FL).fst';
+                        const fileName = 'Danodals - Remake Vocal Chain.fst';
                         const encodedFileName = encodeURIComponent(fileName);
                         const response = await fetch(`/${encodedFileName}`);
                         if (!response.ok) {
