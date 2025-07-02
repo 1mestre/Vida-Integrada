@@ -287,7 +287,7 @@ const WorkTab = () => {
         });
 
         try {
-            const response = await fetch('/api/generate-pdf', {
+            const response = await fetch('https://us-central1-vida-integrada.cloudfunctions.net/generateContractPDF', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
