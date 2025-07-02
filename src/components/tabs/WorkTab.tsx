@@ -19,7 +19,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useAppState, WorkItem, WorkPackageTemplate, type Contribution } from '@/context/AppStateContext';
-import { TrendingUp, Settings, PlusCircle, Wrench, Music, Link, Edit, MessageSquare, Trash2, FileText, Loader2 } from 'lucide-react';
+import { TrendingUp, Settings, PlusCircle, Wrench, Music, Link, Edit, MessageSquare, Trash2, FileText, Loader2, Gift, ClipboardCopy } from 'lucide-react';
 import WorkItemModal from '@/components/WorkItemModal';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
@@ -34,8 +34,9 @@ import PackageSettingsModal from '@/components/PackageSettingsModal';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from '@/lib/utils';
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuGroup, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuPortal, DropdownMenuSubContent } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuPortal, DropdownMenuSubContent } from '@/components/ui/dropdown-menu';
 import { v4 as uuidv4 } from 'uuid';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 
 const generateClientMessage = (item: WorkItem, packageTemplates: WorkPackageTemplate[]): string => {
@@ -77,10 +78,8 @@ const generateClientMessage = (item: WorkItem, packageTemplates: WorkPackageTemp
     const highestPkg = sortedPkgs[sortedPkgs.length - 1];
     let upsellSection = "";
 
-    // Función auxiliar para comparar beneficios entre un paquete superior y la ORDEN ACTUAL
     const getDifferentialFeatures = (higherPkg: WorkPackageTemplate, currentItem: WorkItem): string[] => {
         const features: string[] = [];
-        // Solo se añade si el paquete superior lo tiene Y el item actual NO lo tiene
         if (higherPkg.masterAudio && !currentItem.masterAudio) features.push("• Professional mixing/mastering 🎛️🎚️");
         if (higherPkg.separateFiles && !currentItem.separateFiles) features.push("• Full STEMS 💎");
         if (higherPkg.projectFileDelivery && !currentItem.projectFileDelivery) features.push("• FLP Project File 🎚️🎚️");
@@ -89,13 +88,10 @@ const generateClientMessage = (item: WorkItem, packageTemplates: WorkPackageTemp
         return features;
     };
     
-    // Solo mostrar la oferta si el cliente NO tiene todos los beneficios del paquete más alto
     if (highestPkg && !(item.exclusiveLicense && item.projectFileDelivery && item.separateFiles)) {
         let upsellOffers: string[] = [];
         
-        // CASO A: El paquete actual es el más barato
         if (item.packageName === cheapestPkg?.name) {
-            // Oferta a Paquete Intermedio
             if (middlePkg) {
                 const features = getDifferentialFeatures(middlePkg, item);
                 if (features.length > 0) {
@@ -105,7 +101,6 @@ const generateClientMessage = (item: WorkItem, packageTemplates: WorkPackageTemp
                     upsellOffers.push(offer);
                 }
             }
-            // Oferta a Paquete Más Caro
             const featuresToHighest = getDifferentialFeatures(highestPkg, item);
             if (featuresToHighest.length > 0) {
                 const diff = highestPkg.price - item.price;
@@ -114,7 +109,6 @@ const generateClientMessage = (item: WorkItem, packageTemplates: WorkPackageTemp
                 upsellOffers.push(offer);
             }
         }
-        // CASO B: El paquete actual es el intermedio
         else if (item.packageName === middlePkg?.name) {
              const features = getDifferentialFeatures(highestPkg, item);
              if (features.length > 0) {
@@ -132,15 +126,14 @@ const generateClientMessage = (item: WorkItem, packageTemplates: WorkPackageTemp
     
     message += upsellSection;
     
-    // === Bloque 4: Secciones Finales (CON LÓGICA DE REVISIONES CORREGIDA) ===
     message += `${isMultiple ? 'Keys' : 'Key'}: ${item.key} | ${isMultiple ? 'BPMs' : 'BPM'}: ${item.bpm}\n\n`;
     message += `📦📦 Order #${item.orderNumber}\n\n`;
     
-    if (item.packageName === highestPkg?.name) { // Compara con el más caro
+    if (item.packageName === highestPkg?.name) {
         message += `✅✅ This is built for the BIGGG stages - Spotify, radio, wherever you wanna take it!! 🌟🌟\n${item.revisionsRemaining} revisions remaining 🔧🔧\n\n🎁 PRO TIP: Drop a 5-star review and I'll hook you UPPP with $10 off your next order!! Helps me out FOR REALLL 🙏🙏\n\nNow go make some MAGIC happen!! ✨🎤`;
-    } else if (middlePkg && item.packageName === middlePkg.name) { // Compara con el intermedio
+    } else if (middlePkg && item.packageName === middlePkg.name) {
         message += `✅ ${item.revisionsRemaining} revisions remaining 🔧\n${isMultiple ? "Time to make these BEATS slap!! 💥💥" : "Time to make some WAVES!! 🌊🌊"}\n\n🎁 PRO TIP: Leave me a 5-star review and I'll give you $10 off your next beat!! WIN-WIN SITUATION 😉💰💰\n\nLet's get this music out there!!! 🚀🚀`;
-    } else { // El paquete más barato
+    } else { 
         message += "✅ Let me know what you think of the direction!! If you're vibing with it, we can ALWAYSSS take it to the next level!! 🎯🎯\n\n";
         if (item.revisionsRemaining > 0) {
             message += `(${item.revisionsRemaining} custom revision(s) included in this deal! 😉💡💡)`;
@@ -233,6 +226,8 @@ const WorkTab = () => {
     const [rateLoading, setRateLoading] = useState(true);
     const [amount, setAmount] = useState('');
     const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+    const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
+    const [messageToPreview, setMessageToPreview] = useState('');
   
     const currentMonthKey = format(new Date(), 'yyyy-MM');
     const currentMonthTarget = appState.monthlyTargets[currentMonthKey] || 0;
@@ -332,12 +327,27 @@ const WorkTab = () => {
 
     const generateFileNames = (item: WorkItem) => {
         const safeClientName = item.clientName.replace(/[^a-zA-Z0-9 -]/g, '').trim();
-        const baseName = `${safeClientName} - ${item.genre} ${item.bpm}bpm ${item.key.replace(' / ', '_')}`;
+        const keyFormatted = item.key.replace(/\s*\/\s*/g, '_').replace(/#/g, 'sharp');
+        const baseName = `${safeClientName} - ${item.genre} ${item.bpm}bpm ${keyFormatted}`;
+
         return {
-            wav: `${baseName}.wav`,
-            stems: `${baseName} (STEMS).zip`,
-            project: `${baseName}.flp`,
+            instrumental: `✩♬♪ (JUST INSTRUMENTAL) ${baseName} ✩♬♪`,
+            stems: `✩♬♪ (STEMS SEPARATED INSTRUMENT TRACKS) ${baseName} ✩♬♪`,
+            project: `✩♬♪ (PROJECT FLP) ${baseName} ✩♬♪`,
+            vocals: `✩♬♪ (VOCALS + INSTRUMENTAL) ${baseName} ✩♬♪`,
         };
+    };
+
+    const handleCopyToClipboard = (text: string) => {
+        navigator.clipboard.writeText(text);
+        toast({ title: "Copiado al portapapeles!" });
+        playSound('genericClick');
+    };
+
+    const handlePreviewMessage = (item: WorkItem) => {
+        const message = generateClientMessage(item, appState.workPackageTemplates);
+        setMessageToPreview(message);
+        setIsMessageModalOpen(true);
     };
 
     const handleAddIncome = async () => {
@@ -527,6 +537,7 @@ const WorkTab = () => {
           header: 'Tools',
           cell: ({ row }) => {
             const item = row.original;
+            const fileNames = generateFileNames(item);
             return (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -535,21 +546,9 @@ const WorkTab = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                    <DropdownMenuItem
-                        onSelect={(e) => {
-                          e.preventDefault();
-                          try {
-                            navigator.clipboard.writeText(generateClientMessage(item, appState.workPackageTemplates));
-                            toast({ title: "¡Copiado!", description: "Mensaje para cliente copiado al portapapeles." });
-                          } catch (err) {
-                            console.error("Error al copiar al portapapeles:", err);
-                            toast({ variant: "destructive", title: "Error al Copiar", description: "No se pudo copiar el mensaje." });
-                          }
-                          playSound('genericClick');
-                        }}
-                    >
+                    <DropdownMenuItem onSelect={() => handlePreviewMessage(item)}>
                         <MessageSquare className="mr-2 h-4 w-4" />
-                        <span>Copiar Mensaje Cliente</span>
+                        <span>Mensaje Cliente</span>
                     </DropdownMenuItem>
                   <DropdownMenuSub>
                     <DropdownMenuSubTrigger>
@@ -558,26 +557,17 @@ const WorkTab = () => {
                     </DropdownMenuSubTrigger>
                     <DropdownMenuPortal>
                       <DropdownMenuSubContent>
-                        <DropdownMenuItem onClick={() => {
-                          navigator.clipboard.writeText(generateFileNames(item).wav);
-                          toast({ title: "Copiado!" });
-                          playSound('genericClick');
-                        }}>
-                          Copiar Nombre WAV
+                        <DropdownMenuItem onSelect={() => handleCopyToClipboard(fileNames.instrumental)}>
+                          ✩♬♪ Instrumental
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => {
-                          navigator.clipboard.writeText(generateFileNames(item).stems);
-                          toast({ title: "Copiado!" });
-                          playSound('genericClick');
-                        }}>
-                          Copiar Nombre STEMS
+                        <DropdownMenuItem onSelect={() => handleCopyToClipboard(fileNames.stems)}>
+                          ✩♬♪ STEMS
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => {
-                          navigator.clipboard.writeText(generateFileNames(item).project);
-                          toast({ title: "Copiado!" });
-                          playSound('genericClick');
-                        }}>
-                          Copiar Nombre FLP
+                        <DropdownMenuItem onSelect={() => handleCopyToClipboard(fileNames.project)}>
+                          ✩♬♪ Proyecto FLP
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => handleCopyToClipboard(fileNames.vocals)}>
+                          ✩♬♪ Vocals+Inst
                         </DropdownMenuItem>
                       </DropdownMenuSubContent>
                     </DropdownMenuPortal>
@@ -739,24 +729,18 @@ const WorkTab = () => {
               <div className="flex items-center justify-end gap-2">
                 <Button
                     variant="outline"
-                    size="sm"
+                    size="icon"
                     onClick={() => handleGenerateContract(item)}
                     disabled={isGeneratingPdf}
                 >
-                  {isGeneratingPdf ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                      <FileText className="mr-2 h-4 w-4" />
-                  )}
-                  {isGeneratingPdf ? 'Generando...' : 'Contrato'}
+                  {isGeneratingPdf ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
                 </Button>
                 <Button
                   variant="outline"
-                  size="sm"
+                  size="icon"
                   onClick={() => handleOpenEditModal(item)}
                 >
-                  <Edit className="mr-2 h-4 w-4" />
-                  Editar
+                  <Edit className="h-4 w-4" />
                 </Button>
                 <Button
                   variant="destructive"
@@ -795,6 +779,10 @@ const WorkTab = () => {
                       Tunebat
                     </Button>
                   </a>
+                   <Button className="bg-amber-500 hover:bg-amber-600 text-white shadow-sm">
+                      <Gift className="mr-2 h-4 w-4" />
+                      VocalFst🎁
+                    </Button>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -1002,6 +990,29 @@ const WorkTab = () => {
               isOpen={isSettingsModalOpen}
               onClose={() => setIsSettingsModalOpen(false)}
             />
+
+            <AlertDialog open={isMessageModalOpen} onOpenChange={setIsMessageModalOpen}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Mensaje para el Cliente</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Revisa el mensaje generado. Puedes copiarlo con el botón de abajo.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <div className="max-h-64 overflow-y-auto rounded-md border bg-muted p-4">
+                  <pre className="text-sm text-foreground whitespace-pre-wrap font-sans">
+                    {messageToPreview}
+                  </pre>
+                </div>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cerrar</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => handleCopyToClipboard(messageToPreview)}>
+                    <ClipboardCopy className="mr-2 h-4 w-4" />
+                    Copiar Mensaje
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 };

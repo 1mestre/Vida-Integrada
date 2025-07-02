@@ -50,27 +50,26 @@ const PackageSettingsModal: React.FC<PackageSettingsModalProps> = ({ isOpen, onC
   // Sync state from context to form
   useEffect(() => {
     reset({ templates: appState.workPackageTemplates });
-  }, [appState.workPackageTemplates, reset]);
+     if (appState.workPackageTemplates.length > 0 && !editingTemplateId) {
+      setEditingTemplateId(appState.workPackageTemplates[0].id);
+    }
+  }, [appState.workPackageTemplates, reset, editingTemplateId]);
 
   const onSave = (data: { templates: WorkPackageTemplate[] }) => {
     const updatedTemplates = data.templates;
-    // 1. Ordenar los paquetes por precio de menor a mayor
     const sortedTemplates = [...updatedTemplates].sort((a, b) => a.price - b.price);
 
-    // 2. Definir los colores por rol
     const colorClasses = [
-      'bg-red-600 hover:bg-red-700',   // Más barato
-      'bg-blue-600 hover:bg-blue-700',  // Intermedio
-      'bg-green-600 hover:bg-green-700' // Más caro
+      'bg-red-600 hover:bg-red-700',
+      'bg-blue-600 hover:bg-blue-700',
+      'bg-green-600 hover:bg-green-700'
     ];
 
-    // 3. Asignar el color a cada plantilla según su posición en el ranking de precios
     const templatesWithColors = sortedTemplates.map((template, index) => ({
       ...template,
-      colorClassName: colorClasses[index] || 'bg-gray-500' // Asigna color por índice
+      colorClassName: colorClasses[index] || 'bg-gray-500'
     }));
 
-    // 4. Guardar el estado final con los colores asignados
     setAppState({ workPackageTemplates: templatesWithColors });
     onClose();
   };
@@ -88,9 +87,15 @@ const PackageSettingsModal: React.FC<PackageSettingsModalProps> = ({ isOpen, onC
   };
   
   const handleRemove = (index: number) => {
+    const templateIdToRemove = fields[index].id;
     remove(index);
-    if(fields[index]?.id === editingTemplateId) {
+    if (templateIdToRemove === editingTemplateId) {
+      // If there are other templates left, select the first one
+      if (fields.length > 1) {
+        setEditingTemplateId(fields[0].id);
+      } else {
         setEditingTemplateId(null);
+      }
     }
   };
   
@@ -119,7 +124,7 @@ const PackageSettingsModal: React.FC<PackageSettingsModalProps> = ({ isOpen, onC
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="glassmorphism-card max-w-4xl h-[90vh]">
+      <DialogContent className="glassmorphism-card max-w-5xl h-[90vh]">
         <DialogHeader>
           <DialogTitle>Configurar Paquetes de Trabajo</DialogTitle>
           <DialogDescription>Crea, edita y elimina las plantillas para tus órdenes de trabajo.</DialogDescription>
@@ -148,9 +153,9 @@ const PackageSettingsModal: React.FC<PackageSettingsModalProps> = ({ isOpen, onC
                                     >
                                         <div className="flex items-center gap-2">
                                             <span className={cn('h-3 w-3 rounded-full', watch(`templates.${index}.colorClassName`))}></span>
-                                            <span>{watch(`templates.${index}.name`)}</span>
+                                            <span className='truncate'>{watch(`templates.${index}.name`)}</span>
                                         </div>
-                                        <div className='flex items-center'>
+                                        <div className='flex items-center flex-shrink-0'>
                                             <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); handleEdit(template); }}><Edit className="h-4 w-4" /></Button>
                                             <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={(e) => { e.stopPropagation(); handleRemove(index); }}><Trash2 className="h-4 w-4" /></Button>
                                         </div>
@@ -162,7 +167,7 @@ const PackageSettingsModal: React.FC<PackageSettingsModalProps> = ({ isOpen, onC
                 </Card>
                 
                 {/* Columna de edición */}
-                <Card className="md:col-span-2 flex flex-col">
+                <Card key={editingTemplateId} className="md:col-span-2 flex flex-col">
                     <ScrollArea className="h-full">
                         <CardContent className="p-6">
                             {editingTemplateIndex !== -1 ? (
@@ -174,7 +179,7 @@ const PackageSettingsModal: React.FC<PackageSettingsModalProps> = ({ isOpen, onC
                                     
                                     <Separator />
 
-                                    <div className="grid grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                                         <div>
                                             <Label htmlFor={`templates.${editingTemplateIndex}.price`}>Precio (USD)</Label>
                                             <Input id={`templates.${editingTemplateIndex}.price`} type="number" {...register(`templates.${editingTemplateIndex}.price`, { valueAsNumber: true })} />
@@ -191,17 +196,23 @@ const PackageSettingsModal: React.FC<PackageSettingsModalProps> = ({ isOpen, onC
                                             <Label htmlFor={`templates.${editingTemplateIndex}.numberOfInstruments`}># Instrumentos</Label>
                                             <Input id={`templates.${editingTemplateIndex}.numberOfInstruments`} type="number" {...register(`templates.${editingTemplateIndex}.numberOfInstruments`, { valueAsNumber: true })} />
                                         </div>
+                                        <div className='md:col-span-1'>
+                                            <Label htmlFor={`templates.${editingTemplateIndex}.quantity`}>Cantidad</Label>
+                                            <Input id={`templates.${editingTemplateIndex}.quantity`} type="number" {...register(`templates.${editingTemplateIndex}.quantity`, { valueAsNumber: true })} />
+                                        </div>
                                     </div>
                                     
                                     <Separator />
                                     <h3 className="text-lg font-semibold">Entregables</h3>
-
-                                    <DeliverableSwitch index={editingTemplateIndex} name="masterAudio" label="Audio Masterizado" />
-                                    <DeliverableSwitch index={editingTemplateIndex} name="separateFiles" label="Archivos Separados (STEMS)" />
-                                    <DeliverableSwitch index={editingTemplateIndex} name="projectFileDelivery" label="Archivo de Proyecto (FLP)" />
-                                    <DeliverableSwitch index={editingTemplateIndex} name="exclusiveLicense" label="Licencia Exclusiva" />
-                                    <DeliverableSwitch index={editingTemplateIndex} name="vocalProduction" label="Producción Vocal" />
-                                    <DeliverableSwitch index={editingTemplateIndex} name="vocalChainPreset" label="Preset Cadena Vocal (Regalo)" />
+                                    
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <DeliverableSwitch index={editingTemplateIndex} name="masterAudio" label="Audio Masterizado" />
+                                        <DeliverableSwitch index={editingTemplateIndex} name="separateFiles" label="Archivos Separados (STEMS)" />
+                                        <DeliverableSwitch index={editingTemplateIndex} name="projectFileDelivery" label="Archivo de Proyecto (FLP)" />
+                                        <DeliverableSwitch index={editingTemplateIndex} name="exclusiveLicense" label="Licencia Exclusiva" />
+                                        <DeliverableSwitch index={editingTemplateIndex} name="vocalProduction" label="Producción Vocal" />
+                                        <DeliverableSwitch index={editingTemplateIndex} name="vocalChainPreset" label="Preset Cadena Vocal (Regalo)" />
+                                    </div>
                                 </div>
                             ) : (
                                 <div className="flex items-center justify-center h-full text-muted-foreground">
