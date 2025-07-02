@@ -124,8 +124,6 @@ const generateClientMessage = (item: WorkItem, packageTemplates: WorkPackageTemp
         }
     }
     
-    message += upsellSection;
-    
     message += `${isMultiple ? 'Keys' : 'Key'}: ${item.key} | ${isMultiple ? 'BPMs' : 'BPM'}: ${item.bpm}\n\n`;
     message += `📦📦 Order #${item.orderNumber}\n\n`;
     
@@ -576,15 +574,34 @@ const WorkTab = () => {
                     {isGeneratingPdf ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileText className="mr-2 h-4 w-4" />}
                     <span>Contrato</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onSelect={() => {
-                      const link = document.createElement('a');
-                      link.href = '/Danodals - Remake Vocal Chain (FL).fst'; // Assumes file is in /public
-                      link.download = `${item.clientName} - ${item.remakeType} Vocal Chain.fst`;
-                      document.body.appendChild(link);
-                      link.click();
-                      document.body.removeChild(link);
-                      toast({ title: "Descargando preset..." });
-                  }}>
+                  <DropdownMenuItem
+                    onSelect={async () => {
+                      toast({ title: 'Preparando descarga...' });
+                      try {
+                        const response = await fetch('/Danodals - Remake Vocal Chain (FL).fst');
+                        if (!response.ok) {
+                          throw new Error(`No se encontró el archivo (Error ${response.status})`);
+                        }
+                        const blob = await response.blob();
+                        const url = window.URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = `${item.clientName} ${item.genre} Vocal Chain BY @DANODALS on Fiverr.fst`;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        window.URL.revokeObjectURL(url);
+                        toast({ title: '¡Descarga iniciada!', description: link.download });
+                      } catch (error) {
+                        console.error('Error al descargar el archivo FST:', error);
+                        toast({
+                          variant: 'destructive',
+                          title: 'Error de descarga',
+                          description: 'No se pudo encontrar o descargar el archivo del preset vocal. Asegúrate de que esté en la carpeta /public.',
+                        });
+                      }
+                    }}
+                  >
                       <Gift className="mr-2 h-4 w-4" />
                       <span>VocalFst🎁</span>
                   </DropdownMenuItem>
