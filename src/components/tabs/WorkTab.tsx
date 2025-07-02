@@ -545,15 +545,13 @@ const WorkTab = () => {
                     </DropdownMenuItem>
                   <DropdownMenuSub>
                     <DropdownMenuSubTrigger>
-                      <Wrench className="mr-2 h-4 w-4" />
+                      <Edit className="mr-2 h-4 w-4" />
                       <span>Nombrar Archivos</span>
                     </DropdownMenuSubTrigger>
                     <DropdownMenuPortal>
                       <DropdownMenuSubContent>
                         <DropdownMenuSub>
-                            <DropdownMenuSubTrigger>
-                                ✩ WAV
-                            </DropdownMenuSubTrigger>
+                            <DropdownMenuSubTrigger>✩ WAV</DropdownMenuSubTrigger>
                             <DropdownMenuPortal>
                                 <DropdownMenuSubContent>
                                     <DropdownMenuItem onSelect={() => handleCopyToClipboard(`✩ (JUST INSTRUMENTAL) ${baseName} ✩`)}>
@@ -565,7 +563,7 @@ const WorkTab = () => {
                                 </DropdownMenuSubContent>
                             </DropdownMenuPortal>
                         </DropdownMenuSub>
-                        <DropdownMenuItem onSelect={() => handleCopyToClipboard(`♪ (STEMS SEPARATED INSTRUMENT TRACKS) ${baseName} ♪`)}>
+                        <DropdownMenuItem onSelect={() => handleCopyToClipboard(`♪ (STEMS / SEPARATED INSTRUMENT TRACKS) ${baseName} ♪`)}>
                           ♪ STEMS
                         </DropdownMenuItem>
                         <DropdownMenuItem onSelect={() => handleCopyToClipboard(`♬ (PROJECT FLP) ${baseName} ♬`)}>
@@ -574,6 +572,22 @@ const WorkTab = () => {
                       </DropdownMenuSubContent>
                     </DropdownMenuPortal>
                   </DropdownMenuSub>
+                  <DropdownMenuItem onSelect={() => handleGenerateContract(item)}>
+                    {isGeneratingPdf ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileText className="mr-2 h-4 w-4" />}
+                    <span>Contrato</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => {
+                      const link = document.createElement('a');
+                      link.href = '/Danodals - Remake Vocal Chain (FL).fst'; // Assumes file is in /public
+                      link.download = `${item.clientName} - ${item.remakeType} Vocal Chain.fst`;
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                      toast({ title: "Descargando preset..." });
+                  }}>
+                      <Gift className="mr-2 h-4 w-4" />
+                      <span>VocalFst🎁</span>
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             );
@@ -730,14 +744,6 @@ const WorkTab = () => {
             return (
               <div className="flex items-center justify-end gap-2">
                 <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => handleGenerateContract(item)}
-                    disabled={isGeneratingPdf}
-                >
-                  {isGeneratingPdf ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
-                </Button>
-                <Button
                   variant="outline"
                   size="icon"
                   onClick={() => handleOpenEditModal(item)}
@@ -781,10 +787,6 @@ const WorkTab = () => {
                       Tunebat
                     </Button>
                   </a>
-                   <Button className="bg-amber-500 hover:bg-amber-600 text-white shadow-sm">
-                      <Gift className="mr-2 h-4 w-4" />
-                      VocalFst🎁
-                    </Button>
                 </div>
               </div>
               <div className="flex items-center gap-2">
