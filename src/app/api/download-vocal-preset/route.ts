@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     const clientName = searchParams.get('clientName') || 'CLIENT';
     const genre = searchParams.get('genre') || 'BEAT';
 
-    const sourceFileName = 'Danodals - Remake Vocal Chain (FL).fst';
+    const sourceFileName = 'vocal_preset.fst';
     const filePath = path.join(process.cwd(), 'public', sourceFileName);
 
     // Read the file from the filesystem
