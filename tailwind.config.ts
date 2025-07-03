@@ -1,5 +1,4 @@
 import type { Config } from 'tailwindcss';
-const plugin = require('tailwindcss/plugin');
 
 const config = {
   darkMode: ['class'],
@@ -60,12 +59,6 @@ const config = {
         'ios-red': 'hsl(var(--ios-red))',
         'ios-green': 'hsl(var(--ios-green))',
         'ios-orange': 'hsl(var(--ios-orange))',
-        'brand-purple': '#8B5CF6',
-        'brand-green': '#10B981',
-        'dark-primary': '#1a202c',
-        'dark-secondary': '#2d3748',
-        'light-primary': '#f7fafc',
-        'light-secondary': '#edf2f7',
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -91,16 +84,6 @@ const config = {
   plugins: [
     require("tailwindcss-animate"),
     require('@tailwindcss/aspect-ratio'),
-    plugin(function({ addUtilities }: { addUtilities: any }) {
-      addUtilities({
-        '.text-gradient': {
-          'background-image': 'linear-gradient(to right, #22D3EE, #8B5CF6)',
-          '-webkit-background-clip': 'text',
-          'background-clip': 'text',
-          'color': 'transparent',
-        }
-      })
-    })
   ],
 } satisfies Config;
 
