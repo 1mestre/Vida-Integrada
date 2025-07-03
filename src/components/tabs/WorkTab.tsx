@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
@@ -38,6 +39,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 
 const contractTemplateHtml = `
 <!DOCTYPE html>
@@ -391,6 +393,21 @@ const EditableDateCell = ({
     </Popover>
   );
 };
+
+const TruncatedCell = ({ text, maxWidth = 100 }: { text: string | number; maxWidth?: number }) => (
+  <TooltipProvider>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <p className="truncate mx-auto text-center" style={{ maxWidth: `${maxWidth}px` }}>
+          {text}
+        </p>
+      </TooltipTrigger>
+      <TooltipContent>
+        <p>{text}</p>
+      </TooltipContent>
+    </Tooltip>
+  </TooltipProvider>
+);
 
 
 const WorkTab = () => {
@@ -778,41 +795,50 @@ const WorkTab = () => {
         },
         { 
             accessorKey: 'clientName', 
-            header: () => <div className="text-center">Cliente</div>,
-            cell: ({ row }) => <div className="text-center">{row.getValue('clientName')}</div>
+            header: 'Cliente',
+            cell: ({ row }) => <TruncatedCell text={row.getValue('clientName')} maxWidth={120} />
         },
         {
             accessorKey: 'deliveryDate',
-            header: () => <div className="text-center">Entrega</div>,
+            header: 'Fecha',
             cell: (props) => <EditableDateCell {...props} updateDate={handleDateUpdate} />,
         },
         {
           accessorKey: 'key',
-          header: () => <div className="text-center">Key</div>,
+          header: 'Key',
           cell: ({ row }) => {
             const keyText = row.getValue('key') as string;
             const parts = keyText.split(' / ');
             return (
-              <div className="text-center">
-                <span className="font-semibold text-orange-500">{parts[0]}</span>
-                {parts[1] && (
-                  <>
-                    <span className="text-muted-foreground"> / </span> 
-                    <span className="font-semibold text-sky-700">{parts[1]}</span>
-                  </>
-                )}
-              </div>
+              <TooltipProvider>
+                  <Tooltip>
+                      <TooltipTrigger asChild>
+                          <div className="truncate max-w-[110px] mx-auto text-center">
+                              <span className="font-semibold text-orange-500">{parts[0]}</span>
+                              {parts[1] && (
+                                <>
+                                  <span className="text-muted-foreground"> / </span> 
+                                  <span className="font-semibold text-sky-700">{parts[1]}</span>
+                                </>
+                              )}
+                          </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                          <p>{keyText}</p>
+                      </TooltipContent>
+                  </Tooltip>
+              </TooltipProvider>
             );
           },
         },
         {
             accessorKey: 'bpm',
-            header: () => <div className="text-center">BPM</div>,
-            cell: ({ row }) => <div className="text-center">{row.getValue('bpm')}</div>
+            header: 'BPM',
+            cell: ({ row }) => <TruncatedCell text={row.getValue('bpm')} maxWidth={80} />
         },
         { 
             accessorKey: 'deliveryStatus', 
-            header: () => <div className="text-center">Estado</div>,
+            header: 'Estado',
             cell: ({ row }) => {
                 const item = row.original;
                 const statusOptions: WorkItem['deliveryStatus'][] = ['Pending', 'In Transit', 'In Revision', 'Delivered', 'Returned'];
@@ -845,7 +871,7 @@ const WorkTab = () => {
         },
         {
             accessorKey: 'revisionsRemaining',
-            header: () => <div className="text-center">Revisiones</div>,
+            header: 'Revs',
             cell: ({ row }) => {
               const item = row.original;
               const revisionOptions = [4, 3, 2, 1, 0];
@@ -872,7 +898,7 @@ const WorkTab = () => {
         },
         { 
             accessorKey: 'packageName', 
-            header: () => <div className="text-center">Paquete</div>,
+            header: 'Pack',
             cell: ({ row }) => {
                 const item = row.original;
                 const currentPackage = appState.workPackageTemplates.find(p => p.name === item.packageName);
@@ -906,18 +932,18 @@ const WorkTab = () => {
         },
         {
             accessorKey: 'price',
-            header: () => <div className="text-center">Precio</div>,
-            cell: ({row}) => <div className="text-center">{formatUSD(row.original.price)}</div>
+            header: 'Precio',
+            cell: ({row}) => <div className="text-center font-medium">{formatUSD(row.original.price)}</div>
         },
         { 
             accessorKey: 'orderNumber', 
-            header: () => <div className="text-center">Orden #</div>,
-            cell: ({ row }) => <div className="text-center">{row.getValue('orderNumber')}</div>
+            header: 'Orden #',
+            cell: ({ row }) => <TruncatedCell text={row.getValue('orderNumber')} maxWidth={100} />
         },
         { 
             accessorKey: 'genre', 
-            header: () => <div className="text-center">Género</div>,
-            cell: ({ row }) => <div className="text-center">{row.getValue('genre')}</div>
+            header: 'Género',
+            cell: ({ row }) => <TruncatedCell text={row.getValue('genre')} maxWidth={90} />
         },
         {
           id: 'actions',
@@ -991,7 +1017,7 @@ const WorkTab = () => {
                             {table.getHeaderGroups().map((headerGroup) => (
                                 <TableRow key={headerGroup.id}>
                                     {headerGroup.headers.map((header) => (
-                                        <TableHead key={header.id} className="text-center whitespace-nowrap">
+                                        <TableHead key={header.id} className="text-center whitespace-nowrap px-2 py-3">
                                             {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                                         </TableHead>
                                     ))}
@@ -1003,7 +1029,7 @@ const WorkTab = () => {
                                 table.getRowModel().rows.map((row) => (
                                     <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
                                         {row.getVisibleCells().map((cell) => (
-                                            <TableCell key={cell.id} className="whitespace-nowrap">
+                                            <TableCell key={cell.id} className="py-1 px-2 text-center">
                                                 {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                             </TableCell>
                                         ))}
@@ -1205,3 +1231,5 @@ const WorkTab = () => {
 };
 
 export default WorkTab;
+
+    
