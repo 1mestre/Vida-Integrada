@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
@@ -493,7 +492,7 @@ const WorkTab = () => {
             
             pdf.addImage(imgData, 'PNG', 0, 0, canvasWidth, canvasHeight);
 
-            const fileName = `Contrato - ${item.clientName} - #${item.orderNumber}.pdf`;
+            const fileName = `Contract - ${item.clientName} - ${item.orderNumber}.pdf`;
             pdf.save(fileName);
         } catch (error) {
             console.error("Error generating PDF:", error);
