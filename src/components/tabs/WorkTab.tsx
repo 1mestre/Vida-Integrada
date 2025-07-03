@@ -19,7 +19,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useAppState, WorkItem, WorkPackageTemplate, type Contribution } from '@/context/AppStateContext';
-import { TrendingUp, Settings, PlusCircle, Wrench, Music, Link, Edit, MessageSquare, Trash2, FileText, Gift, ClipboardCopy } from 'lucide-react';
+import { TrendingUp, Settings, PlusCircle, Wrench, Music, Link, Edit, MessageSquare, Trash2, FileText, Gift, ClipboardCopy, Loader2 } from 'lucide-react';
 import WorkItemModal from '@/components/WorkItemModal';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
@@ -37,7 +37,8 @@ import { cn } from "@/lib/utils";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuPortal, DropdownMenuSubContent } from '@/components/ui/dropdown-menu';
 import { v4 as uuidv4 } from 'uuid';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 const contractTemplateHtml = `
 <!DOCTYPE html>
@@ -58,10 +59,9 @@ const contractTemplateHtml = `
             color-adjust: exact;
         }
         .contract-container {
-            max-width: 800px;
-            margin: 40px auto;
+            width: 800px; /* Fixed width for consistent rendering */
+            margin: 0;
             background-color: #ffffff;
-            border-radius: 41px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.1);
             overflow: hidden;
         }
@@ -401,6 +401,7 @@ const WorkTab = () => {
     const [selectedItem, setSelectedItem] = useState<WorkItem | null>(null);
     const { toast } = useToast();
     const { playSound } = useSound();
+    const [generatingPdfId, setGeneratingPdfId] = useState<string | null>(null);
 
     const [exchangeRate, setExchangeRate] = useState<number | null>(null);
     const [rateLoading, setRateLoading] = useState(true);
@@ -454,36 +455,56 @@ const WorkTab = () => {
         setIsSettingsModalOpen(true);
     };
     
-    const handleGenerateContract = (item: WorkItem) => {
-        try {
-            let html = contractTemplateHtml;
-    
-            const agreementDate = new Date().toLocaleDateString("en-US", {
-                month: "long", day: "numeric", year: "numeric",
-            });
-    
-            html = html.replace(/{{clientName}}/g, item.clientName || "N/A");
-            html = html.replace(/{{orderNumber}}/g, item.orderNumber || "N/A");
-            html = html.replace(/{{agreementDate}}/g, agreementDate);
-            html = html.replace(/{{producerEmail}}/g, "danodalbeats@gmail.com");
+    const handleGeneratePdf = async (item: WorkItem) => {
+        setGeneratingPdfId(item.id);
+        const tempElement = document.createElement('div');
+        tempElement.style.position = 'absolute';
+        tempElement.style.left = '-9999px';
+        tempElement.style.top = 'auto';
+        
+        let html = contractTemplateHtml;
+        const agreementDate = new Date().toLocaleDateString("en-US", {
+            month: "long", day: "numeric", year: "numeric",
+        });
+        html = html.replace(/{{clientName}}/g, item.clientName || "N/A");
+        html = html.replace(/{{orderNumber}}/g, item.orderNumber || "N/A");
+        html = html.replace(/{{agreementDate}}/g, agreementDate);
+        html = html.replace(/{{producerEmail}}/g, "danodalbeats@gmail.com");
 
-            const blob = new Blob([html], { type: 'text/html' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `Contrato - ${item.clientName} - #${item.orderNumber}.html`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-    
-        } catch (error: any) {
-            console.error('Error al generar el contrato HTML:', error);
+        tempElement.innerHTML = html;
+        document.body.appendChild(tempElement);
+
+        try {
+            const canvas = await html2canvas(tempElement.querySelector('.contract-container')!, {
+                scale: 2,
+                useCORS: true,
+                backgroundColor: null,
+            });
+
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jsPDF({
+                orientation: 'p',
+                unit: 'mm',
+                format: 'a4'
+            });
+
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+            
+            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+
+            const fileName = `Contrato - ${item.clientName} - #${item.orderNumber}.pdf`;
+            pdf.save(fileName);
+        } catch (error) {
+            console.error("Error generating PDF:", error);
             toast({
                 variant: 'destructive',
-                title: 'Error al generar contrato',
-                description: error.message || 'Ocurrió un error inesperado.',
+                title: 'Error al generar PDF',
+                description: 'No se pudo crear el archivo PDF. Inténtalo de nuevo.',
             });
+        } finally {
+            document.body.removeChild(tempElement);
+            setGeneratingPdfId(null);
         }
     };
     
@@ -687,6 +708,7 @@ const WorkTab = () => {
           cell: ({ row }) => {
             const item = row.original;
             const baseName = generateFileNames(item);
+            const isLoading = generatingPdfId === item.id;
             return (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -728,9 +750,9 @@ const WorkTab = () => {
                             </DropdownMenuSubContent>
                         </DropdownMenuPortal>
                     </DropdownMenuSub>
-                    <DropdownMenuItem onSelect={() => handleGenerateContract(item)}>
-                        <FileText className="mr-2 h-4 w-4" />
-                        <span>Ver Contrato</span>
+                    <DropdownMenuItem onSelect={() => handleGeneratePdf(item)} disabled={isLoading}>
+                       {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileText className="mr-2 h-4 w-4" />}
+                       <span>{isLoading ? 'Generando...' : 'Ver Contrato'}</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem
                         onSelect={() => {
@@ -923,7 +945,7 @@ const WorkTab = () => {
             );
           },
         }
-    ], [appState.workPackageTemplates, handleDateUpdate, handleStatusUpdate, handlePackageUpdate, handleRevisionsUpdate, playSound, handleDeleteWorkItem, handleOpenEditModal, toast]);
+    ], [appState.workPackageTemplates, handleDateUpdate, handleStatusUpdate, handlePackageUpdate, handleRevisionsUpdate, playSound, handleDeleteWorkItem, handleOpenEditModal, toast, generatingPdfId]);
 
     const table = useReactTable({
         data: sortedWorkItems,
