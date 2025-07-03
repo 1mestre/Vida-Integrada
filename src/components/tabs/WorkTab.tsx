@@ -19,7 +19,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useAppState, WorkItem, WorkPackageTemplate, type Contribution } from '@/context/AppStateContext';
-import { TrendingUp, Settings, PlusCircle, Wrench, Music, Link, Edit, MessageSquare, Trash2, FileText, Loader2, Gift, ClipboardCopy } from 'lucide-react';
+import { TrendingUp, Settings, PlusCircle, Wrench, Music, Link, Edit, MessageSquare, Trash2, FileText, Loader2, Gift, ClipboardCopy, Camera } from 'lucide-react';
 import WorkItemModal from '@/components/WorkItemModal';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
@@ -31,6 +31,7 @@ import { format, differenceInCalendarDays, startOfDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useSound } from '@/context/SoundContext';
 import PackageSettingsModal from '@/components/PackageSettingsModal';
+import ScreenshotManagerModal from '@/components/ScreenshotManagerModal';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
@@ -73,11 +74,6 @@ const contractTemplateHtml = `
         }
         .header-content {
             position: relative;
-        }
-        .brand-logo {
-            width: 45px;
-            height: 45px;
-            margin-bottom: 20px;
         }
         .content-body {
             padding: 40px;
@@ -403,7 +399,9 @@ const WorkTab = () => {
     const { appState, setAppState } = useAppState();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+    const [isScreenshotModalOpen, setIsScreenshotModalOpen] = useState(false);
     const [selectedItem, setSelectedItem] = useState<WorkItem | null>(null);
+    const [pdfFileName, setPdfFileName] = useState('');
     const { toast } = useToast();
     const { playSound } = useSound();
 
@@ -460,14 +458,9 @@ const WorkTab = () => {
     };
     
     const handleGenerateContract = (item: WorkItem) => {
-        toast({
-            title: "Generando vista previa del contrato...",
-        });
-
         try {
             let html = contractTemplateHtml;
     
-            // Replace placeholders
             const agreementDate = new Date().toLocaleDateString("en-US", {
                 month: "long", day: "numeric", year: "numeric",
             });
@@ -494,6 +487,12 @@ const WorkTab = () => {
                 description: error.message || 'Ocurrió un error inesperado.',
             });
         }
+    };
+    
+    const handleOpenScreenshotManager = (item: WorkItem) => {
+        handleGenerateContract(item);
+        setPdfFileName(`Contrato-${item.clientName}`);
+        setIsScreenshotModalOpen(true);
     };
 
     const handleCopyToClipboard = (text: string) => {
@@ -737,9 +736,9 @@ const WorkTab = () => {
                             </DropdownMenuSubContent>
                         </DropdownMenuPortal>
                     </DropdownMenuSub>
-                    <DropdownMenuItem onSelect={() => handleGenerateContract(item)}>
-                        <FileText className="mr-2 h-4 w-4" />
-                        <span>Contrato</span>
+                    <DropdownMenuItem onSelect={() => handleOpenScreenshotManager(item)}>
+                        <Camera className="mr-2 h-4 w-4" />
+                        <span>Capturar Contrato</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem
                         onSelect={() => {
@@ -932,7 +931,7 @@ const WorkTab = () => {
             );
           },
         }
-    ], [appState.workPackageTemplates, handleDateUpdate, handleStatusUpdate, handlePackageUpdate, handleRevisionsUpdate, playSound, handleDeleteWorkItem, handleOpenEditModal, toast, handleGenerateContract]);
+    ], [appState.workPackageTemplates, handleDateUpdate, handleStatusUpdate, handlePackageUpdate, handleRevisionsUpdate, playSound, handleDeleteWorkItem, handleOpenEditModal, toast]);
 
     const table = useReactTable({
         data: sortedWorkItems,
@@ -1165,6 +1164,14 @@ const WorkTab = () => {
                 isOpen={isSettingsModalOpen}
                 onClose={() => setIsSettingsModalOpen(false)}
             />
+            
+            {isScreenshotModalOpen && (
+                <ScreenshotManagerModal 
+                    isOpen={isScreenshotModalOpen}
+                    onClose={() => setIsScreenshotModalOpen(false)}
+                    fileName={pdfFileName}
+                />
+            )}
 
             <AlertDialog open={isMessageModalOpen} onOpenChange={setIsMessageModalOpen}>
               <AlertDialogContent>
