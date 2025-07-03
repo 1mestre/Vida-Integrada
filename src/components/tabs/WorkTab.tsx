@@ -778,38 +778,37 @@ const WorkTab = () => {
                             
                             const safeClientName = item.clientName.replace(/[^a-zA-Z0-9 -]/g, '').trim() || 'Preset';
                             const safeGenre = item.genre.replace(/[^a-zA-Z0-9 -]/g, '').trim() || 'Vocal';
-                            const fileName = `${safeClientName} - ${safeGenre} Vocal Preset.fst`;
+                            const downloadFileName = `${safeClientName} - ${safeGenre} Vocal Preset.fst`;
 
                             toast({ title: 'Iniciando descarga...', description: 'El preset se está preparando.' });
 
-                            const driveUrl = 'https://drive.google.com/uc?export=download&id=1UN9N5MWO3tj5iimjLKGpLgH0Tj-Z9j5u';
+                            const sourceFilePath = '/CLIENT NAME GENRE Vocal Chain BY @DANODALS on Fiverr.fst';
 
-                            const response = await fetch(driveUrl);
+                            const response = await fetch(sourceFilePath);
                             if (!response.ok) {
-                                throw new Error('La descarga directa falló. Abriendo enlace de respaldo.');
+                                throw new Error("File not found. Ensure 'CLIENT NAME GENRE...fst' is in /public.");
                             }
 
                             const blob = await response.blob();
                             const url = window.URL.createObjectURL(blob);
                             const link = document.createElement('a');
                             link.href = url;
-                            link.setAttribute('download', fileName);
+                            link.setAttribute('download', downloadFileName);
                             document.body.appendChild(link);
                             link.click();
                             
                             document.body.removeChild(link);
                             window.URL.revokeObjectURL(url);
 
-                            toast({ title: 'Descarga Iniciada!', description: `Guardando como: ${fileName}` });
+                            toast({ title: 'Descarga Iniciada!', description: `Guardando como: ${downloadFileName}` });
 
                           } catch (error: any) {
                               console.error("Error initiating download:", error);
                               toast({
                                   variant: 'destructive',
                                   title: 'Error de Descarga',
-                                  description: error.message || 'No se pudo descargar el archivo. Intenta abrir el enlace directamente.',
+                                  description: error.message || 'No se pudo descargar el archivo.',
                               });
-                              window.open('https://drive.google.com/file/d/1UN9N5MWO3tj5iimjLKGpLgH0Tj-Z9j5u/view?usp=drive_link', '_blank');
                           }
                         }}
                     >
@@ -1262,3 +1261,4 @@ export default WorkTab;
 
     
     
+
