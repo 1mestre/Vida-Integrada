@@ -15,12 +15,11 @@ export const generateContractPDF = onRequest(
   {timeoutSeconds: 300, memory: "1GiB"},
   async (request, response) => {
     // --- INICIO DE LA CORRECCIÓN DE CORS ---
-    // Ponemos las cabeceras de permiso en TODAS las respuestas
     response.set("Access-Control-Allow-Origin", "*");
     response.set("Access-Control-Allow-Methods", "POST, OPTIONS");
-    response.set("Access-control-Allow-Headers", "Content-Type");
+    // Ajuste menor de capitalización para seguir el estándar
+    response.set("Access-Control-Allow-Headers", "Content-Type");
 
-    // Si el navegador envía la pre-inspección (OPTIONS), le damos OK y terminamos.
     if (request.method === "OPTIONS") {
       response.status(204).send("");
       return;
