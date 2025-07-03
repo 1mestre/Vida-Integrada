@@ -482,16 +482,16 @@ const WorkTab = () => {
             });
 
             const imgData = canvas.toDataURL('image/png');
-            const pdf = new jsPDF({
-                orientation: 'p',
-                unit: 'mm',
-                format: 'a4'
-            });
+            const canvasWidth = canvas.width;
+            const canvasHeight = canvas.height;
 
-            const pdfWidth = pdf.internal.pageSize.getWidth();
-            const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+            const pdf = new jsPDF({
+                orientation: canvasWidth > canvasHeight ? 'l' : 'p',
+                unit: 'px',
+                format: [canvasWidth, canvasHeight]
+            });
             
-            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+            pdf.addImage(imgData, 'PNG', 0, 0, canvasWidth, canvasHeight);
 
             const fileName = `Contrato - ${item.clientName} - #${item.orderNumber}.pdf`;
             pdf.save(fileName);
@@ -1206,5 +1206,3 @@ const WorkTab = () => {
 };
 
 export default WorkTab;
-
-    
