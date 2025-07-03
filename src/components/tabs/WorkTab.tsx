@@ -492,22 +492,21 @@ const WorkTab = () => {
 
         try {
             const canvas = await html2canvas(tempElement.querySelector('.contract-container')!, {
-                scale: 4, // Increased scale for higher resolution
+                scale: 4,
                 useCORS: true,
                 backgroundColor: null,
             });
-
+            
             const imgData = canvas.toDataURL('image/png');
+            const pdfWidth = 595.28; // A4 width in points
             const imgWidth = canvas.width;
             const imgHeight = canvas.height;
-            
-            const pdfWidth = 595.28; // A4 width in points
-            const pdfHeight = (imgHeight * pdfWidth) / imgWidth; // Calculate height based on aspect ratio
+            const pdfHeight = (imgHeight * pdfWidth) / imgWidth;
 
             const pdf = new jsPDF({
                 orientation: 'p',
                 unit: 'pt',
-                format: [pdfWidth, pdfHeight] // Custom format: A4 width, dynamic height
+                format: [pdfWidth, pdfHeight]
             });
 
             pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
@@ -775,9 +774,22 @@ const WorkTab = () => {
                     </DropdownMenuItem>
                     <DropdownMenuItem
                         onSelect={() => {
-                            const driveUrl = "https://drive.google.com/file/d/1UN9N5MWO3tj5iimjLKGpLgH0Tj-Z9j5u/view?usp=sharing";
-                            window.open(driveUrl, '_blank');
-                            toast({ title: 'Abriendo Google Drive...' });
+                            const item = row.original;
+                            const fileId = '1UN9N5MWO3tj5iimjLKGpLgH0Tj-Z9j5u';
+                            const downloadUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
+                            
+                            const safeClientName = item.clientName.replace(/[^a-zA-Z0-9 -]/g, '').trim();
+                            const safeGenre = item.genre.replace(/[^a-zA-Z0-9 -]/g, '').trim();
+                            const fileName = `${safeClientName} - ${safeGenre} Vocal Preset.fst`;
+                    
+                            const link = document.createElement('a');
+                            link.href = downloadUrl;
+                            link.setAttribute('download', fileName);
+                            document.body.appendChild(link);
+                            link.click();
+                            link.parentNode?.removeChild(link);
+                    
+                            toast({ title: 'Iniciando descarga...', description: `Nombre sugerido: ${fileName}` });
                         }}
                     >
                         <Gift className="mr-2 h-4 w-4" />
@@ -1226,3 +1238,5 @@ const WorkTab = () => {
 };
 
 export default WorkTab;
+
+    
