@@ -1,8 +1,7 @@
-
 "use client";
 
 import React, { useState, useRef, useCallback } from 'react';
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { AnimatePresence, motion } from "framer-motion";
@@ -210,12 +209,12 @@ const ScreenshotManagerModal: React.FC<ScreenshotManagerModalProps> = ({ isOpen,
         <>
             <Dialog open={isOpen} onOpenChange={onClose}>
                 <DialogContent className="bg-[#1a202c] border-[#8B5CF6]/50 text-[#f7fafc] max-w-7xl h-[90vh] flex flex-col p-4 sm:p-6">
-                    <div className="flex-shrink-0">
-                         <h1 className="text-3xl font-bold text-gradient">
+                    <DialogHeader className="flex-shrink-0 text-left">
+                         <DialogTitle className="text-3xl font-bold text-gradient">
                             Gestor de Capturas
-                        </h1>
-                        <p className="text-[#edf2f7]/70">Añade, reordena y convierte tus imágenes en un PDF.</p>
-                    </div>
+                        </DialogTitle>
+                        <DialogDescription className="text-[#edf2f7]/70">Añade, reordena y convierte tus imágenes en un PDF.</DialogDescription>
+                    </DialogHeader>
 
                     <div className="flex-grow min-h-0 py-4">
                         {images.length === 0 ? (
