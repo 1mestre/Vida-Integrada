@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
@@ -120,7 +121,6 @@ const contractTemplateHtml = `
     <div class="contract-container">
         <div class="header-wave">
             <div class="header-content">
-                <img src="https://uxwing.com/wp-content/themes/uxwing/download/brands-and-social-media/fiverr-icon.png" alt="Fiverr Logo" class="brand-logo">
                 <div>
                     <h1 class="text-3xl font-bold tracking-tight text-white">WORK FOR HIRE & RIGHTS TRANSFER AGREEMENT</h1>
                     <p class="text-lg text-white">Custom Instrumental Production Service</p>
@@ -459,11 +459,11 @@ const WorkTab = () => {
         setIsSettingsModalOpen(true);
     };
     
-    const handleGenerateContract = async (item: WorkItem) => {
+    const handleGenerateContract = (item: WorkItem) => {
         toast({
             title: "Generando vista previa del contrato...",
         });
-    
+
         try {
             let html = contractTemplateHtml;
     
@@ -475,9 +475,8 @@ const WorkTab = () => {
             html = html.replace(/{{clientName}}/g, item.clientName || "N/A");
             html = html.replace(/{{orderNumber}}/g, item.orderNumber || "N/A");
             html = html.replace(/{{agreementDate}}/g, agreementDate);
-            html = html.replace(/{{producerEmail}}/g, "danodalbeats@gmail.com"); // Using a default email
+            html = html.replace(/{{producerEmail}}/g, "danodalbeats@gmail.com");
     
-            // Open a new tab and write the HTML
             const newTab = window.open();
             if (newTab) {
                 newTab.document.open();
