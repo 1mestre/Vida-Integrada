@@ -14,6 +14,7 @@ const readTemplate = (): string => {
 export const generateContractPDF = onRequest(
   {timeoutSeconds: 300, memory: "1GiB"},
   async (request, response) => {
+    console.log("¡FUNCIÓN INICIADA! Recibiendo una solicitud.");
     // --- INICIO DE LA CORRECCIÓN DE CORS ---
     response.set("Access-Control-Allow-Origin", "*");
     response.set("Access-Control-Allow-Methods", "POST, OPTIONS");
