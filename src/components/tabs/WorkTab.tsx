@@ -150,7 +150,7 @@ const contractTemplateHtml = `
                                 Project Reference
                             </th>
                             <td class="px-6 py-4">
-                                Fiverr Order ID #{{orderNumber}}
+                                Fiverr Order ID {{orderNumber}}
                             </td>
                         </tr>
                          <tr class="border-b">
@@ -492,22 +492,25 @@ const WorkTab = () => {
 
         try {
             const canvas = await html2canvas(tempElement.querySelector('.contract-container')!, {
-                scale: 2,
+                scale: 4, // Increased scale for higher resolution
                 useCORS: true,
                 backgroundColor: null,
             });
 
             const imgData = canvas.toDataURL('image/png');
-            const canvasWidth = canvas.width;
-            const canvasHeight = canvas.height;
+            const imgWidth = canvas.width;
+            const imgHeight = canvas.height;
+            
+            const pdfWidth = 595.28; // A4 width in points
+            const pdfHeight = (imgHeight * pdfWidth) / imgWidth; // Calculate height based on aspect ratio
 
             const pdf = new jsPDF({
-                orientation: canvasWidth > canvasHeight ? 'l' : 'p',
-                unit: 'px',
-                format: [canvasWidth, canvasHeight]
+                orientation: 'p',
+                unit: 'pt',
+                format: [pdfWidth, pdfHeight] // Custom format: A4 width, dynamic height
             });
-            
-            pdf.addImage(imgData, 'PNG', 0, 0, canvasWidth, canvasHeight);
+
+            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
 
             const fileName = `Contract - ${item.clientName} - ${item.orderNumber}.pdf`;
             pdf.save(fileName);
@@ -1231,5 +1234,3 @@ const WorkTab = () => {
 };
 
 export default WorkTab;
-
-    
