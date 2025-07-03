@@ -497,7 +497,6 @@ const WorkTab = () => {
                 backgroundColor: null,
             });
             
-            const imgData = canvas.toDataURL('image/png');
             const pdfWidth = 595.28; // A4 width in points
             const imgWidth = canvas.width;
             const imgHeight = canvas.height;
@@ -509,7 +508,7 @@ const WorkTab = () => {
                 format: [pdfWidth, pdfHeight]
             });
 
-            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+            pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, pdfWidth, pdfHeight);
 
             const fileName = `Exclusive Rights for ${item.clientName} Contract ${item.orderNumber}.pdf`;
             pdf.save(fileName);
@@ -773,34 +772,44 @@ const WorkTab = () => {
                        <span>{isLoading ? 'Generando...' : 'Descargar Contrato'}</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem
-                        onSelect={() => {
+                        onSelect={async () => {
                           try {
                             const item = row.original;
-                            // The path to the file in the public directory
-                            const filePath = '/Danodals Vocal Chain Preset.fst';
                             
                             const safeClientName = item.clientName.replace(/[^a-zA-Z0-9 -]/g, '').trim() || 'Preset';
                             const safeGenre = item.genre.replace(/[^a-zA-Z0-9 -]/g, '').trim() || 'Vocal';
                             const fileName = `${safeClientName} - ${safeGenre} Vocal Preset.fst`;
 
-                            // Create a link element
-                            const link = document.createElement('a');
-                            link.href = filePath;
-                            link.setAttribute('download', fileName); // Set the custom download filename
+                            toast({ title: 'Iniciando descarga...', description: 'El preset se está preparando.' });
 
-                            // Append to the document, click it, and remove it
+                            const driveUrl = 'https://drive.google.com/uc?export=download&id=1UN9N5MWO3tj5iimjLKGpLgH0Tj-Z9j5u';
+
+                            const response = await fetch(driveUrl);
+                            if (!response.ok) {
+                                throw new Error('La descarga directa falló. Abriendo enlace de respaldo.');
+                            }
+
+                            const blob = await response.blob();
+                            const url = window.URL.createObjectURL(blob);
+                            const link = document.createElement('a');
+                            link.href = url;
+                            link.setAttribute('download', fileName);
                             document.body.appendChild(link);
                             link.click();
+                            
                             document.body.removeChild(link);
+                            window.URL.revokeObjectURL(url);
 
-                            toast({ title: 'Descarga Iniciada', description: `Guardando como: ${fileName}` });
-                          } catch (error) {
+                            toast({ title: 'Descarga Iniciada!', description: `Guardando como: ${fileName}` });
+
+                          } catch (error: any) {
                               console.error("Error initiating download:", error);
                               toast({
                                   variant: 'destructive',
                                   title: 'Error de Descarga',
-                                  description: 'Asegúrate de que el archivo "Danodals Vocal Chain Preset.fst" existe en la carpeta `public` del proyecto.',
+                                  description: error.message || 'No se pudo descargar el archivo. Intenta abrir el enlace directamente.',
                               });
+                              window.open('https://drive.google.com/file/d/1UN9N5MWO3tj5iimjLKGpLgH0Tj-Z9j5u/view?usp=drive_link', '_blank');
                           }
                         }}
                     >
