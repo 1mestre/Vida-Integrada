@@ -775,17 +775,9 @@ const WorkTab = () => {
                     </DropdownMenuItem>
                     <DropdownMenuItem
                         onSelect={() => {
-                            const downloadUrl = "https://drive.google.com/uc?export=download&id=1UN9N5MWO3tj5iimjLKGpLgH0Tj-Z9j5u";
-                            const downloadFileName = `${item.clientName} ${item.genre} Vocal Chain BY @DANODALS on Fiverr.fst`;
-                        
-                            const a = document.createElement('a');
-                            a.href = downloadUrl;
-                            a.download = downloadFileName; 
-                            document.body.appendChild(a);
-                            a.click();
-                            document.body.removeChild(a);
-                            
-                            toast({ title: '¡Descarga iniciada!' });
+                            const driveUrl = "https://drive.google.com/file/d/1UN9N5MWO3tj5iimjLKGpLgH0Tj-Z9j5u/view?usp=sharing";
+                            window.open(driveUrl, '_blank');
+                            toast({ title: 'Abriendo Google Drive...' });
                         }}
                     >
                         <Gift className="mr-2 h-4 w-4" />
