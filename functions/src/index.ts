@@ -1,4 +1,3 @@
-// Importamos desde la nueva ruta para la v2
 import {onRequest} from "firebase-functions/v2/https";
 import * as puppeteer from "puppeteer";
 import * as fs from "fs";
@@ -12,14 +11,21 @@ const readTemplate = (): string => {
   return fs.readFileSync(templatePath, "utf8");
 };
 
-// Nueva sintaxis para la v2 de Cloud Functions
 export const generateContractPDF = onRequest(
-  // Las opciones ahora van dentro como un objeto
-  // AQUÍ ESTÁ EL CAMBIO: 1GiB en lugar de 1GB
   {timeoutSeconds: 300, memory: "1GiB"},
-  // La función handler. request y response ya tienen sus tipos correctos.
   async (request, response) => {
+    // --- INICIO DE LA CORRECCIÓN DE CORS ---
+    // Ponemos las cabeceras de permiso en TODAS las respuestas
     response.set("Access-Control-Allow-Origin", "*");
+    response.set("Access-Control-Allow-Methods", "POST, OPTIONS");
+    response.set("Access-control-Allow-Headers", "Content-Type");
+
+    // Si el navegador envía la pre-inspección (OPTIONS), le damos OK y terminamos.
+    if (request.method === "OPTIONS") {
+      response.status(204).send("");
+      return;
+    }
+    // --- FIN DE LA CORRECCIÓN DE CORS ---
 
     if (request.method !== "POST") {
       response.status(405).send("Method Not Allowed");
@@ -36,7 +42,7 @@ export const generateContractPDF = onRequest(
     html = html.replace(/{{clientName}}/g, data.clientName || "N/A");
     html = html.replace(/{{orderNumber}}/g, data.orderNumber || "N/A");
     html = html.replace(/{{agreementDate}}/g, agreementDate);
-    html = html.replace(/{{producerEmail}}/g, data.producerEmail||"N/A");
+    html = html.replace(/{{producerEmail}}/g, data.producerEmail || "N/A");
 
     const browser = await puppeteer.launch({args: ["--no-sandbox"]});
     const page = await browser.newPage();
