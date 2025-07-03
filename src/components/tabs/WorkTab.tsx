@@ -512,7 +512,7 @@ const WorkTab = () => {
 
             pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
 
-            const fileName = `Contract - ${item.clientName} - ${item.orderNumber}.pdf`;
+            const fileName = `Exclusive Rights for ${item.clientName} Contract ${item.orderNumber}.pdf`;
             pdf.save(fileName);
         } catch (error) {
             console.error("Error generating PDF:", error);
@@ -738,7 +738,7 @@ const WorkTab = () => {
                 <DropdownMenuContent align="end">
                     <DropdownMenuItem onSelect={() => handlePreviewMessage(item)}>
                         <MessageSquare className="mr-2 h-4 w-4" />
-                        <span>Mensaje Cliente</span>
+                        <span>Mensaje Delivery</span>
                     </DropdownMenuItem>
                     <DropdownMenuSub>
                         <DropdownMenuSubTrigger>
@@ -771,7 +771,7 @@ const WorkTab = () => {
                     </DropdownMenuSub>
                     <DropdownMenuItem onSelect={() => handleGeneratePdf(item)} disabled={isLoading}>
                        {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileText className="mr-2 h-4 w-4" />}
-                       <span>{isLoading ? 'Generando...' : 'Ver Contrato'}</span>
+                       <span>{isLoading ? 'Generando...' : 'Descargar Contrato'}</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem
                         onSelect={() => {
