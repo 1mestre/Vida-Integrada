@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
@@ -287,7 +286,7 @@ const WorkTab = () => {
         });
 
         try {
-            const response = await fetch('https://us-central1-vida-integrada.cloudfunctions.net/generateContractPDF', {
+            const response = await fetch('https://generatecontractpdf-oldcdsxq4a-uc.a.run.app', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -637,9 +636,9 @@ const WorkTab = () => {
           },
         },
         {
-          accessorKey: 'bpm',
-          header: () => <div className="text-center">BPM</div>,
-          cell: ({ row }) => <div className="text-center">{row.getValue('bpm')}</div>
+            accessorKey: 'bpm',
+            header: () => <div className="text-center">BPM</div>,
+            cell: ({ row }) => <div className="text-center">{row.getValue('bpm')}</div>
         },
         { 
             accessorKey: 'deliveryStatus', 
@@ -680,7 +679,7 @@ const WorkTab = () => {
             cell: ({ row }) => {
               const item = row.original;
               const revisionOptions = [4, 3, 2, 1, 0];
-          
+        
               return (
                 <div className="text-center">
                     <DropdownMenu>
@@ -811,101 +810,101 @@ const WorkTab = () => {
                  <Button onClick={handleOpenNewOrderModal} className="h-12 md:h-14 text-base md:text-lg">
                    Nueva Orden🤑💵
                  </Button>
-               </div>
+                </div>
             </div>
 
             <Card className="glassmorphism-card">
-                <CardContent className="pt-6">
-                    <div className="rounded-md border overflow-x-auto">
-                        <Table>
-                            <TableHeader>
-                                {table.getHeaderGroups().map((headerGroup) => (
-                                    <TableRow key={headerGroup.id}>
-                                        {headerGroup.headers.map((header) => (
-                                            <TableHead key={header.id} className="text-center whitespace-nowrap">
-                                                {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                                            </TableHead>
+              <CardContent className="pt-6">
+                <div className="rounded-md border overflow-x-auto">
+                    <Table>
+                        <TableHeader>
+                            {table.getHeaderGroups().map((headerGroup) => (
+                                <TableRow key={headerGroup.id}>
+                                    {headerGroup.headers.map((header) => (
+                                        <TableHead key={header.id} className="text-center whitespace-nowrap">
+                                            {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                                        </TableHead>
+                                    ))}
+                                </TableRow>
+                            ))}
+                        </TableHeader>
+                        <TableBody>
+                            {table.getRowModel().rows?.length ? (
+                                table.getRowModel().rows.map((row) => (
+                                    <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
+                                        {row.getVisibleCells().map((cell) => (
+                                            <TableCell key={cell.id} className="whitespace-nowrap">
+                                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                            </TableCell>
                                         ))}
                                     </TableRow>
-                                ))}
-                            </TableHeader>
-                            <TableBody>
-                                {table.getRowModel().rows?.length ? (
-                                    table.getRowModel().rows.map((row) => (
-                                        <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
-                                            {row.getVisibleCells().map((cell) => (
-                                                <TableCell key={cell.id} className="whitespace-nowrap">
-                                                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                                </TableCell>
-                                            ))}
-                                        </TableRow>
-                                    ))
-                                ) : (
-                                    <TableRow>
-                                        <TableCell colSpan={columns.length} className="h-24 text-center">
-                                            No hay datos.
-                                        </TableCell>
-                                    </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
-                    </div>
-                </CardContent>
+                                ))
+                            ) : (
+                                <TableRow>
+                                    <TableCell colSpan={columns.length} className="h-24 text-center">
+                                        No hay datos.
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
+                </div>
+              </CardContent>
             </Card>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <div className="lg:col-span-2 space-y-8">
                 <Card className="glassmorphism-card">
-                  <CardHeader>
-                    <CardTitle className="flex items-center">
-                      <TrendingUp className="mr-2 text-primary" />
-                      Meta de Ingresos - {format(new Date(), 'MMMM yyyy', { locale: es })}
-                    </CardTitle>
-                    <CardDescription>Establece y sigue tu objetivo de ingresos mensuales.</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div className="flex flex-col sm:flex-row items-center gap-4">
-                      <Input
-                        type="number"
-                        placeholder="Meta en COP"
-                        value={currentMonthTarget || ''}
-                        onChange={(e) => setAppState({ monthlyTargets: { ...appState.monthlyTargets, [currentMonthKey]: Number(e.target.value) } })}
-                        className="bg-background/50 border-border"
-                      />
-                      <span className="text-sm text-muted-foreground whitespace-nowrap">
-                        Progreso: {formatCOP(financialSummary.incomeThisMonth)} / {formatCOP(currentMonthTarget)}
-                      </span>
-                    </div>
-                    
-                    <div className="space-y-2">
-                        <p className="text-sm font-medium">Progreso Meta del Mes ({financialSummary.progress.toFixed(1)}%)</p>
-                        <Progress value={financialSummary.progress} className="h-4 shimmer [&>div]:bg-ios-green"/>
-                    </div>
+                    <CardHeader>
+                        <CardTitle className="flex items-center">
+                            <TrendingUp className="mr-2 text-primary" />
+                            Meta de Ingresos - {format(new Date(), 'MMMM yyyy', { locale: es })}
+                        </CardTitle>
+                        <CardDescription>Establece y sigue tu objetivo de ingresos mensuales.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                        <div className="flex flex-col sm:flex-row items-center gap-4">
+                            <Input
+                                type="number"
+                                placeholder="Meta en COP"
+                                value={currentMonthTarget || ''}
+                                onChange={(e) => setAppState({ monthlyTargets: { ...appState.monthlyTargets, [currentMonthKey]: Number(e.target.value) } })}
+                                className="bg-background/50 border-border"
+                            />
+                            <span className="text-sm text-muted-foreground whitespace-nowrap">
+                                Progreso: {formatCOP(financialSummary.incomeThisMonth)} / {formatCOP(currentMonthTarget)}
+                            </span>
+                        </div>
+                        
+                        <div className="space-y-2">
+                            <p className="text-sm font-medium">Progreso Meta del Mes ({financialSummary.progress.toFixed(1)}%)</p>
+                            <Progress value={financialSummary.progress} className="h-4 shimmer [&>div]:bg-ios-green"/>
+                        </div>
 
-                    <div className="space-y-2">
-                        <p className="text-sm font-medium text-muted-foreground">Progreso del Mes (Tiempo: {monthTimeProgress.toFixed(1)}%)</p>
-                        <Progress value={monthTimeProgress} className="h-4 [&>div]:bg-ios-orange"/>
-                    </div>
+                        <div className="space-y-2">
+                            <p className="text-sm font-medium text-muted-foreground">Progreso del Mes (Tiempo: {monthTimeProgress.toFixed(1)}%)</p>
+                            <Progress value={monthTimeProgress} className="h-4 [&>div]:bg-ios-orange"/>
+                        </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                      <Select value={appState.selectedInputCurrencyIngresos} onValueChange={(val: 'USD' | 'COP') => setAppState({ selectedInputCurrencyIngresos: val })}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent><SelectItem value="COP">COP</SelectItem><SelectItem value="USD">USD</SelectItem></SelectContent>
-                      </Select>
-                      <Input
-                        type="number"
-                        placeholder={`Monto en ${appState.selectedInputCurrencyIngresos}`}
-                        value={amount}
-                        onChange={(e) => setAmount(e.target.value)}
-                        className="sm:col-span-2 bg-background/50 border-border"
-                      />
-                    </div>
-                    <Button onClick={handleAddIncome} disabled={rateLoading || !amount} className="w-full">
-                      <PlusCircle className="mr-2 h-4 w-4" />
-                      {rateLoading ? 'Cargando tasa...' : 'Añadir Ingreso'}
-                    </Button>
-                    <p className="text-xs text-center text-muted-foreground">Tasa de cambio actual (USD a COP): {rateLoading ? '...' : exchangeRate?.toFixed(2)}</p>
-                  </CardContent>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <Select value={appState.selectedInputCurrencyIngresos} onValueChange={(val: 'USD' | 'COP') => setAppState({ selectedInputCurrencyIngresos: val })}>
+                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectContent><SelectItem value="COP">COP</SelectItem><SelectItem value="USD">USD</SelectItem></SelectContent>
+                            </Select>
+                            <Input
+                                type="number"
+                                placeholder={`Monto en ${appState.selectedInputCurrencyIngresos}`}
+                                value={amount}
+                                onChange={(e) => setAmount(e.target.value)}
+                                className="sm:col-span-2 bg-background/50 border-border"
+                            />
+                        </div>
+                        <Button onClick={handleAddIncome} disabled={rateLoading || !amount} className="w-full">
+                            <PlusCircle className="mr-2 h-4 w-4" />
+                            {rateLoading ? 'Cargando tasa...' : 'Añadir Ingreso'}
+                        </Button>
+                        <p className="text-xs text-center text-muted-foreground">Tasa de cambio actual (USD a COP): {rateLoading ? '...' : exchangeRate?.toFixed(2)}</p>
+                    </CardContent>
                 </Card>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -984,12 +983,12 @@ const WorkTab = () => {
                             </div>
                         </div>
                     </CardContent>
-                  </Card>
-                  <div className="text-center">
+                </Card>
+                <div className="text-center">
                     <p className="text-sm text-muted-foreground">
                       Ingresos Acumulados: {formatCOP(financialSummary.totalNetCOP)} / {formatUSD(financialSummary.totalNetUSD)}
                     </p>
-                  </div>
+                </div>
                 {financialSummary.progress >= 100 && (
                     <Card className="glassmorphism-card bg-ios-green/20 border-ios-green p-4 text-center">
                         <p className="font-bold text-ios-green animate-pulse">🎉✨ ¡FELICITACIONES! ¡META ALCANZADA! ✨🎉</p>
@@ -1005,8 +1004,8 @@ const WorkTab = () => {
             />
 
             <PackageSettingsModal 
-              isOpen={isSettingsModalOpen}
-              onClose={() => setIsSettingsModalOpen(false)}
+                isOpen={isSettingsModalOpen}
+                onClose={() => setIsSettingsModalOpen(false)}
             />
 
             <AlertDialog open={isMessageModalOpen} onOpenChange={setIsMessageModalOpen}>
