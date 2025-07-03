@@ -774,22 +774,31 @@ const WorkTab = () => {
                     </DropdownMenuItem>
                     <DropdownMenuItem
                         onSelect={() => {
-                            const item = row.original;
-                            const fileId = '1UN9N5MWO3tj5iimjLKGpLgH0Tj-Z9j5u';
-                            const downloadUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
-                            
-                            const safeClientName = item.clientName.replace(/[^a-zA-Z0-9 -]/g, '').trim();
-                            const safeGenre = item.genre.replace(/[^a-zA-Z0-9 -]/g, '').trim();
-                            const fileName = `${safeClientName} - ${safeGenre} Vocal Preset.fst`;
-                    
-                            const link = document.createElement('a');
-                            link.href = downloadUrl;
-                            link.setAttribute('download', fileName);
-                            document.body.appendChild(link);
-                            link.click();
-                            link.parentNode?.removeChild(link);
-                    
-                            toast({ title: 'Iniciando descarga...', description: `Nombre sugerido: ${fileName}` });
+                          try {
+                              const item = row.original;
+                              const fileId = '1UN9N5MWO3tj5iimjLKGpLgH0Tj-Z9j5u';
+                              const downloadUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
+                              
+                              const safeClientName = item.clientName.replace(/[^a-zA-Z0-9 -]/g, '').trim() || 'Preset';
+                              const safeGenre = item.genre.replace(/[^a-zA-Z0-9 -]/g, '').trim() || 'Vocal';
+                              const fileName = `${safeClientName} - ${safeGenre} Vocal Preset.fst`;
+                  
+                              const link = document.createElement('a');
+                              link.href = downloadUrl;
+                              link.setAttribute('download', fileName);
+                              document.body.appendChild(link);
+                              link.click();
+                              document.body.removeChild(link);
+                  
+                              toast({ title: 'Descarga Iniciada', description: `Guardando como: ${fileName}` });
+                          } catch (error) {
+                              console.error("Error initiating download:", error);
+                              toast({
+                                  variant: 'destructive',
+                                  title: 'Error de Descarga',
+                                  description: 'No se pudo iniciar la descarga. Por favor, intenta de nuevo.',
+                              });
+                          }
                         }}
                     >
                         <Gift className="mr-2 h-4 w-4" />
