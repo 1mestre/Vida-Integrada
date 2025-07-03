@@ -772,7 +772,7 @@ const WorkTab = () => {
                        <span>{isLoading ? 'Generando...' : 'Descargar Contrato'}</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem
-                        onSelect={async () => {
+                        onSelect={() => {
                           try {
                             const item = row.original;
                             
@@ -780,26 +780,16 @@ const WorkTab = () => {
                             const safeGenre = item.genre.replace(/[^a-zA-Z0-9 -]/g, '').trim() || 'Vocal';
                             const downloadFileName = `${safeClientName} - ${safeGenre} Vocal Preset.fst`;
 
-                            toast({ title: 'Iniciando descarga...', description: 'El preset se está preparando.' });
+                            // Path to file in /public. Let the browser handle path encoding.
+                            const sourceFilePath = '/CLIENT NAME GENRE Vocal Chain BY @DANODALS on Fiverr.fst';
 
-                            const sourceFilePath = '/CLIENT%20NAME%20GENRE%20Vocal%20Chain%20BY%20%40DANODALS%20on%20Fiverr.fst';
-
-                            const response = await fetch(sourceFilePath);
-                            if (!response.ok) {
-                                throw new Error("File not found. Ensure 'CLIENT NAME GENRE...fst' is in /public.");
-                            }
-
-                            const blob = await response.blob();
-                            const url = window.URL.createObjectURL(blob);
                             const link = document.createElement('a');
-                            link.href = url;
-                            link.setAttribute('download', downloadFileName);
+                            link.href = sourceFilePath;
+                            link.download = downloadFileName;
                             document.body.appendChild(link);
                             link.click();
-                            
                             document.body.removeChild(link);
-                            window.URL.revokeObjectURL(url);
-
+                            
                             toast({ title: 'Descarga Iniciada!', description: `Guardando como: ${downloadFileName}` });
 
                           } catch (error: any) {
@@ -807,7 +797,7 @@ const WorkTab = () => {
                               toast({
                                   variant: 'destructive',
                                   title: 'Error de Descarga',
-                                  description: error.message || 'No se pudo descargar el archivo.',
+                                  description: "No se pudo iniciar la descarga. Verifique que el archivo exista en la carpeta /public.",
                               });
                           }
                         }}
@@ -1261,5 +1251,6 @@ export default WorkTab;
 
     
     
+
 
 
