@@ -466,15 +466,16 @@ const WorkTab = () => {
             html = html.replace(/{{orderNumber}}/g, item.orderNumber || "N/A");
             html = html.replace(/{{agreementDate}}/g, agreementDate);
             html = html.replace(/{{producerEmail}}/g, "danodalbeats@gmail.com");
-    
-            const newTab = window.open();
-            if (newTab) {
-                newTab.document.open();
-                newTab.document.write(html);
-                newTab.document.close();
-            } else {
-                throw new Error("No se pudo abrir una nueva pestaña. Revisa los permisos de tu navegador.");
-            }
+
+            const blob = new Blob([html], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `Contrato - ${item.clientName} - #${item.orderNumber}.html`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
     
         } catch (error: any) {
             console.error('Error al generar el contrato HTML:', error);
@@ -1183,3 +1184,5 @@ const WorkTab = () => {
 };
 
 export default WorkTab;
+
+    
