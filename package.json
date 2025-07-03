@@ -59,6 +59,7 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "@tailwindcss/aspect-ratio": "^0.4.2",
     "@types/jspdf": "^2.0.0",
     "@types/node": "^20",
     "@types/react": "^18",
