@@ -769,7 +769,7 @@ const WorkTab = () => {
                     </DropdownMenuSub>
                     <DropdownMenuItem onSelect={() => handleGeneratePdf(item)} disabled={isLoading}>
                        {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileText className="mr-2 h-4 w-4" />}
-                       <span>{isLoading ? 'Generando...' : 'Descargar Contrato'}</span>
+                       <span>Descargar Contrato</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem
                         onSelect={() => {
@@ -779,10 +779,14 @@ const WorkTab = () => {
                             const safeClientName = item.clientName.replace(/[^a-zA-Z0-9 -]/g, '').trim() || 'Preset';
                             const safeGenre = item.genre.replace(/[^a-zA-Z0-9 -]/g, '').trim() || 'Vocal';
                             const downloadFileName = `${safeClientName} - ${safeGenre} Vocal Preset.fst`;
-
-                            // Path to file in /public. Let the browser handle path encoding.
-                            const sourceFilePath = '/CLIENT NAME GENRE Vocal Chain BY @DANODALS on Fiverr.fst';
-
+    
+                            // The exact filename as provided by the user.
+                            const sourceFileName = 'NAME GENRE Vocal Chain BY @DANODALS on Fiverr.fst';
+                            
+                            // The path to the file in the /public folder.
+                            // We must encode it to handle spaces and special characters.
+                            const sourceFilePath = `/${encodeURI(sourceFileName)}`;
+    
                             const link = document.createElement('a');
                             link.href = sourceFilePath;
                             link.download = downloadFileName;
@@ -791,7 +795,7 @@ const WorkTab = () => {
                             document.body.removeChild(link);
                             
                             toast({ title: 'Descarga Iniciada!', description: `Guardando como: ${downloadFileName}` });
-
+    
                           } catch (error: any) {
                               console.error("Error initiating download:", error);
                               toast({
@@ -1251,6 +1255,7 @@ export default WorkTab;
 
     
     
+
 
 
 
