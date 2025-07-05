@@ -216,6 +216,18 @@ const contractTemplateHtml = `
 `;
 
 
+const normalizeKeyString = (key: string | undefined | null): string => {
+    if (!key) return '';
+    return key.split(',')
+        .map(k =>
+            k.trim()
+             .replace(/#/g, 'sharp')
+             .replace(/[\/\-_]/g, ' or ')
+             .replace(/\s\s+/g, ' ')
+        )
+        .join(', ');
+};
+
 const generateClientMessage = (item: WorkItem, packageTemplates: WorkPackageTemplate[]): string => {
     const isMultiple = item.remakeType.includes('Multiple');
     let message = `Heyyy ${item.clientName}! 👋👋\n\n`;
@@ -301,7 +313,8 @@ const generateClientMessage = (item: WorkItem, packageTemplates: WorkPackageTemp
         }
     }
     
-    message += `${isMultiple ? 'Keys' : 'Key'}: ${item.key} | ${isMultiple ? 'BPMs' : 'BPM'}: ${item.bpm}\n\n`;
+    const normalizedKey = normalizeKeyString(item.key);
+    message += `${isMultiple ? 'Keys' : 'Key'}: ${normalizedKey} | ${isMultiple ? 'BPMs' : 'BPM'}: ${item.bpm}\n\n`;
     message += `📦📦 Order #${item.orderNumber}\n\n`;
     
     if (item.packageName === highestPkg?.name) {
@@ -349,7 +362,7 @@ const generateFileNames = (item: WorkItem) => {
         .filter(b => !isNaN(parseFloat(b)))
         .join(', ');
 
-    const safeKey = item.key.replace(/#/g, 'sharp').trim();
+    const safeKey = normalizeKeyString(item.key);
     const baseName = `${safeClientName} - ${safeGenre} ${safeBPM}bpm ${safeKey}`;
     return baseName.replace(/\s+/g, ' ').trim();
 };
@@ -711,8 +724,8 @@ const WorkTab = () => {
     const handleDownloadVocalPreset = async (item: WorkItem) => {
         setGeneratingVocalFstId(item.id);
         try {
-            const sourceFileName = 'NAME GENRE Vocal Chain BY @DANODALS on Fiverr.fst';
-            const sourceFilePath = `/sounds/${encodeURIComponent(sourceFileName)}`;
+            // Updated file path to include the 'sounds' directory
+            const sourceFilePath = `/sounds/NAME GENRE Vocal Chain BY @DANODALS  on Fiverr.fst`;
     
             const response = await fetch(sourceFilePath);
     
@@ -743,7 +756,7 @@ const WorkTab = () => {
             toast({
                 variant: 'destructive',
                 title: 'Error de Descarga',
-                description: "No se pudo encontrar el archivo. Asegúrate que está en 'public/sounds/'.",
+                description: `No se pudo encontrar el archivo. Asegúrate que la ruta sea correcta.`,
             });
         } finally {
             setGeneratingVocalFstId(null);
@@ -852,7 +865,8 @@ const WorkTab = () => {
           header: 'Key',
           cell: ({ row }) => {
             const keyText = row.getValue('key') as string;
-            const parts = keyText.split(' or ');
+            const firstKey = normalizeKeyString(keyText).split(',')[0];
+            const parts = firstKey.split(' or ');
             return (
               <TooltipProvider>
                   <Tooltip>
@@ -868,7 +882,7 @@ const WorkTab = () => {
                           </div>
                       </TooltipTrigger>
                       <TooltipContent>
-                          <p>{keyText}</p>
+                          <p>{normalizeKeyString(keyText)}</p>
                       </TooltipContent>
                   </Tooltip>
               </TooltipProvider>
