@@ -341,7 +341,7 @@ const formatUSD = (value: number) => new Intl.NumberFormat('en-US', { style: 'cu
 
 const generateFileNames = (item: WorkItem) => {
     const safeClientName = item.clientName.replace(/[^a-zA-Z0-9 -]/g, '').trim();
-    const keyFormatted = item.key.replace(/\s*\/\s*/g, '_').replace(/#/g, 'sharp');
+    const keyFormatted = item.key.replace(/\s*\/\s*|\s+or\s+/g, '_').replace(/#/g, 'sharp');
     const baseName = `${safeClientName} - ${item.genre} ${item.bpm}bpm ${keyFormatted}`;
     return baseName;
 };
@@ -832,7 +832,7 @@ const WorkTab = () => {
           header: 'Key',
           cell: ({ row }) => {
             const keyText = row.getValue('key') as string;
-            const parts = keyText.split(' / ');
+            const parts = keyText.replace(/\s*\/\s*/, ' or ').split(' or ');
             return (
               <TooltipProvider>
                   <Tooltip>
@@ -841,7 +841,7 @@ const WorkTab = () => {
                               <span className="font-semibold text-orange-500">{parts[0]}</span>
                               {parts[1] && (
                                 <>
-                                  <span className="text-muted-foreground"> / </span> 
+                                  <span className="text-muted-foreground text-xs mx-1">or</span>
                                   <span className="font-semibold text-sky-700">{parts[1]}</span>
                                 </>
                               )}
@@ -1258,6 +1258,7 @@ export default WorkTab;
 
     
     
+
 
 
 
