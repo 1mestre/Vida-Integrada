@@ -340,10 +340,19 @@ const formatCOP = (value: number) => new Intl.NumberFormat('es-CO', { style: 'cu
 const formatUSD = (value: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
 
 const generateFileNames = (item: WorkItem) => {
-    const safeClientName = item.clientName.replace(/[^a-zA-Z0-9 -]/g, '').trim();
-    const keyFormatted = item.key.replace(/\s*\/\s*|\s+or\s+/g, '_').replace(/#/g, 'sharp');
-    const baseName = `${safeClientName} - ${item.genre} ${item.bpm}bpm ${keyFormatted}`;
-    return baseName;
+    const safeClientName = item.clientName.replace(/[^a-zA-Z0-9\s-]/g, '').trim();
+    const safeGenre = item.genre.replace(/,/g, ' ').replace(/\s+/g, ' ').trim();
+    const safeBPM = item.bpm
+        .toString()
+        .split(',')
+        .map(b => b.trim())
+        .filter(b => !isNaN(parseFloat(b)))
+        .map(b => Math.round(parseFloat(b)))
+        .join(', ');
+
+    const safeKey = item.key.replace(/#/g, 'sharp').trim();
+    const baseName = `${safeClientName} - ${safeGenre} ${safeBPM}bpm ${safeKey}`;
+    return baseName.replace(/\s+/g, ' ').trim();
 };
 
 // Componente especializado para la celda de fecha editable
@@ -418,6 +427,7 @@ const WorkTab = () => {
     const { toast } = useToast();
     const { playSound } = useSound();
     const [generatingPdfId, setGeneratingPdfId] = useState<string | null>(null);
+    const [generatingVocalFstId, setGeneratingVocalFstId] = useState<string | null>(null);
 
     const [exchangeRate, setExchangeRate] = useState<number | null>(null);
     const [rateLoading, setRateLoading] = useState(true);
@@ -698,6 +708,45 @@ const WorkTab = () => {
             return { ...prevState, workItems: updatedWorkItems };
         });
     }, [appState.workPackageTemplates, setAppState]);
+    
+    const handleDownloadVocalPreset = async (item: WorkItem) => {
+        setGeneratingVocalFstId(item.id);
+        try {
+            const sourceFileName = 'NAME GENRE Vocal Chain BY @DANODALS on Fiverr.fst';
+            const sourceFilePath = `/sounds/${encodeURIComponent(sourceFileName)}`;
+
+            const response = await fetch(sourceFilePath);
+            if (!response.ok) {
+                throw new Error(`File not found at ${sourceFilePath}. Status: ${response.status}`);
+            }
+            const blob = await response.blob();
+    
+            const safeClientName = item.clientName.replace(/[^a-zA-Z0-9 -]/g, '').trim() || 'Preset';
+            const safeGenre = item.genre.replace(/[^a-zA-Z0-9 -]/g, '').trim() || 'Vocal';
+            const downloadFileName = `${safeClientName} - ${safeGenre} Vocal Preset.fst`;
+    
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = downloadFileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(link.href);
+            
+            toast({ title: 'Descarga Iniciada!', description: `Guardando como: ${downloadFileName}` });
+    
+        } catch (error: any) {
+            console.error("Error initiating download:", error);
+            toast({
+                variant: 'destructive',
+                title: 'Error de Descarga',
+                description: "No se pudo encontrar el archivo. Asegúrate que está en 'public/sounds/'.",
+            });
+        } finally {
+            setGeneratingVocalFstId(null);
+        }
+    };
+
 
     const financialSummary = useMemo(() => {
         const incomeThisMonth = appState.contributions
@@ -725,7 +774,9 @@ const WorkTab = () => {
           cell: ({ row }) => {
             const item = row.original;
             const baseName = generateFileNames(item);
-            const isLoading = generatingPdfId === item.id;
+            const isLoadingPdf = generatingPdfId === item.id;
+            const isLoadingVocalFst = generatingVocalFstId === item.id;
+
             return (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -767,49 +818,15 @@ const WorkTab = () => {
                             </DropdownMenuSubContent>
                         </DropdownMenuPortal>
                     </DropdownMenuSub>
-                    <DropdownMenuItem onSelect={() => handleGeneratePdf(item)} disabled={isLoading}>
-                       {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileText className="mr-2 h-4 w-4" />}
+                    <DropdownMenuItem onSelect={() => handleGeneratePdf(item)} disabled={isLoadingPdf}>
+                       {isLoadingPdf ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileText className="mr-2 h-4 w-4" />}
                        <span>Descargar Contrato</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem
-                        onSelect={async () => {
-                          try {
-                            const item = row.original;
-                            
-                            const sourceFileName = 'NAME GENRE Vocal Chain BY @DANODALS on Fiverr.fst';
-                            const sourceFilePath = `/sounds/${encodeURIComponent(sourceFileName)}`;
-    
-                            const response = await fetch(sourceFilePath);
-                            if (!response.ok) {
-                                throw new Error(`File not found at ${sourceFilePath}. Status: ${response.status}`);
-                            }
-                            const blob = await response.blob();
-    
-                            const safeClientName = item.clientName.replace(/[^a-zA-Z0-9 -]/g, '').trim() || 'Preset';
-                            const safeGenre = item.genre.replace(/[^a-zA-Z0-9 -]/g, '').trim() || 'Vocal';
-                            const downloadFileName = `${safeClientName} - ${safeGenre} Vocal Preset.fst`;
-    
-                            const link = document.createElement('a');
-                            link.href = URL.createObjectURL(blob);
-                            link.download = downloadFileName;
-                            document.body.appendChild(link);
-                            link.click();
-                            document.body.removeChild(link);
-                            URL.revokeObjectURL(link.href);
-                            
-                            toast({ title: 'Descarga Iniciada!', description: `Guardando como: ${downloadFileName}` });
-    
-                          } catch (error: any) {
-                              console.error("Error initiating download:", error);
-                              toast({
-                                  variant: 'destructive',
-                                  title: 'Error de Descarga',
-                                  description: "No se pudo encontrar el archivo. Asegúrate que está en 'public/sounds/'.",
-                              });
-                          }
-                        }}
+                        onSelect={() => handleDownloadVocalPreset(item)}
+                        disabled={isLoadingVocalFst}
                     >
-                        <Gift className="mr-2 h-4 w-4" />
+                        {isLoadingVocalFst ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Gift className="mr-2 h-4 w-4" />}
                         <span>VocalFst🎁</span>
                     </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -832,7 +849,7 @@ const WorkTab = () => {
           header: 'Key',
           cell: ({ row }) => {
             const keyText = row.getValue('key') as string;
-            const parts = keyText.replace(/\s*\/\s*/, ' or ').split(' or ');
+            const parts = keyText.split(' or ');
             return (
               <TooltipProvider>
                   <Tooltip>
@@ -994,7 +1011,7 @@ const WorkTab = () => {
             );
           },
         }
-    ], [appState.workPackageTemplates, handleDateUpdate, handleStatusUpdate, handlePackageUpdate, handleRevisionsUpdate, playSound, handleDeleteWorkItem, handleOpenEditModal, toast, generatingPdfId]);
+    ], [appState.workPackageTemplates, handleDateUpdate, handleStatusUpdate, handlePackageUpdate, handleRevisionsUpdate, playSound, handleDeleteWorkItem, handleOpenEditModal, toast, generatingPdfId, generatingVocalFstId]);
 
     const table = useReactTable({
         data: sortedWorkItems,
@@ -1255,14 +1272,3 @@ const WorkTab = () => {
 };
 
 export default WorkTab;
-
-    
-    
-
-
-
-
-
-
-
-
