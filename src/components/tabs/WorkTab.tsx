@@ -223,7 +223,7 @@ const normalizeKeyString = (key: string | undefined | null): string => {
             k.trim()
              .replace(/#/g, 'sharp')
              .replace(/[\/\-_]/g, ' or ')
-             .replace(/\s\s+/g, ' ')
+             .replace(/\s+/g, ' ')
         )
         .join(', ');
 };
@@ -359,12 +359,16 @@ const generateFileNames = (item: WorkItem) => {
         .toString()
         .split(',')
         .map(b => b.trim())
-        .filter(b => !isNaN(parseFloat(b)))
+        .filter(b => b)
         .join(', ');
 
     const safeKey = normalizeKeyString(item.key);
     const baseName = `${safeClientName} - ${safeGenre} ${safeBPM}bpm ${safeKey}`;
-    return baseName.replace(/\s+/g, ' ').trim();
+    // Replace all invalid filename characters and symbols
+    return baseName
+        .replace(/[\\/:\*\?"<>\|♪♬✩]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
 };
 
 // Componente especializado para la celda de fecha editable
@@ -723,20 +727,13 @@ const WorkTab = () => {
     
     const handleDownloadVocalPreset = async (item: WorkItem) => {
         setGeneratingVocalFstId(item.id);
+        const sourceFilePath = '/sounds/NAME GENRE Vocal Chain BY @DANODALS on Fiverr.fst';
         try {
-            // Updated file path to include the 'sounds' directory
-            const sourceFilePath = `/sounds/NAME GENRE Vocal Chain BY @DANODALS  on Fiverr.fst`;
-    
             const response = await fetch(sourceFilePath);
-    
             if (!response.ok) {
-                const errorText = await response.text();
-                console.error(`Error fetching file: ${response.status} ${response.statusText}`, errorText);
-                throw new Error(`File not found at ${sourceFilePath}. Status: ${response.status}`);
+                throw new Error(`File not found: ${response.statusText}`);
             }
-    
             const blob = await response.blob();
-    
             const safeClientName = item.clientName.replace(/[^a-zA-Z0-9 -]/g, '').trim() || 'Preset';
             const safeGenre = item.genre.replace(/[^a-zA-Z0-9 -]/g, '').trim() || 'Vocal';
             const downloadFileName = `${safeClientName} - ${safeGenre} Vocal Preset.fst`;
@@ -748,15 +745,13 @@ const WorkTab = () => {
             link.click();
             document.body.removeChild(link);
             URL.revokeObjectURL(link.href);
-            
             toast({ title: 'Descarga Iniciada!', description: `Guardando como: ${downloadFileName}` });
-    
         } catch (error: any) {
             console.error("Error initiating download:", error);
             toast({
                 variant: 'destructive',
                 title: 'Error de Descarga',
-                description: `No se pudo encontrar el archivo. Asegúrate que la ruta sea correcta.`,
+                description: `No se pudo encontrar el archivo del preset.`,
             });
         } finally {
             setGeneratingVocalFstId(null);
@@ -813,23 +808,23 @@ const WorkTab = () => {
                         <DropdownMenuPortal>
                             <DropdownMenuSubContent>
                                 <DropdownMenuSub>
-                                    <DropdownMenuSubTrigger>✩ WAV</DropdownMenuSubTrigger>
+                                    <DropdownMenuSubTrigger>WAV</DropdownMenuSubTrigger>
                                     <DropdownMenuPortal>
                                         <DropdownMenuSubContent>
-                                            <DropdownMenuItem onSelect={() => handleCopyToClipboard(`✩ (JUST INSTRUMENTAL) ${baseName} ✩`)}>
+                                            <DropdownMenuItem onSelect={() => handleCopyToClipboard(`(JUST INSTRUMENTAL) ${baseName}`)}>
                                             Instrumental
                                             </DropdownMenuItem>
-                                            <DropdownMenuItem onSelect={() => handleCopyToClipboard(`✩ (VOCALS + INSTRUMENTAL) ${baseName} ✩`)}>
+                                            <DropdownMenuItem onSelect={() => handleCopyToClipboard(`(VOCALS + INSTRUMENTAL) ${baseName}`)}>
                                             Vocal + Inst
                                             </DropdownMenuItem>
                                         </DropdownMenuSubContent>
                                     </DropdownMenuPortal>
                                 </DropdownMenuSub>
-                                <DropdownMenuItem onSelect={() => handleCopyToClipboard(`♪ (STEMS / SEPARATED INSTRUMENT TRACKS) ${baseName} ♪`)}>
-                                ♪ STEMS
+                                <DropdownMenuItem onSelect={() => handleCopyToClipboard(`(STEMS - SEPARATED INSTRUMENT TRACKS) ${baseName}`)}>
+                                STEMS
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => handleCopyToClipboard(`♬ (PROJECT FLP) ${baseName} ♬`)}>
-                                ♬ FLP
+                                <DropdownMenuItem onSelect={() => handleCopyToClipboard(`(PROJECT FLP) ${baseName}`)}>
+                                FLP
                                 </DropdownMenuItem>
                             </DropdownMenuSubContent>
                         </DropdownMenuPortal>
