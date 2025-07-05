@@ -209,7 +209,7 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
           const sanitizedWorkItems = (data.workItems || []).map((item: Partial<WorkItem>): WorkItem => {
             const defaults: Omit<WorkItem, 'id'> = {
               clientName: '', orderNumber: '', deliveryDate: format(new Date(), 'yyyy-MM-dd'),
-              genre: '', bpm: '', key: 'C / Am', deliveryStatus: 'Pending', remakeType: 'Single Remake',
+              genre: '', bpm: '', key: 'C or Am', deliveryStatus: 'Pending', remakeType: 'Single Remake',
               packageName: 'Amateurs', price: 0, revisionsRemaining: 0, songLength: 0,
               numberOfInstruments: 0, separateFiles: false, masterAudio: false, projectFileDelivery: false,
               exclusiveLicense: false, vocalProduction: false, vocalChainPreset: false,

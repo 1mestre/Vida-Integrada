@@ -30,18 +30,18 @@ interface WorkItemModalProps {
 const DELIVERY_STATUSES: WorkItem['deliveryStatus'][] = ['Pending', 'In Transit', 'In Revision', 'Delivered', 'Returned'];
 
 const keyOptions = [
-  { value: 'C or Am', label: 'C Maj or A min' },
-  { value: 'G or Em', label: 'G Maj or E min' },
-  { value: 'D or Bm', label: 'D Maj or B min' },
-  { value: 'A or F#m', label: 'A Maj or F# min' },
-  { value: 'E or C#m', label: 'E Maj or C# min' },
-  { value: 'B or G#m', label: 'B Maj or G# min' },
-  { value: 'F# or D#m', label: 'F# Maj or D# min' },
-  { value: 'Db or Bbm', label: 'Db Maj or Bb min' },
-  { value: 'Ab or Fm', label: 'Ab Maj or F min' },
-  { value: 'Eb or Cm', label: 'Eb Maj or C min' },
-  { value: 'Bb or Gm', label: 'Bb Maj or G min' },
-  { value: 'F or Dm', label: 'F Maj or D min' }
+  { value: 'C or Am', label: 'C or Am' },
+  { value: 'G or Em', label: 'G or Em' },
+  { value: 'D or Bm', label: 'D or Bm' },
+  { value: 'A or F#m', label: 'A or F#m' },
+  { value: 'E or C#m', label: 'E or C#m' },
+  { value: 'B or G#m', label: 'B or G#m' },
+  { value: 'F# or D#m', label: 'F# or D#m' },
+  { value: 'Db or Bbm', label: 'Db or Bbm' },
+  { value: 'Ab or Fm', label: 'Ab or Fm' },
+  { value: 'Eb or Cm', label: 'Eb or Cm' },
+  { value: 'Bb or Gm', label: 'Bb or Gm' },
+  { value: 'F or Dm', label: 'F or Dm' }
 ];
 
 const remakeTypeOptions: { value: WorkItem['remakeType'], label: string }[] = [
