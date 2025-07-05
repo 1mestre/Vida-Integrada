@@ -776,12 +776,9 @@ const WorkTab = () => {
                           try {
                             const item = row.original;
                             
-                            // Using the exact filename with double space, as identified.
-                            const sourceFileName = 'NAME GENRE Vocal Chain BY @DANODALS  on Fiverr.fst';
+                            const sourceFileName = 'NAME GENRE Vocal Chain BY @DANODALS on Fiverr.fst';
                             
-                            // The path to the file in the /public folder.
-                            // We must encode it to handle spaces and special characters.
-                            const sourceFilePath = `/${encodeURI(sourceFileName)}`;
+                            const sourceFilePath = `/sounds/${encodeURI(sourceFileName)}`;
     
                             const safeClientName = item.clientName.replace(/[^a-zA-Z0-9 -]/g, '').trim() || 'Preset';
                             const safeGenre = item.genre.replace(/[^a-zA-Z0-9 -]/g, '').trim() || 'Vocal';
@@ -801,7 +798,7 @@ const WorkTab = () => {
                               toast({
                                   variant: 'destructive',
                                   title: 'Error de Descarga',
-                                  description: "No se pudo iniciar la descarga. Verifique que el archivo 'NAME GENRE...fst' exista en la carpeta /public.",
+                                  description: "No se pudo iniciar la descarga. Verifique la ruta y el nombre del archivo.",
                               });
                           }
                         }}
@@ -1255,6 +1252,7 @@ export default WorkTab;
 
     
     
+
 
 
 
