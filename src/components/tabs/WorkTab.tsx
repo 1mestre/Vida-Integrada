@@ -347,7 +347,6 @@ const generateFileNames = (item: WorkItem) => {
         .split(',')
         .map(b => b.trim())
         .filter(b => !isNaN(parseFloat(b)))
-        .map(b => Math.round(parseFloat(b)))
         .join(', ');
 
     const safeKey = item.key.replace(/#/g, 'sharp').trim();
@@ -714,11 +713,15 @@ const WorkTab = () => {
         try {
             const sourceFileName = 'NAME GENRE Vocal Chain BY @DANODALS on Fiverr.fst';
             const sourceFilePath = `/sounds/${encodeURIComponent(sourceFileName)}`;
-
+    
             const response = await fetch(sourceFilePath);
+    
             if (!response.ok) {
+                const errorText = await response.text();
+                console.error(`Error fetching file: ${response.status} ${response.statusText}`, errorText);
                 throw new Error(`File not found at ${sourceFilePath}. Status: ${response.status}`);
             }
+    
             const blob = await response.blob();
     
             const safeClientName = item.clientName.replace(/[^a-zA-Z0-9 -]/g, '').trim() || 'Preset';
