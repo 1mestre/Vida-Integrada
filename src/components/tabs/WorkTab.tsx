@@ -772,24 +772,30 @@ const WorkTab = () => {
                        <span>Descargar Contrato</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem
-                        onSelect={() => {
+                        onSelect={async () => {
                           try {
                             const item = row.original;
                             
                             const sourceFileName = 'NAME GENRE Vocal Chain BY @DANODALS on Fiverr.fst';
-                            
-                            const sourceFilePath = `/sounds/${encodeURI(sourceFileName)}`;
+                            const sourceFilePath = `/sounds/${encodeURIComponent(sourceFileName)}`;
+    
+                            const response = await fetch(sourceFilePath);
+                            if (!response.ok) {
+                                throw new Error(`File not found at ${sourceFilePath}. Status: ${response.status}`);
+                            }
+                            const blob = await response.blob();
     
                             const safeClientName = item.clientName.replace(/[^a-zA-Z0-9 -]/g, '').trim() || 'Preset';
                             const safeGenre = item.genre.replace(/[^a-zA-Z0-9 -]/g, '').trim() || 'Vocal';
                             const downloadFileName = `${safeClientName} - ${safeGenre} Vocal Preset.fst`;
     
                             const link = document.createElement('a');
-                            link.href = sourceFilePath;
+                            link.href = URL.createObjectURL(blob);
                             link.download = downloadFileName;
                             document.body.appendChild(link);
                             link.click();
                             document.body.removeChild(link);
+                            URL.revokeObjectURL(link.href);
                             
                             toast({ title: 'Descarga Iniciada!', description: `Guardando como: ${downloadFileName}` });
     
@@ -798,7 +804,7 @@ const WorkTab = () => {
                               toast({
                                   variant: 'destructive',
                                   title: 'Error de Descarga',
-                                  description: "No se pudo iniciar la descarga. Verifique la ruta y el nombre del archivo.",
+                                  description: "No se pudo encontrar el archivo. Asegúrate que está en 'public/sounds/'.",
                               });
                           }
                         }}
@@ -1252,6 +1258,7 @@ export default WorkTab;
 
     
     
+
 
 
 
