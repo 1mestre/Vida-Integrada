@@ -221,7 +221,6 @@ const normalizeKeyString = (key: string | undefined | null): string => {
     return key.split(',')
         .map(k =>
             k.trim()
-             .replace(/#/g, 'sharp')
              .replace(/[\/\-_]/g, ' or ')
              .replace(/\s+/g, ' ')
         )
@@ -362,11 +361,12 @@ const generateFileNames = (item: WorkItem) => {
         .filter(b => b)
         .join(', ');
 
-    const safeKey = normalizeKeyString(item.key);
-    const baseName = `${safeClientName} - ${safeGenre} ${safeBPM}bpm ${safeKey}`;
-    // Replace all invalid filename characters and symbols
+    const safeKeyForDisplay = normalizeKeyString(item.key);
+    const safeKeyForFilename = safeKeyForDisplay.replace(/#/g, 'sharp');
+    const baseName = `${safeClientName} - ${safeGenre} ${safeBPM}bpm ${safeKeyForFilename}`;
+    
     return baseName
-        .replace(/[\\/:\*\?"<>\|♪♬✩]/g, '')
+        .replace(/[\\/:\*\?"<>\|]/g, '')
         .replace(/\s+/g, ' ')
         .trim();
 };
@@ -727,12 +727,11 @@ const WorkTab = () => {
     
     const handleDownloadVocalPreset = async (item: WorkItem) => {
         setGeneratingVocalFstId(item.id);
-        const sourceFilePath = '/sounds/NAME GENRE Vocal Chain BY @DANODALS on Fiverr.fst';
+        const sourceFilePath = '/sounds/NAME GENRE Vocal Chain BY @DANODALS  on Fiverr.fst';
         try {
             const response = await fetch(sourceFilePath);
-            if (!response.ok) {
-                throw new Error(`File not found: ${response.statusText}`);
-            }
+            if (!response.ok) throw new Error(`File not found: ${response.statusText}`);
+
             const blob = await response.blob();
             const safeClientName = item.clientName.replace(/[^a-zA-Z0-9 -]/g, '').trim() || 'Preset';
             const safeGenre = item.genre.replace(/[^a-zA-Z0-9 -]/g, '').trim() || 'Vocal';
@@ -751,7 +750,7 @@ const WorkTab = () => {
             toast({
                 variant: 'destructive',
                 title: 'Error de Descarga',
-                description: `No se pudo encontrar el archivo del preset.`,
+                description: `No se pudo encontrar el archivo del preset. Asegúrate que está en public/sounds/.`,
             });
         } finally {
             setGeneratingVocalFstId(null);
