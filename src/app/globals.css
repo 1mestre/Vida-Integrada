@@ -31,6 +31,8 @@
     --ios-red: 0 100% 60%; /* #FF3B30 */
     --ios-green: 145 58% 49%; /* #34C759 */
     --ios-orange: 36 100% 50%; /* #FF9500 */
+    --custom-pink-1: 339 100% 55%; /* #FF1C6A */
+    --custom-pink-2: 320 50% 60%; /* #CC66AA */
   }
 
   .dark {
@@ -59,6 +61,8 @@
     --ios-red: 0 100% 60%;
     --ios-green: 145 58% 49%;
     --ios-orange: 36 100% 50%;
+    --custom-pink-1: 339 100% 55%; /* #FF1C6A */
+    --custom-pink-2: 320 50% 60%; /* #CC66AA */
   }
 }
 
