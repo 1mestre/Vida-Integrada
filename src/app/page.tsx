@@ -81,9 +81,65 @@ export default function Home() {
     <AppStateProvider>
       <main className="relative min-h-screen w-full overflow-hidden">
         <div className="absolute inset-0 z-0 pointer-events-none">
-            <div className="light -top-1/4 -left-1/4 h-[70vw] w-[70vw] bg-custom-pink-1" style={{ animationDelay: '0s', animationDuration: '25s' }}></div>
-            <div className="light -bottom-1/4 -right-1/4 h-[65vw] w-[65vw] bg-custom-pink-2" style={{ animationDelay: '5s', animationDuration: '35s' }}></div>
-            <div className="light top-1/4 right-1/3 h-[60vw] w-[60vw] bg-custom-pink-1" style={{ animationDelay: '10s', animationDuration: '40s' }}></div>
+          <div
+            className="light"
+            style={{
+              width: '60vw',
+              height: '60vh',
+              top: '-20%',
+              left: '-20%',
+              backgroundColor: '#FF6C11',
+              animation: 'move-light-1 25s infinite ease-in-out',
+            }}
+          ></div>
+          <div
+            className="light"
+            style={{
+              width: '50vw',
+              height: '50vh',
+              top: '10%',
+              right: '-15%',
+              backgroundColor: '#FF3864',
+              animation: 'move-light-2 30s infinite ease-in-out',
+              animationDelay: '3s',
+            }}
+          ></div>
+          <div
+            className="light"
+            style={{
+              width: '70vw',
+              height: '70vh',
+              bottom: '-30%',
+              left: '10%',
+              backgroundColor: '#2DE2E6',
+              animation: 'move-light-3 35s infinite ease-in-out',
+              animationDelay: '6s',
+            }}
+          ></div>
+          <div
+            className="light"
+            style={{
+              width: '55vw',
+              height: '55vh',
+              bottom: '-10%',
+              right: '-10%',
+              backgroundColor: '#261447',
+              animation: 'move-light-4 28s infinite ease-in-out',
+              animationDelay: '9s',
+            }}
+          ></div>
+          <div
+            className="light"
+            style={{
+              width: '80vw',
+              height: '80vh',
+              top: '40%',
+              left: '30%',
+              backgroundColor: '#0D0221',
+              animation: 'move-light-5 40s infinite ease-in-out',
+              animationDelay: '12s',
+            }}
+          ></div>
         </div>
         <FloatingEmojis />
         <div className="absolute inset-0 z-10 bg-black/20 backdrop-blur-sm"></div>
