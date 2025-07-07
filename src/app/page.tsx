@@ -84,22 +84,22 @@ export default function Home() {
           <div
             className="light"
             style={{
-              width: '60vw',
-              height: '60vh',
+              width: '80vw',
+              height: '80vh',
               top: '-20%',
               left: '-20%',
-              backgroundColor: '#FF6C11',
+              backgroundColor: '#FF1C6A',
               animation: 'move-light-1 25s infinite ease-in-out',
             }}
           ></div>
           <div
             className="light"
             style={{
-              width: '50vw',
-              height: '50vh',
+              width: '80vw',
+              height: '80vh',
               top: '10%',
               right: '-15%',
-              backgroundColor: '#FF3864',
+              backgroundColor: '#E324D6',
               animation: 'move-light-2 30s infinite ease-in-out',
               animationDelay: '3s',
             }}
@@ -107,11 +107,11 @@ export default function Home() {
           <div
             className="light"
             style={{
-              width: '70vw',
-              height: '70vh',
+              width: '80vw',
+              height: '80vh',
               bottom: '-30%',
               left: '10%',
-              backgroundColor: '#2DE2E6',
+              backgroundColor: '#1CD5FF',
               animation: 'move-light-3 35s infinite ease-in-out',
               animationDelay: '6s',
             }}
@@ -119,11 +119,11 @@ export default function Home() {
           <div
             className="light"
             style={{
-              width: '55vw',
-              height: '55vh',
+              width: '80vw',
+              height: '80vh',
               bottom: '-10%',
               right: '-10%',
-              backgroundColor: '#261447',
+              backgroundColor: '#0047FF',
               animation: 'move-light-4 28s infinite ease-in-out',
               animationDelay: '9s',
             }}
@@ -135,7 +135,7 @@ export default function Home() {
               height: '80vh',
               top: '40%',
               left: '30%',
-              backgroundColor: '#0D0221',
+              backgroundColor: '#CC66AA',
               animation: 'move-light-5 40s infinite ease-in-out',
               animationDelay: '12s',
             }}
