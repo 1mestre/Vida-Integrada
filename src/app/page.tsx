@@ -7,7 +7,6 @@ import { Calendar, University, Rocket, Briefcase } from 'lucide-react';
 
 import { app } from '@/lib/firebase';
 import { AppStateProvider } from '@/context/AppStateContext';
-import FloatingEmojis from '@/components/FloatingEmojis';
 import { Button } from '@/components/ui/button';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Login } from '@/components/Login';
@@ -79,94 +78,7 @@ export default function Home() {
 
   return (
     <AppStateProvider>
-      <main className="relative min-h-screen w-full overflow-hidden">
-        <div className="absolute inset-0 z-0 pointer-events-none">
-          <div
-            className="light"
-            style={{
-              width: '80vw',
-              height: '80vh',
-              top: '-20%',
-              left: '-20%',
-              backgroundColor: '#FF1C6A',
-              animation: 'move-light-1 25s infinite ease-in-out',
-            }}
-          ></div>
-          <div
-            className="light"
-            style={{
-              width: '80vw',
-              height: '80vh',
-              top: '10%',
-              right: '-15%',
-              backgroundColor: '#E324D6',
-              animation: 'move-light-2 30s infinite ease-in-out',
-              animationDelay: '3s',
-            }}
-          ></div>
-          <div
-            className="light"
-            style={{
-              width: '80vw',
-              height: '80vh',
-              bottom: '-30%',
-              left: '10%',
-              backgroundColor: '#1CD5FF',
-              animation: 'move-light-3 35s infinite ease-in-out',
-              animationDelay: '6s',
-            }}
-          ></div>
-          <div
-            className="light"
-            style={{
-              width: '80vw',
-              height: '80vh',
-              bottom: '-10%',
-              right: '-10%',
-              backgroundColor: '#0047FF',
-              animation: 'move-light-4 28s infinite ease-in-out',
-              animationDelay: '9s',
-            }}
-          ></div>
-          <div
-            className="light"
-            style={{
-              width: '80vw',
-              height: '80vh',
-              top: '40%',
-              left: '30%',
-              backgroundColor: '#CC66AA',
-              animation: 'move-light-5 40s infinite ease-in-out',
-              animationDelay: '12s',
-            }}
-          ></div>
-           <div
-            className="light"
-            style={{
-              width: '80vw',
-              height: '80vh',
-              bottom: '-20%',
-              left: '-20%',
-              backgroundColor: 'hsl(var(--ios-purple))',
-              animation: 'move-light-6 38s infinite ease-in-out',
-              animationDelay: '15s',
-            }}
-          ></div>
-          <div
-            className="light"
-            style={{
-              width: '80vw',
-              height: '80vh',
-              top: '-20%',
-              right: '-20%',
-              backgroundColor: 'hsl(var(--ios-orange))',
-              animation: 'move-light-7 33s infinite ease-in-out',
-              animationDelay: '18s',
-            }}
-          ></div>
-        </div>
-        <FloatingEmojis />
-        <div className="absolute inset-0 z-10 bg-black/20 backdrop-blur-sm"></div>
+      <main className="relative min-h-screen w-full">
         
         {/* Desktop Navigation: Sticky Top Bar */}
         <nav className="hidden md:sticky md:top-0 z-40 w-full border-b bg-background/80 backdrop-blur-lg md:block">

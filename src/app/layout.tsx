@@ -24,7 +24,7 @@ export default function RootLayout({
       </head>
       <body className={cn("antialiased")}>
         <SoundProvider>
-          <div className="bg-background min-h-screen">
+          <div className="min-h-screen">
             {children}
             <Toaster />
           </div>
