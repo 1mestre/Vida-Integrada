@@ -140,6 +140,30 @@ export default function Home() {
               animationDelay: '12s',
             }}
           ></div>
+           <div
+            className="light"
+            style={{
+              width: '80vw',
+              height: '80vh',
+              bottom: '-20%',
+              left: '-20%',
+              backgroundColor: 'hsl(var(--ios-purple))',
+              animation: 'move-light-6 38s infinite ease-in-out',
+              animationDelay: '15s',
+            }}
+          ></div>
+          <div
+            className="light"
+            style={{
+              width: '80vw',
+              height: '80vh',
+              top: '-20%',
+              right: '-20%',
+              backgroundColor: 'hsl(var(--ios-orange))',
+              animation: 'move-light-7 33s infinite ease-in-out',
+              animationDelay: '18s',
+            }}
+          ></div>
         </div>
         <FloatingEmojis />
         <div className="absolute inset-0 z-10 bg-black/20 backdrop-blur-sm"></div>

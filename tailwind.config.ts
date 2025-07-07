@@ -59,6 +59,7 @@ const config = {
         'ios-red': 'hsl(var(--ios-red))',
         'ios-green': 'hsl(var(--ios-green))',
         'ios-orange': 'hsl(var(--ios-orange))',
+        'ios-purple': 'hsl(var(--ios-purple))',
         'custom-pink-1': 'hsl(var(--custom-pink-1))',
         'custom-pink-2': 'hsl(var(--custom-pink-2))',
       },
