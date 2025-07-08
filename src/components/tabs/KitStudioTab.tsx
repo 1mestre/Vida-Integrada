@@ -183,8 +183,10 @@ const KitStudioTab = () => {
     setProcessingStatus([`Iniciando proceso para ${acceptedFiles.length} archivo(s)...`]);
     const audioFilesToProcess: { file: File, name: string }[] = [];
 
+    // Helper to process ZIP files
     const processZip = async (zipFile: File) => {
       try {
+        setProcessingStatus(prev => [...prev, `Leyendo ${zipFile.name}...`]);
         const zip = await JSZip.loadAsync(zipFile);
         const zipPromises: Promise<void>[] = [];
         let foundInZip = 0;
@@ -209,11 +211,9 @@ const KitStudioTab = () => {
       }
     };
 
+    // Iterate through dropped files
     for (const file of acceptedFiles) {
-      setProcessingStatus(prev => [...prev, `Leyendo ${file.name}...`]);
-
-      const fileNameLower = file.name.toLowerCase();
-      if (fileNameLower.endsWith('.zip')) {
+      if (file.name.toLowerCase().endsWith('.zip')) {
         await processZip(file);
       } else if (file.type.startsWith('audio/')) {
         audioFilesToProcess.push({ file: file, name: file.name });
@@ -221,7 +221,7 @@ const KitStudioTab = () => {
     }
     
     if (audioFilesToProcess.length === 0) {
-      if(acceptedFiles.length > 0) {
+      if (acceptedFiles.length > 0) {
         toast({ variant: "destructive", title: "No se encontraron archivos", description: "No se encontraron archivos de audio (.wav o .mp3) válidos en la selección." });
       }
       setIsProcessing(false);
@@ -275,7 +275,7 @@ const KitStudioTab = () => {
       accept: { 
         'audio/wav': ['.wav'], 
         'audio/mpeg': ['.mp3'], 
-        'application/zip': ['.zip'],
+        'application/zip': ['.zip']
       }
   });
 
