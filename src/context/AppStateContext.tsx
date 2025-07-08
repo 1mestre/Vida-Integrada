@@ -107,13 +107,19 @@ export interface SoundLibraryItem {
   key: string | null;
 }
 
+export interface KitSound {
+  id: string; // Unique ID for this entry within the kit
+  soundId: string; // Reference to SoundLibraryItem
+  nameInKit: string; // The (potentially AI-generated) name for the sound in this kit
+}
+
 export interface DrumKitProject {
   id: number;
   name: string;
   coverArtUrl: string | null;
   imagePrompt: string;
   seoNames: string[];
-  soundIds: string[];
+  sounds: KitSound[];
   wordpressProductId?: number | null;
 }
 
@@ -222,6 +228,16 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
         if (docSnap.exists()) {
           const data = docSnap.data();
           
+          const sanitizedSoundLibrary = (data.soundLibrary || []).map((item: Partial<SoundLibraryItem>): SoundLibraryItem => {
+            const defaults: Omit<SoundLibraryItem, 'id'> = {
+              originalName: 'sonido_desconocido.wav',
+              storageUrl: '',
+              soundType: 'Sin Categoría',
+              key: null,
+            };
+            return { ...defaults, ...item, id: item.id || uuidv4() };
+          });
+
           // --- Comprehensive Sanitization ---
           const sanitizedContributions = (data.contributions || []).map((c: any): Contribution => ({
             id: c.id || uuidv4(),
@@ -275,25 +291,24 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
               return { ...defaults, ...template, id: template.id || uuidv4(), colorClassName: template.colorClassName || 'bg-gray-500' };
           });
 
-          const sanitizedSoundLibrary = (data.soundLibrary || []).map((item: Partial<SoundLibraryItem>): SoundLibraryItem => {
-            const defaults: Omit<SoundLibraryItem, 'id'> = {
-              originalName: 'sonido_desconocido.wav',
-              storageUrl: '',
-              soundType: 'Sin Categoría',
-              key: null,
-            };
-            return { ...defaults, ...item, id: item.id || uuidv4() };
-          });
-
-          const sanitizedDrumKitProjects = (data.drumKitProjects || []).map((project: Partial<DrumKitProject>): DrumKitProject => {
+          const sanitizedDrumKitProjects = (data.drumKitProjects || []).map((project: any): DrumKitProject => {
             const defaults: Omit<DrumKitProject, 'id'> = {
               name: 'Nuevo Kit',
               coverArtUrl: null,
               imagePrompt: '',
               seoNames: [],
-              soundIds: [],
+              sounds: [],
             };
-            return { ...defaults, ...project, id: project.id || Date.now() };
+             // Migration from old soundIds structure
+            if (project.soundIds && !project.sounds) {
+              project.sounds = project.soundIds.map((soundId: string) => ({
+                id: uuidv4(),
+                soundId: soundId,
+                nameInKit: sanitizedSoundLibrary.find(s => s.id === soundId)?.originalName || 'Migrated Sound'
+              }));
+              delete project.soundIds;
+            }
+            return { ...defaults, ...project, id: project.id || Date.now(), sounds: project.sounds || [] };
           });
 
           const sanitizedState: AppState = {
@@ -340,8 +355,10 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
 
       if (db) {
         const docRef = doc(db, 'organizador-publico', 'datos-compartidos');
+        // Create a deep copy for Firestore to avoid issues with undefined values from functions etc.
+        const stateToSave = JSON.parse(JSON.stringify(updatedState));
         setDoc(docRef, { 
-          ...updatedState,
+          ...stateToSave,
           lastUpdated: serverTimestamp()
         }).catch(err => {
           console.error("Firebase setDoc error:", err);
