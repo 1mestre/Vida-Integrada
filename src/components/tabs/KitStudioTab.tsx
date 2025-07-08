@@ -69,6 +69,9 @@ const KitStudioTab = () => {
   };
 
   const handleDeleteSound = (id: string) => {
+    const soundToDelete = appState.soundLibrary.find(item => item.id === id);
+    if (!soundToDelete) return;
+
     setAppState(prevState => {
       const updatedProjects = prevState.drumKitProjects.map(proj => ({
         ...proj,
@@ -80,6 +83,11 @@ const KitStudioTab = () => {
         soundLibrary: prevState.soundLibrary.filter(item => item.id !== id),
         drumKitProjects: updatedProjects,
       }
+    });
+
+    toast({
+      title: "Sonido Eliminado",
+      description: `"${soundToDelete.originalName}" ha sido borrado de tu librería.`,
     });
   };
 
@@ -194,17 +202,30 @@ const KitStudioTab = () => {
   });
 
   const handleCreateNewKit = () => {
+    const todayStr = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' });
+    const baseName = `Nuevo Kit - ${todayStr}`;
+    const existingNames = new Set(appState.drumKitProjects.map(p => p.name));
+    
+    let finalName = baseName;
+    let suffixCounter = 0;
+
+    while (existingNames.has(finalName)) {
+      finalName = `${baseName} ${String.fromCharCode(65 + suffixCounter)}`;
+      suffixCounter++;
+    }
+
     const newKit: DrumKitProject = {
-        id: Date.now(),
-        name: `Nuevo Kit - ${new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' })}`,
-        coverArtUrl: null,
-        imagePrompt: '',
-        seoNames: [],
-        soundIds: [],
+      id: Date.now(),
+      name: finalName,
+      coverArtUrl: null,
+      imagePrompt: '',
+      seoNames: [],
+      soundIds: [],
     };
+
     setAppState(prevState => ({
-        ...prevState,
-        drumKitProjects: [...prevState.drumKitProjects, newKit]
+      ...prevState,
+      drumKitProjects: [...prevState.drumKitProjects, newKit]
     }));
     setActiveProjectId(newKit.id);
   };
