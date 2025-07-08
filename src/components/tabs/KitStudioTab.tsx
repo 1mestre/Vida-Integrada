@@ -72,13 +72,29 @@ const KitStudioTab = () => {
 
 
   const handlePlaySound = (url: string) => {
+    if (!url) {
+      toast({
+        variant: "destructive",
+        title: "URL de Sonido Inválida",
+        description: "Este sonido no tiene una fuente válida. Intenta subirlo de nuevo.",
+      });
+      return;
+    }
+
     if (activeAudio) {
       activeAudio.pause();
       activeAudio.currentTime = 0;
     }
     const audio = new Audio(url);
     setActiveAudio(audio);
-    audio.play().catch(e => console.error("Error playing audio:", e));
+    audio.play().catch(e => {
+      console.error("Error playing audio:", e);
+      toast({
+        variant: "destructive",
+        title: "Error de Reproducción",
+        description: "No se pudo cargar el audio. La URL puede ser inválida o el archivo está corrupto."
+      })
+    });
   };
   
   const handleTypeChange = (id: string, newType: SoundType) => {

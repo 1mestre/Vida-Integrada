@@ -223,15 +223,27 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
         if (docSnap.exists()) {
           const data = docSnap.data();
           
-          const sanitizedSoundLibrary = (data.soundLibrary || []).map((item: Partial<SoundLibraryItem>): SoundLibraryItem => {
-            const defaults: Omit<SoundLibraryItem, 'id'> = {
-              originalName: 'sonido_desconocido.wav',
-              storageUrl: '',
-              soundType: 'Sin Categoría',
-              key: null,
-            };
-            return { ...defaults, ...item, id: item.id || uuidv4() };
-          });
+          const sanitizedSoundLibrary = (data.soundLibrary || []).reduce((acc: SoundLibraryItem[], item: Partial<SoundLibraryItem>) => {
+            // Only include items that have a valid, non-empty storageUrl.
+            // This filters out old/invalid data and ensures data integrity.
+            if (item && typeof item.storageUrl === 'string' && item.storageUrl) {
+              const defaults: Omit<SoundLibraryItem, 'id'> = {
+                originalName: 'sonido_desconocido.wav',
+                storageUrl: '',
+                soundType: 'Sin Categoría',
+                key: null,
+              };
+              // Ensure the final object matches the interface
+              const completeItem: SoundLibraryItem = {
+                  ...defaults,
+                  ...item,
+                  id: item.id || uuidv4(),
+                  storageUrl: item.storageUrl, // Explicitly carry over the validated URL
+              };
+              acc.push(completeItem);
+            }
+            return acc;
+          }, []);
 
           // --- Comprehensive Sanitization ---
           const sanitizedContributions = (data.contributions || []).map((c: any): Contribution => ({
