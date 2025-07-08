@@ -14,6 +14,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 const GenerateCoverArtInputSchema = z.object({
   prompt: z.string().describe('A description of the desired cover art style, mood, and content.'),
+  kitName: z.string().describe('The name of the kit to be visually included on the packaging.'),
 });
 type GenerateCoverArtInput = z.infer<typeof GenerateCoverArtInputSchema>;
 
@@ -68,7 +69,7 @@ const generateCoverArtFlow = ai.defineFlow(
     inputSchema: GenerateCoverArtInputSchema,
     outputSchema: GenerateCoverArtOutputSchema,
   },
-  async ({prompt}) => {
+  async ({prompt, kitName}) => {
     let enhancedPrompt = '';
     
     // --- STEP 0: ENHANCE PROMPT ---
@@ -107,11 +108,20 @@ const generateCoverArtFlow = ai.defineFlow(
 
     // --- STEP 1 & 2: GENERATE IMAGE & UPLOAD ---
     try {
-        const imageGenerationPrompt = `You are a 3D artist creating a piece of packaging art.
+        const imageGenerationPrompt = `You are a 3D packaging artist. Generate a cinematic 3D render of a product box. 
+
+        — VISUAL STYLE —
+        The scene must be abstract, highly stylized, and cinematic. Use only visual elements like lighting, textures, reflections, shadows, colors, and mood.
         
-        **THE SINGLE MOST IMPORTANT RULE:** The design must be PURELY GRAPHICAL and ABSTRACT. It must NOT contain any words, letters, text, typography, numbers, or characters of any kind. I will reject any image that contains elements that even resemble letters.
+        — SPECIAL TEXT INSTRUCTIONS —
+        The design must include **exactly one word**, rendered as part of the product case in a clean, futuristic, or grunge typographic style: "${kitName}". 
+        This text must appear on the product box, label, or front cover, as if it were real packaging. 
+        Do NOT include any other words, numbers, or characters anywhere in the image.
         
-        **INSPIRATION FOR THE VISUALS (Do NOT write these words):** ${enhancedPrompt}`;
+        — CREATIVE CONTEXT (DON’T OUTPUT THIS TEXT) —
+        ${enhancedPrompt}
+        
+        Make sure the text "${kitName}" is clearly visible but naturally blended into the packaging design.`;
 
         const generationResult = await ai.generate({
             model: 'googleai/gemini-2.0-flash-preview-image-generation',

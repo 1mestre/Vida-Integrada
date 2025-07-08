@@ -513,23 +513,29 @@ const KitStudioTab = () => {
   };
 
   const handleGenerateArt = async () => {
-    if (!activeProject || !imagePrompt) {
-        toast({ variant: "destructive", title: "Error", description: "La descripción no puede estar vacía." });
+    if (!activeProject) {
+        toast({ variant: "destructive", title: "Error", description: "Por favor, crea o selecciona un kit primero." });
         return;
     }
+    if (!imagePrompt) {
+        toast({ variant: "destructive", title: "Error", description: "La descripción para la IA no puede estar vacía." });
+        return;
+    }
+    if (!currentKitName.trim()) {
+        toast({ variant: "destructive", title: "Error", description: "El nombre del kit no puede estar vacío para generar la carátula." });
+        return;
+    }
+
     setIsGeneratingArt(true);
-    setAppState(prevState => ({ ...prevState, drumKitProjects: prevState.drumKitProjects.map(p => p.id === activeProjectId ? { ...p, imagePrompt: imagePrompt } : p) }));
+    setAppState(prevState => ({ ...prevState, drumKitProjects: prevState.drumKitProjects.map(p => p.id === activeProjectId ? { ...p, imagePrompt: imagePrompt, name: currentKitName.trim() } : p) }));
     
-    // The try/catch is now inside the flow, so we just handle the result object.
-    const result = await generateCoverArt({ prompt: imagePrompt });
+    const result = await generateCoverArt({ prompt: imagePrompt, kitName: currentKitName.trim() });
     
     setLastEnhancedPrompt(result.enhancedPrompt);
 
     if (result.error) {
-        // If the flow returned an error, show it in a toast.
         toast({ variant: "destructive", title: "Error de IA", description: result.error });
     } else if (result.finalUrl) {
-        // On success, update state and show a success toast.
         setAppState(prevState => ({ ...prevState, drumKitProjects: prevState.drumKitProjects.map(p => p.id === activeProjectId ? { ...p, coverArtUrl: result.finalUrl } : p) }));
         toast({ title: "¡Carátula generada!", description: "La nueva imagen para tu kit está lista." });
     }
@@ -661,16 +667,6 @@ const KitStudioTab = () => {
 
               {activeProject ? (
                 <div className="space-y-4">
-                  <div>
-                      <Label htmlFor="kit-name">Nombre Final del Kit</Label>
-                      <Input 
-                        id="kit-name"
-                        value={currentKitName}
-                        onChange={(e) => setCurrentKitName(e.target.value)}
-                        onBlur={onKitNameBlur}
-                        placeholder="Escribe el nombre final del kit"
-                      />
-                  </div>
                   <div className='p-4 border rounded-lg space-y-4 bg-background/30'>
                     <div className='flex gap-4 items-start'>
                         <div className='w-32 h-32 rounded-md bg-muted flex-shrink-0 relative flex items-center justify-center group'>
@@ -687,14 +683,26 @@ const KitStudioTab = () => {
                           }
                         </div>
                         <div className='space-y-2 flex-grow'>
-                          <Label htmlFor="kit-prompt">Descripción para la IA</Label>
-                          <Input id="kit-prompt" placeholder="Ej: Dark trap, estilo Travis Scott..." value={imagePrompt} onChange={(e) => setImagePrompt(e.target.value)}/>
-                           <div className="flex gap-2">
-                              <Button onClick={handleGenerateNames} disabled={isGeneratingNames || !imagePrompt} className="w-full"><Sparkles className='mr-2'/>Sugerir Nombres</Button>
-                              <Button onClick={handleGenerateArt} disabled={isGeneratingArt || !imagePrompt} className="w-full"><Sparkles className='mr-2'/>Generar Carátula</Button>
+                          <div>
+                            <Label htmlFor="kit-name">Nombre Final del Kit (para carátula)</Label>
+                            <Input 
+                              id="kit-name"
+                              value={currentKitName}
+                              onChange={(e) => setCurrentKitName(e.target.value)}
+                              onBlur={onKitNameBlur}
+                              placeholder="Escribe el nombre del kit"
+                            />
+                          </div>
+                           <div>
+                            <Label htmlFor="kit-prompt">Descripción para la IA</Label>
+                            <Input id="kit-prompt" placeholder="Ej: Dark trap, estilo Travis Scott..." value={imagePrompt} onChange={(e) => setImagePrompt(e.target.value)}/>
                            </div>
                         </div>
                     </div>
+                     <div className="flex flex-col gap-2">
+                        <Button onClick={handleGenerateNames} disabled={isGeneratingNames || !imagePrompt} className="w-full"><Sparkles className='mr-2'/>Sugerir Nombres</Button>
+                        <Button onClick={handleGenerateArt} disabled={isGeneratingArt || !imagePrompt || !currentKitName.trim()} className="w-full"><Sparkles className='mr-2'/>Generar Carátula</Button>
+                     </div>
                      {activeProject.seoNames.length > 0 && (
                         <div className="space-y-2">
                           <Label>Nombres Sugeridos:</Label>
