@@ -26,9 +26,8 @@ function selectApiKey(): string | undefined {
 export const ai = genkit({
   plugins: [
     googleAI({
-      // Pass the function directly. Genkit will call this function to get a key
-      // dynamically, which is more effective for rotation in a serverless environment.
-      apiKey: selectApiKey,
+      // Call the function to get the key string, then pass it to the plugin.
+      apiKey: selectApiKey(),
     }),
   ],
   model: 'googleai/gemini-2.5-flash',
