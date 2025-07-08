@@ -3,3 +3,4 @@ import './flows/generate-kit-names-flow';
 import './flows/categorizeSoundFlow';
 import './flows/renameSoundFlow';
 import './flows/generateCoverArtFlow';
+import './flows/uploadSoundFlow';

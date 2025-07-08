@@ -21,11 +21,21 @@ import { generateKitNames } from '@/ai/flows/generate-kit-names-flow';
 import { categorizeSound } from '@/ai/flows/categorizeSoundFlow';
 import { renameSound } from '@/ai/flows/renameSoundFlow';
 import { generateCoverArt } from '@/ai/flows/generateCoverArtFlow';
+import { uploadSound } from '@/ai/flows/uploadSoundFlow';
 import { Label } from '@/components/ui/label';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 
 const soundCategories: SoundType[] = ['Kick', 'Snare', 'Clap', 'Hi-Hat', 'Hi-Hat Open', 'Hi-Hat Closed', 'Perc', 'Rim', '808 & Bass', 'FX & Texture', 'Vocal', 'Oneshot Melodic', 'Sin Categoría'];
+
+const fileToDataUri = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+};
 
 const KitStudioTab = () => {
   const { appState, setAppState } = useAppState();
@@ -163,15 +173,18 @@ const KitStudioTab = () => {
       return;
     }
 
-    setProcessingStatus(prev => [...prev, `Procesando ${audioFilesToProcess.length} sonidos con IA...`]);
+    setProcessingStatus(prev => [...prev, `Procesando ${audioFilesToProcess.length} sonidos...`]);
 
-    // This is where we call the AI
     const newLibraryItems: SoundLibraryItem[] = [];
     for (const f of audioFilesToProcess) {
       try {
-        // TODO: Replace with real upload logic to R2 and get public URL
-        const storageUrl = URL.createObjectURL(f.file); // Temporary local URL
+        setProcessingStatus(prev => [...prev, `Subiendo ${f.name}...`]);
+        const soundDataUri = await fileToDataUri(f.file);
+        const storageUrl = await uploadSound({ soundDataUri, filename: f.name });
+
+        setProcessingStatus(prev => [...prev, `Categorizando ${f.name}...`]);
         const { soundType, key } = await categorizeSound({ filename: f.name });
+
         newLibraryItems.push({
           id: uuidv4(),
           originalName: f.name,
@@ -179,10 +192,15 @@ const KitStudioTab = () => {
           soundType,
           key,
         });
-        setProcessingStatus(prev => [...prev, `✅ Categorizado: ${f.name}`]);
+        setProcessingStatus(prev => [...prev, `✅ Procesado: ${f.name}`]);
       } catch (error) {
         setProcessingStatus(prev => [...prev, `❌ Error en ${f.name}`]);
-        console.error(`Error categorizing ${f.name}:`, error);
+        console.error(`Error procesando ${f.name}:`, error);
+        toast({
+          variant: "destructive",
+          title: "Error de Procesamiento",
+          description: `No se pudo procesar el archivo ${f.name}.`,
+        });
       }
     }
 
