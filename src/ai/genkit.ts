@@ -14,22 +14,21 @@ function selectApiKey(): string | undefined {
   }
 
   // Fallback to single key variables for backward compatibility
-  return process.env.GOOGLE_API_KEY || process.env.GOOGLE_AI_API_KEY;
-}
-
-const apiKey = selectApiKey();
-
-if (!apiKey) {
+  const singleKey = process.env.GOOGLE_API_KEY || process.env.GOOGLE_AI_API_KEY;
+  if(!singleKey) {
     // This check runs when the server starts. If the key is missing in the Vercel environment,
     // the entire deployment will fail to start, which is a clear and immediate signal.
     throw new Error("CRITICAL: No Google AI API Key found. Please set GOOGLE_API_KEYS or GOOGLE_API_KEY in your environment variables.");
+  }
+  return singleKey;
 }
-
 
 export const ai = genkit({
   plugins: [
     googleAI({
-      apiKey: apiKey,
+      // Pass the function directly. Genkit will call this function to get a key
+      // dynamically, which is more effective for rotation in a serverless environment.
+      apiKey: selectApiKey,
     }),
   ],
   model: 'googleai/gemini-2.5-flash',
