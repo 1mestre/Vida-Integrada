@@ -97,7 +97,14 @@ const KitStudioTab = () => {
 
                 for (const relativePath in zip.files) {
                     const zipEntry = zip.files[relativePath];
-                    if (!zipEntry.dir && (zipEntry.name.toLowerCase().endsWith('.wav') || zipEntry.name.toLowerCase().endsWith('.mp3'))) {
+
+                    // Skip directories and Mac-specific metadata folders
+                    if (zipEntry.dir || relativePath.startsWith('__MACOSX/')) {
+                        continue;
+                    }
+                    
+                    const normalizedName = zipEntry.name.trim().toLowerCase();
+                    if (normalizedName.endsWith('.wav') || normalizedName.endsWith('.mp3')) {
                         foundInZip++;
                         const promise = async () => {
                             const fileData = await zipEntry.async('blob');
