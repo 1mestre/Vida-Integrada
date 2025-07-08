@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview An AI flow to generate cover art and upload it to object storage.
@@ -61,15 +62,15 @@ const generateCoverArtFlow = ai.defineFlow(
     // ---- PASO 0: MEJORA DEL PROMPT ----
     // Usamos Gemini 2.5 para tomar el concepto simple del usuario y convertirlo en una descripción rica y detallada
     // para la IA de generación de imágenes. Esto mejora drásticamente la calidad y creatividad del resultado.
-    const enhancementPrompt = `You are a creative director and expert prompt engineer for an advanced image generation AI. Your task is to take a user's core concept and expand it into a rich, detailed, and artistic prompt. This new prompt will be used to generate a premium, 3D-rendered product packaging image.
+    const enhancementPrompt = `You are a creative director for a music brand. A user has provided a core concept for a product's packaging. Your task is to expand this concept into a slightly more detailed and descriptive paragraph that an image generation AI can use.
 
     **Core Concept:** "${prompt}"
 
     **Instructions:**
-    1.  **Elaborate on the Concept:** Expand on the core concept with evocative details. Think about mood, atmosphere, and underlying story.
-    2.  **Describe Visuals:** Detail specific visual elements, textures, materials, and lighting. Use cinematic and artistic language.
-    3.  **Maintain Structure:** The final output should be a single, coherent paragraph.
-    4.  **Do NOT add any text like "Prompt:" or titles.** Just return the pure, enhanced prompt.
+    1.  **Extend, Don't Invent:** Your main goal is to elaborate on the user's core concept. Do not introduce new, unrelated themes or elements.
+    2.  **Translate to a Visual for a Box:** Describe how the core concept could be represented visually *on a product box*. Focus on mood, atmosphere, color palettes, and textures that are directly relatable to the concept provided.
+    3.  **Describe the Vibe:** Use evocative, artistic language to describe the overall feeling and aesthetic of the packaging.
+    4.  **Single Paragraph Output:** The final output must be a single, coherent paragraph, without any titles or labels.
     
     Example:
     User Concept: "Dark trap, Travis Scott style"
