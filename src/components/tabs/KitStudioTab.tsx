@@ -39,12 +39,27 @@ const KitStudioTab = () => {
   const [activeProjectId, setActiveProjectId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<SoundType | 'all'>('all');
+  const [imagePrompt, setImagePrompt] = useState('');
+
 
   useEffect(() => {
     if (!activeProjectId && appState.drumKitProjects.length > 0) {
         setActiveProjectId(appState.drumKitProjects[0].id);
     }
   }, [appState.drumKitProjects, activeProjectId]);
+  
+  const activeProject = useMemo(() => {
+      return appState.drumKitProjects.find(p => p.id === activeProjectId);
+  }, [appState.drumKitProjects, activeProjectId]);
+  
+  useEffect(() => {
+      if (activeProject) {
+          setImagePrompt(activeProject.imagePrompt || '');
+      } else {
+          setImagePrompt('');
+      }
+  }, [activeProject]);
+
 
   const handlePlaySound = (url: string) => {
     if (activeAudio) {
@@ -223,14 +238,14 @@ const KitStudioTab = () => {
 
   const handleDropOnAssembler = async (e: React.DragEvent<HTMLDivElement>) => {
       e.preventDefault();
-      if (!activeProjectId) {
+      if (!activeProject) {
           toast({ variant: 'destructive', title: "No hay un kit seleccionado", description: "Por favor, crea o selecciona un kit antes de añadirle sonidos." });
           return;
       }
       const soundId = e.dataTransfer.getData("soundId");
       const sound = appState.soundLibrary.find(s => s.id === soundId);
-      const activeProject = appState.drumKitProjects.find(p => p.id === activeProjectId);
-      if (!sound || !activeProject || activeProject.soundIds.includes(soundId)) return;
+      
+      if (!sound || activeProject.soundIds.includes(soundId)) return;
       
       // Add sound immediately with a placeholder name
       setAppState(prevState => ({
@@ -247,7 +262,8 @@ const KitStudioTab = () => {
 
       // Then, call the AI to get the real name
       try {
-        const { newName } = await renameSound({ originalName: sound.originalName, kitDescription: activeProject.imagePrompt || 'general purpose' });
+        const descriptionForAI = imagePrompt || activeProject.imagePrompt || 'general purpose';
+        const { newName } = await renameSound({ originalName: sound.originalName, kitDescription: descriptionForAI });
         setAppState(prevState => ({
             ...prevState,
             drumKitProjects: prevState.drumKitProjects.map(p => {
@@ -297,25 +313,15 @@ const KitStudioTab = () => {
     });
   }, [appState.soundLibrary, searchTerm, filterType]);
 
-  const activeProject = useMemo(() => {
-      return appState.drumKitProjects.find(p => p.id === activeProjectId);
-  }, [appState.drumKitProjects, activeProjectId]);
-
-  const handlePromptChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!activeProject) return;
-    const newPrompt = e.target.value;
-    setAppState(prevState => ({ ...prevState, drumKitProjects: prevState.drumKitProjects.map(p => p.id === activeProjectId ? { ...p, imagePrompt: newPrompt } : p) }));
-  };
-
   const handleGenerateNames = async () => {
-    if (!activeProject || !activeProject.imagePrompt) {
+    if (!activeProject || !imagePrompt) {
         toast({ variant: "destructive", title: "Error", description: "Por favor, escribe una descripción para el kit." });
         return;
     }
     setIsGeneratingNames(true);
     try {
-        const result = await generateKitNames({ prompt: activeProject.imagePrompt });
-        setAppState(prevState => ({ ...prevState, drumKitProjects: prevState.drumKitProjects.map(p => p.id === activeProjectId ? { ...p, seoNames: result.names } : p) }));
+        const result = await generateKitNames({ prompt: imagePrompt });
+        setAppState(prevState => ({ ...prevState, drumKitProjects: prevState.drumKitProjects.map(p => p.id === activeProjectId ? { ...p, seoNames: result.names, imagePrompt: imagePrompt } : p) }));
         toast({ title: "Nombres generados", description: "La IA ha sugerido algunos nombres para tu kit." });
     } catch (error) {
         console.error("Error generating names:", error);
@@ -326,14 +332,14 @@ const KitStudioTab = () => {
   };
 
   const handleGenerateArt = async () => {
-    if (!activeProject || !activeProject.imagePrompt) {
+    if (!activeProject || !imagePrompt) {
         toast({ variant: "destructive", title: "Error", description: "La descripción no puede estar vacía." });
         return;
     }
     setIsGeneratingArt(true);
     try {
-        const imageUrl = await generateCoverArt({ prompt: activeProject.imagePrompt });
-        setAppState(prevState => ({ ...prevState, drumKitProjects: prevState.drumKitProjects.map(p => p.id === activeProjectId ? { ...p, coverArtUrl: imageUrl } : p) }));
+        const imageUrl = await generateCoverArt({ prompt: imagePrompt });
+        setAppState(prevState => ({ ...prevState, drumKitProjects: prevState.drumKitProjects.map(p => p.id === activeProjectId ? { ...p, coverArtUrl: imageUrl, imagePrompt: imagePrompt } : p) }));
         toast({ title: "¡Carátula generada!", description: "La nueva imagen para tu kit está lista." });
     } catch (error) {
         console.error("Error generating cover art:", error);
@@ -466,10 +472,10 @@ const KitStudioTab = () => {
                     </div>
                     <div className='space-y-2 flex-grow'>
                       <Label htmlFor="kit-prompt">Descripción del Kit (para la IA)</Label>
-                      <Input id="kit-prompt" placeholder="Ej: Dark trap, estilo Travis Scott..." value={activeProject.imagePrompt} onChange={handlePromptChange}/>
+                      <Input id="kit-prompt" placeholder="Ej: Dark trap, estilo Travis Scott..." value={imagePrompt} onChange={(e) => setImagePrompt(e.target.value)}/>
                        <div className="flex gap-2">
-                          <Button onClick={handleGenerateArt} disabled={isGeneratingArt || !activeProject.imagePrompt} className="w-full"><Sparkles className='mr-2'/>Generar Carátula</Button>
-                          <Button onClick={handleGenerateNames} disabled={isGeneratingNames || !activeProject.imagePrompt} className="w-full"><Sparkles className='mr-2'/>Generar Nombres</Button>
+                          <Button onClick={handleGenerateArt} disabled={isGeneratingArt || !imagePrompt} className="w-full"><Sparkles className='mr-2'/>Generar Carátula</Button>
+                          <Button onClick={handleGenerateNames} disabled={isGeneratingNames || !imagePrompt} className="w-full"><Sparkles className='mr-2'/>Generar Nombres</Button>
                        </div>
                     </div>
                   </div>
