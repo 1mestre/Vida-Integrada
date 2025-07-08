@@ -66,13 +66,14 @@ const generateCoverArtFlow = ai.defineFlow(
   {
     name: 'generateCoverArtFlow',
     inputSchema: GenerateCoverArtInputSchema,
-    outputSchema: GenerateCoverArtOutputSchema, // Use the new output schema
+    outputSchema: GenerateCoverArtOutputSchema,
   },
   async ({prompt}) => {
     let enhancedPrompt = '';
+    
+    // --- STEP 0: ENHANCE PROMPT ---
     try {
-        // ---- PASO 0: MEJORA DEL PROMPT ----
-        const enhancementPromptText = `You are a creative director AI. A user has provided a core concept. Your task is to expand this into a vivid, single-paragraph visual description for an image generation AI.
+      const enhancementPromptText = `You are a creative director AI. A user has provided a core concept. Your task is to expand this into a vivid, single-paragraph visual description for an image generation AI.
 
         **Core Concept:** ${prompt}
         
@@ -93,10 +94,19 @@ const generateCoverArtFlow = ai.defineFlow(
         
         enhancedPrompt = enhancementResult.text;
         if (!enhancedPrompt) {
-            throw new Error('Failed to enhance the prompt. The AI did not return a description.');
+            throw new Error('The AI failed to return an enhanced description.');
         }
+    } catch (e: any) {
+        // If enhancement fails, we can't proceed. Return the error.
+        return { 
+            finalUrl: null, 
+            enhancedPrompt: prompt, // Return original prompt as it's all we have
+            error: `Failed to enhance prompt: ${e.message}` 
+        };
+    }
 
-        // ---- PASO 1: GENERACIÓN DE LA IMAGEN ----
+    // --- STEP 1 & 2: GENERATE IMAGE & UPLOAD ---
+    try {
         const imageGenerationPrompt = `You are a 3D artist creating a piece of packaging art.
         
         **THE SINGLE MOST IMPORTANT RULE:** The design must be PURELY GRAPHICAL and ABSTRACT. It must NOT contain any words, letters, text, typography, numbers, or characters of any kind. I will reject any image that contains elements that even resemble letters.
@@ -117,7 +127,6 @@ const generateCoverArtFlow = ai.defineFlow(
           throw new Error('La IA no devolvió una imagen. Intenta con una descripción diferente.');
         }
         
-        // ---- PASO 2: DECODIFICACIÓN Y SUBIDA ----
         const base64Data = media.url.split(';base64,').pop();
         if (!base64Data) {
             throw new Error('Invalid data URI format.');
@@ -136,7 +145,6 @@ const generateCoverArtFlow = ai.defineFlow(
           })
         );
 
-        // ---- PASO 3: DEVOLUCIÓN DE RESULTADOS ----
         const finalUrl = `${publicUrl}/${filename}`;
         return { finalUrl, enhancedPrompt };
 
@@ -145,8 +153,8 @@ const generateCoverArtFlow = ai.defineFlow(
         if (e.message && (e.message.includes('429') || e.message.toLowerCase().includes('quota'))) {
             errorMessage = 'Límite de cuota de API alcanzado. Por favor, intenta de nuevo más tarde o añade nuevas API keys de un proyecto de Google Cloud diferente.';
         }
-        // Instead of throwing, return the error in the payload
-        return { finalUrl: null, enhancedPrompt: enhancedPrompt || prompt, error: errorMessage };
+        // On image generation failure, return the successfully enhanced prompt and the error.
+        return { finalUrl: null, enhancedPrompt: enhancedPrompt, error: errorMessage };
     }
   }
 );
