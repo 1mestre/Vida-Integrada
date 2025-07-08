@@ -81,7 +81,7 @@ const generateCoverArtFlow = ai.defineFlow(
     
     Example:
     User Concept: "Dark trap, Travis Scott style"
-    Your Output: "A moody, cinematic 3D render of a premium product box with a dark, enigmatic aesthetic inspired by Travis Scott's 'Astroworld'. The packaging features a blend of matte black textures and subtle, iridescent details that catch the light. The scene is lit with atmospheric neon glows in deep purples and reds, casting long, soft shadows. The overall composition feels grounded yet otherworldly, with a focus on tactile realism and a hint of cosmic mystery."`;
+    Your Output: "A moody, cinematic 3D render of a premium product box with a dark, enigmatic aesthetic inspired by Travis Scott's 'Astroworld'. The packaging features a blend of matte black textures and subtle, iridescent details that catch the light. The scene is lit with atmospheric neon glows in deep purples and reds, casting long, soft shadows. The overall composition feels grounded yet otherworldly, with a focus on tactile realism, and a hint of cosmic mystery."`;
     
     const enhancementResult = await ai.generate({
         prompt: enhancementPromptText,
@@ -94,10 +94,10 @@ const generateCoverArtFlow = ai.defineFlow(
     }
 
     // ---- PASO 1: GENERACIÓN DE LA IMAGEN ----
-    // Se usa un prompt muy específico para evitar texto y asegurar una estética de producto.
+    // Este prompt es extremadamente explícito para evitar la generación de texto.
     const imageGenerationPrompt = `A realistic, handcrafted 3D-rendered product packaging. The box should appear modern and premium with a natural, organic aesthetic. Emphasize depth, physicality, and tactile design—soft textures, subtle imperfections, and smooth transitions between surfaces. Lighting should feel cinematic and ambient, avoiding overly sharp digital edges. The composition must appear thoughtfully layered, grounded in realism, and artistically composed.
     
-    CRITICAL INSTRUCTION: The packaging design MUST NOT contain any words, letters, numbers, or text of any kind. It must be a purely visual, graphical design.
+    CRITICAL COMMAND: The packaging design MUST BE PURELY GRAPHICAL. It must not contain any words, letters, text, typography, or numbers of any kind. This is a visual-only template. I will reject any image that contains text.
     
     The visual theme that inspires the packaging's graphical elements is: "${enhancedPrompt}".`;
 
