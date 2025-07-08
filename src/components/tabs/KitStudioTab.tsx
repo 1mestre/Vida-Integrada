@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { useDropzone } from 'react-dropzone';
 import { saveAs } from 'file-saver';
@@ -47,7 +47,7 @@ const KitStudioTab = () => {
   const [isGeneratingArt, setIsGeneratingArt] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [processingStatus, setProcessingStatus] = useState<string[]>([]);
-  const [activeAudio, setActiveAudio] = useState<HTMLAudioElement | null>(null);
+  const activeAudio = useRef<HTMLAudioElement | null>(null);
   
   const [activeProjectId, setActiveProjectId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -113,13 +113,18 @@ const KitStudioTab = () => {
       return;
     }
 
-    if (activeAudio) {
-      activeAudio.pause();
-      activeAudio.currentTime = 0;
+    if (activeAudio.current) {
+      activeAudio.current.pause();
+      activeAudio.current.currentTime = 0;
     }
     const audio = new Audio(url);
-    setActiveAudio(audio);
+    activeAudio.current = audio;
     audio.play().catch(e => {
+      // Ignore AbortError which is common when interrupting playback
+      if (e.name === 'AbortError') {
+        console.log('Playback aborted');
+        return;
+      }
       console.error("Error playing audio:", e);
       toast({
         variant: "destructive",
