@@ -46,28 +46,46 @@ const generateCoverArtFlow = ai.defineFlow(
     outputSchema: z.string().url().describe('The public URL of the generated image in Cloudflare R2.'),
   },
   async ({prompt}) => {
-    // Step 1: Generate the image data URI with AI
-    const {media} = await ai.generate({
+    // Step 1: Generate the initial image
+    const initialGeneration = await ai.generate({
       model: 'googleai/gemini-2.0-flash-preview-image-generation',
-      prompt: `Artwork for a drum kit with the following theme: "${prompt}". Style: modern, high-resolution, cinematic, suitable for a music product cover.`,
+      prompt: `Artwork for a drum kit with the following theme: "${prompt}". Style: modern, high-resolution, cinematic, suitable for a music product cover. Do not include any text unless explicitly asked.`,
       config: {
         responseModalities: ['TEXT', 'IMAGE'],
       },
     });
 
-    if (!media.url) {
-        throw new Error('Image generation failed to produce an image.');
+    if (!initialGeneration.media.url) {
+      throw new Error('Initial image generation failed.');
     }
     
-    // Step 2: Decode the base64 data URI
-    const base64Data = media.url.split(';base64,').pop();
+    // Step 2: Refine the image to fix any text issues
+    const refinementPrompt = [
+      { media: { url: initialGeneration.media.url } },
+      { text: "Analyze the provided image. If it contains any text that is distorted, illegible, or nonsensical, regenerate the image to correct the text, making it clear and artistically integrated. Maintain the original art style. If there is no text, or the text is already perfect, return the original image's style and composition." },
+    ];
+    
+    const { media: finalMedia } = await ai.generate({
+      model: 'googleai/gemini-2.0-flash-preview-image-generation',
+      prompt: refinementPrompt,
+      config: {
+        responseModalities: ['TEXT', 'IMAGE'],
+      },
+    });
+
+    if (!finalMedia.url) {
+        throw new Error('Image refinement failed to produce an image.');
+    }
+    
+    // Step 3: Decode the base64 data URI from the FINAL image
+    const base64Data = finalMedia.url.split(';base64,').pop();
     if (!base64Data) {
         throw new Error('Invalid data URI format.');
     }
     const imageBuffer = Buffer.from(base64Data, 'base64');
-    const contentType = media.url.substring(media.url.indexOf(':') + 1, media.url.indexOf(';'));
+    const contentType = finalMedia.url.substring(finalMedia.url.indexOf(':') + 1, finalMedia.url.indexOf(';'));
 
-    // Step 3: Upload the image to R2
+    // Step 4: Upload the image to R2
     const filename = `cover-art/${uuidv4()}.png`;
     
     await s3.send(
@@ -79,7 +97,7 @@ const generateCoverArtFlow = ai.defineFlow(
       })
     );
 
-    // Step 4: Return the public URL
+    // Step 5: Return the public URL
     const finalUrl = `${publicUrl}/${filename}`;
     return finalUrl;
   }

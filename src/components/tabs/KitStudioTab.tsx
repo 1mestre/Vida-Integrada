@@ -641,7 +641,7 @@ const KitStudioTab = () => {
                     </div>
                      {activeProject.seoNames.length > 0 && (
                         <div className="space-y-2">
-                          <Label>Nombres Sugeridos (haz clic para usar):</Label>
+                          <Label>Nombres Sugeridos:</Label>
                           <div className="flex flex-wrap gap-2">{activeProject.seoNames.map((name, i) => (<Badge key={i} variant="outline" className="cursor-pointer" onClick={() => onSuggestedNameClick(name)}>{name}</Badge>))}</div>
                         </div>
                       )}
