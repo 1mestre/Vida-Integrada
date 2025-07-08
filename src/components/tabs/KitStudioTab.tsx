@@ -181,39 +181,46 @@ const KitStudioTab = () => {
     setProcessingStatus([`Iniciando proceso para ${acceptedFiles.length} archivo(s)...`]);
     const audioFilesToProcess: { file: File, name: string }[] = [];
 
+    const processZip = async (zipFile: File) => {
+      try {
+        const zip = await JSZip.loadAsync(zipFile);
+        const zipPromises: Promise<void>[] = [];
+        let foundInZip = 0;
+        zip.forEach((relativePath, zipEntry) => {
+          if (zipEntry.dir || relativePath.startsWith('__MACOSX/') || !(zipEntry.name.toLowerCase().endsWith('.wav') || zipEntry.name.toLowerCase().endsWith('.mp3'))) {
+            return;
+          }
+          foundInZip++;
+          const promise = async () => {
+            const fileData = await zipEntry.async('blob');
+            const audioFile = new File([fileData], zipEntry.name.split('/').pop() || zipEntry.name, { type: fileData.type });
+            audioFilesToProcess.push({ file: audioFile, name: audioFile.name });
+          };
+          zipPromises.push(promise());
+        });
+        await Promise.all(zipPromises);
+        setProcessingStatus(prev => [...prev, `Se encontraron ${foundInZip} sonidos en ${zipFile.name}.`]);
+      } catch (e) {
+        console.error("Error al descomprimir el ZIP:", e);
+        setProcessingStatus(prev => [...prev, `Error al leer ${zipFile.name}`]);
+        toast({ variant: "destructive", title: "Error de ZIP", description: `No se pudo procesar el archivo ${zipFile.name}.` });
+      }
+    };
+
     for (const file of acceptedFiles) {
-        setProcessingStatus(prev => [...prev, `Leyendo ${file.name}...`]);
-        if (file.name.toLowerCase().endsWith('.zip')) {
-            try {
-              const zip = await JSZip.loadAsync(file);
-              const zipPromises: Promise<void>[] = [];
-              let foundInZip = 0;
-              zip.forEach((relativePath, zipEntry) => {
-                  if (zipEntry.dir || relativePath.startsWith('__MACOSX/') || !(zipEntry.name.toLowerCase().endsWith('.wav') || zipEntry.name.toLowerCase().endsWith('.mp3'))) {
-                      return;
-                  }
-                  foundInZip++;
-                  const promise = async () => {
-                      const fileData = await zipEntry.async('blob');
-                      const audioFile = new File([fileData], zipEntry.name.split('/').pop() || zipEntry.name, { type: fileData.type });
-                      audioFilesToProcess.push({ file: audioFile, name: audioFile.name });
-                  };
-                  zipPromises.push(promise());
-              });
-              await Promise.all(zipPromises);
-              setProcessingStatus(prev => [...prev, `Se encontraron ${foundInZip} sonidos en ${file.name}.`]);
-            } catch (e) {
-              console.error("Error al descomprimir el ZIP:", e);
-              setProcessingStatus(prev => [...prev, `Error al leer ${file.name}`]);
-              toast({ variant: "destructive", title: "Error de ZIP", description: `No se pudo procesar el archivo ${file.name}.` });
-            }
-        } else if (file.type.startsWith('audio/')) {
-            audioFilesToProcess.push({ file: file, name: file.name });
-        }
+      setProcessingStatus(prev => [...prev, `Leyendo ${file.name}...`]);
+
+      if (file.name.toLowerCase().endsWith('.zip')) {
+        await processZip(file);
+      } else if (file.type.startsWith('audio/')) {
+        audioFilesToProcess.push({ file: file, name: file.name });
+      }
     }
     
     if (audioFilesToProcess.length === 0) {
-      toast({ variant: "destructive", title: "No se encontraron archivos", description: "No se encontraron archivos de audio (.wav o .mp3) válidos en la selección." });
+      if(acceptedFiles.length > 0) {
+        toast({ variant: "destructive", title: "No se encontraron archivos", description: "No se encontraron archivos de audio (.wav o .mp3) válidos en la selección." });
+      }
       setIsProcessing(false);
       setProcessingStatus([]);
       return;
@@ -262,7 +269,11 @@ const KitStudioTab = () => {
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
       onDrop,
-      accept: { 'audio/wav': ['.wav'], 'audio/mpeg': ['.mp3'], 'application/zip': ['.zip'] }
+      accept: { 
+        'audio/wav': ['.wav'], 
+        'audio/mpeg': ['.mp3'], 
+        'application/zip': ['.zip'],
+      }
   });
 
   const handleCreateNewKit = () => {
@@ -438,7 +449,7 @@ const KitStudioTab = () => {
                       })
                       .then(blob => {
                           const extension = soundInfo.originalName.split('.').pop() || 'wav';
-                          const safeNameInKit = nameInKit.replace(/[\\/:\*\?"<>\|]/g, '');
+                          const safeNameInKit = nameInKit.replace(/[\\/:\*?"<>\|]/g, '');
                           const finalName = `${safeNameInKit} [${soundInfo.key || 'NK'}].${extension}`;
                           categoryFolder?.file(finalName, blob);
                       })
