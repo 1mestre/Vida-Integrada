@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview An AI flow to generate creative drum kit names.
@@ -13,12 +14,12 @@ import {z} from 'genkit';
 const GenerateKitNamesInputSchema = z.object({
   prompt: z.string().describe('A description of the drum kit genre, style, or vibe.'),
 });
-export type GenerateKitNamesInput = z.infer<typeof GenerateKitNamesInputSchema>;
+type GenerateKitNamesInput = z.infer<typeof GenerateKitNamesInputSchema>;
 
 const GenerateKitNamesOutputSchema = z.object({
   names: z.array(z.string()).length(4).describe('An array of 4 distinct and creative drum kit names.'),
 });
-export type GenerateKitNamesOutput = z.infer<typeof GenerateKitNamesOutputSchema>;
+type GenerateKitNamesOutput = z.infer<typeof GenerateKitNamesOutputSchema>;
 
 export async function generateKitNames(input: GenerateKitNamesInput): Promise<GenerateKitNamesOutput> {
   return generateKitNamesFlow(input);

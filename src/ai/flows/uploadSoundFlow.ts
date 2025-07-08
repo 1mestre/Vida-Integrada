@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview An AI flow to upload a sound file to object storage.
@@ -14,7 +15,7 @@ const UploadSoundInputSchema = z.object({
   soundDataUri: z.string().describe("The sound file as a data URI. Expected format: 'data:<mimetype>;base64,<encoded_data>'."),
   filename: z.string().describe('The original filename of the sound.'),
 });
-export type UploadSoundInput = z.infer<typeof UploadSoundInputSchema>;
+type UploadSoundInput = z.infer<typeof UploadSoundInputSchema>;
 
 export async function uploadSound(input: UploadSoundInput): Promise<string> {
     return uploadSoundFlow(input);

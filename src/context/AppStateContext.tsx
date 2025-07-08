@@ -97,7 +97,7 @@ export interface UniversityTask {
   status: 'pendiente' | 'en progreso' | 'completado';
 }
 
-export type SoundType = 'Kick' | 'Snare' | 'Clap' | 'Hi-Hat' | 'Hi-Hat Open' | 'Hi-Hat Closed' | 'Perc' | 'Rim' | '808 & Bass' | 'FX & Texture' | 'Vocal' | 'Oneshot Melodic' | 'Sin Categoría';
+export type SoundType = 'Kick' | 'Snare' | 'Clap' | 'Hi-Hat' | 'Hi-Hat Open' | 'Perc' | 'Rim' | '808' | 'Bass' | 'FX & Texture' | 'Vocal' | 'Oneshot Melodic' | 'EXTRAS';
 
 export interface SoundLibraryItem {
   id: string;
@@ -224,21 +224,18 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
           const data = docSnap.data();
           
           const sanitizedSoundLibrary = (data.soundLibrary || []).reduce((acc: SoundLibraryItem[], item: Partial<SoundLibraryItem>) => {
-            // Stricter validation: URL must be a string and start with 'http'.
-            // This filters out old/invalid data (like data: URIs) and ensures data integrity.
             if (item && typeof item.storageUrl === 'string' && item.storageUrl.startsWith('http')) {
               const defaults: Omit<SoundLibraryItem, 'id'> = {
                 originalName: 'sonido_desconocido.wav',
                 storageUrl: '',
-                soundType: 'Sin Categoría',
+                soundType: 'EXTRAS',
                 key: null,
               };
-              // Ensure the final object matches the interface
               const completeItem: SoundLibraryItem = {
                   ...defaults,
                   ...item,
                   id: item.id || uuidv4(),
-                  storageUrl: item.storageUrl, // Explicitly carry over the validated URL
+                  storageUrl: item.storageUrl,
               };
               acc.push(completeItem);
             }
@@ -249,8 +246,8 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
           const sanitizedContributions = (data.contributions || []).map((c: any): Contribution => ({
             id: c.id || uuidv4(),
             date: c.date || new Date().toISOString(),
-            netUSDValue: c.netUSDValue ?? c.netUSD ?? 0, // Handles old data structure
-            netCOPValue: c.netCOPValue ?? c.netCOP ?? 0, // Handles old data structure
+            netUSDValue: c.netUSDValue ?? c.netUSD ?? 0,
+            netCOPValue: c.netCOPValue ?? c.netCOP ?? 0,
           }));
 
           const sanitizedWorkItems = (data.workItems || []).map((item: Partial<WorkItem>): WorkItem => {
@@ -312,7 +309,6 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
                 soundNamesInKit: project.soundNamesInKit || {},
             };
         
-            // Check for the old 'sounds' array of objects and migrate it
             if (project.sounds && Array.isArray(project.sounds) && project.sounds.length > 0) {
                 migratedProject.soundIds = [];
                 migratedProject.soundNamesInKit = {};
@@ -324,7 +320,6 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
                 });
             }
             
-            // This is a temporary property and should not be saved
             delete (migratedProject as any).sounds;
         
             return migratedProject;
@@ -346,7 +341,6 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
           
           setAppState(sanitizedState);
         } else {
-          // Document doesn't exist, create it with initial state
           setDoc(docRef, { ...initialAppState, lastUpdated: serverTimestamp() });
         }
         setLoading(false);
@@ -374,7 +368,6 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
 
       if (db) {
         const docRef = doc(db, 'organizador-publico', 'datos-compartidos');
-        // Create a deep copy for Firestore to avoid issues with undefined values from functions etc.
         const stateToSave = JSON.parse(JSON.stringify(updatedState));
         setDoc(docRef, { 
           ...stateToSave,

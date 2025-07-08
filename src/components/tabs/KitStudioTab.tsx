@@ -28,7 +28,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Separator } from '../ui/separator';
 
 
-const soundCategories: SoundType[] = ['Kick', 'Snare', 'Clap', 'Hi-Hat', 'Hi-Hat Open', 'Hi-Hat Closed', 'Perc', 'Rim', '808 & Bass', 'FX & Texture', 'Vocal', 'Oneshot Melodic', 'Sin Categoría'];
+const soundCategories: SoundType[] = ['Kick', 'Snare', 'Clap', 'Hi-Hat', 'Hi-Hat Open', 'Perc', 'Rim', '808', 'Bass', 'FX & Texture', 'Vocal', 'Oneshot Melodic', 'EXTRAS'];
 
 const fileToDataUri = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -103,7 +103,7 @@ const KitStudioTab = () => {
   };
 
 
-  const handlePlaySound = (url: string) => {
+  const handlePlaySound = useCallback((url: string) => {
     if (!url || !url.startsWith('http')) {
       toast({
         variant: "destructive",
@@ -114,15 +114,18 @@ const KitStudioTab = () => {
     }
 
     if (activeAudio.current) {
-      activeAudio.current.pause();
-      activeAudio.current.currentTime = 0;
+        if (activeAudio.current.src === url && !activeAudio.current.paused) {
+            activeAudio.current.pause();
+            return;
+        }
+        activeAudio.current.pause();
     }
+    
     const audio = new Audio(url);
     activeAudio.current = audio;
     audio.play().catch(e => {
-      // Ignore AbortError which is common when interrupting playback
       if (e.name === 'AbortError') {
-        console.log('Playback aborted');
+        // This is a normal interruption, no need to show an error.
         return;
       }
       console.error("Error playing audio:", e);
@@ -132,7 +135,7 @@ const KitStudioTab = () => {
         description: "No se pudo cargar el audio. La URL puede ser inválida o el archivo está corrupto."
       })
     });
-  };
+  }, [toast]);
   
   const handleTypeChange = (id: string, newType: SoundType) => {
     setAppState(prevState => ({
@@ -218,10 +221,10 @@ const KitStudioTab = () => {
 
     // Iterate through dropped files
     for (const file of acceptedFiles) {
-      if (file.name.toLowerCase().endsWith('.zip')) {
-        await processZip(file);
-      } else if (file.type.startsWith('audio/')) {
+      if (file.type.startsWith('audio/')) {
         audioFilesToProcess.push({ file: file, name: file.name });
+      } else if (file.name.toLowerCase().endsWith('.zip')) {
+        await processZip(file);
       }
     }
     
@@ -346,7 +349,7 @@ const KitStudioTab = () => {
       // Then, call the AI to get the real name
       try {
         const descriptionForAI = imagePrompt || activeProject.imagePrompt || 'general purpose';
-        const { newName } = await renameSound({ originalName: sound.originalName, kitDescription: descriptionForAI });
+        const { newName } = await renameSound({ originalName: sound.originalName, kitDescription: descriptionForAI, soundType: sound.soundType });
         setAppState(prevState => ({
             ...prevState,
             drumKitProjects: prevState.drumKitProjects.map(p => {
@@ -362,7 +365,7 @@ const KitStudioTab = () => {
             ...prevState,
             drumKitProjects: prevState.drumKitProjects.map(p => {
                 if (p.id === activeProjectId) {
-                    const newSoundNamesInKit = { ...p.soundNamesInKit, [soundId]: sound.originalName };
+                    const newSoundNamesInKit = { ...p.soundNamesInKit, [soundId]: `${sound.originalName} - ${sound.soundType}` };
                     return { ...p, soundNamesInKit: newSoundNamesInKit };
                 }
                 return p;
@@ -407,75 +410,64 @@ const KitStudioTab = () => {
     const zip = new JSZip();
 
     try {
-      // Handle cover art at the root level
-      if (activeProject.coverArtUrl) {
-        try {
-          const response = await fetch(`/api/r2-proxy?url=${encodeURIComponent(activeProject.coverArtUrl)}`);
-          if (response.ok) {
-            const blob = await response.blob();
-            const extension = blob.type.split('/')[1] || 'png';
-            zip.file(`cover.${extension}`, blob);
-          } else {
-             console.error("Failed to fetch cover art, status:", response.status);
-          }
-        } catch (e) {
-          console.error("Error fetching cover art:", e);
+        // Add README.txt to the root of the zip
+        const readmeContent = `Hey! Thanks for downloading! <3\n\nAll sounds are free to use, hope you make some fire beats with them! :D\n\nEnjoy! :)\n\n- Danodals`;
+        zip.file('README.txt', readmeContent);
+
+        // Handle cover art at the root level
+        if (activeProject.coverArtUrl) {
+            try {
+                const response = await fetch(`/api/r2-proxy?url=${encodeURIComponent(activeProject.coverArtUrl)}`);
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const extension = blob.type.split('/')[1] || 'png';
+                    zip.file(`cover.${extension}`, blob);
+                } else {
+                    console.error("Failed to fetch cover art, status:", response.status);
+                }
+            } catch (e) {
+                console.error("Error fetching cover art:", e);
+            }
         }
-      }
+        
+        // Fetch all sound blobs in parallel
+        const soundFetchPromises = activeProject.soundIds.map(soundId => {
+            const soundInfo = appState.soundLibrary.find(s => s.id === soundId);
+            if (!soundInfo || !soundInfo.storageUrl) return Promise.resolve(null);
+            
+            return fetch(`/api/r2-proxy?url=${encodeURIComponent(soundInfo.storageUrl)}`)
+                .then(response => {
+                    if (!response.ok) throw new Error(`Failed to fetch ${soundInfo.originalName}`);
+                    return response.blob();
+                })
+                .then(blob => ({ soundInfo, blob }))
+                .catch(e => {
+                    console.error(`Error downloading sound ${soundInfo.originalName}:`, e);
+                    toast({ variant: "destructive", title: `Error en Sonido`, description: `No se pudo descargar "${soundInfo.originalName}".` });
+                    return null;
+                });
+        });
 
-      // Group sounds by category
-      const soundsByCategory = activeProject.soundIds.reduce((acc, soundId) => {
-        const soundInfo = appState.soundLibrary.find(s => s.id === soundId);
-        if (soundInfo) {
-          let category: string = soundInfo.soundType;
-          if (category === 'Sin Categoría') {
-            category = 'EXTRAS';
-          }
-          if (!acc[category]) {
-            acc[category] = [];
-          }
-          acc[category].push(soundInfo);
+        const fetchedSounds = (await Promise.all(soundFetchPromises)).filter(Boolean);
+
+        // Add fetched sounds to the zip with correct folder structure
+        for (const { soundInfo, blob } of fetchedSounds) {
+            const nameInKit = activeProject.soundNamesInKit[soundInfo.id];
+            if (!nameInKit) continue;
+
+            const creativeName = nameInKit.replace(` - ${soundInfo.soundType}`, '').trim();
+            const extension = soundInfo.originalName.split('.').pop() || 'wav';
+            const finalName = `${creativeName} (DNDLS) - ${soundInfo.soundType}, ${activeProject.name}.${extension}`;
+            
+            let categoryFolder;
+            if (soundInfo.soundType === 'Hi-Hat Open') {
+                categoryFolder = zip.folder('Hi-Hat')?.folder('Open');
+            } else {
+                categoryFolder = zip.folder(soundInfo.soundType);
+            }
+
+            categoryFolder?.file(finalName, blob);
         }
-        return acc;
-      }, {} as Record<string, SoundLibraryItem[]>);
-
-
-      // Create promises for fetching all sounds
-      const soundPromises = Object.entries(soundsByCategory).flatMap(([category, sounds]) => {
-          if (sounds.length > 0) {
-              const categoryFolder = zip.folder(category);
-              return sounds.map(soundInfo => {
-                  const nameInKit = activeProject.soundNamesInKit[soundInfo.id];
-                  if (!nameInKit || !soundInfo.storageUrl) return Promise.resolve();
-
-                  return fetch(`/api/r2-proxy?url=${encodeURIComponent(soundInfo.storageUrl)}`)
-                      .then(response => {
-                          if (!response.ok) {
-                              throw new Error(`Failed to fetch ${soundInfo.originalName}: ${response.statusText}`);
-                          }
-                          return response.blob();
-                      })
-                      .then(blob => {
-                          const extension = soundInfo.originalName.split('.').pop() || 'wav';
-                          const safeNameInKit = nameInKit.replace(/[\\/:\*?"<>\|]/g, '');
-                          const finalName = `${safeNameInKit} [${soundInfo.key || 'NK'}].${extension}`;
-                          categoryFolder?.file(finalName, blob);
-                      })
-                      .catch(e => {
-                          console.error(`Error downloading sound ${soundInfo.originalName}:`, e);
-                          toast({
-                              variant: "destructive",
-                              title: `Error en Sonido`,
-                              description: `No se pudo descargar "${soundInfo.originalName}".`,
-                          });
-                      });
-              });
-          }
-          return [];
-      });
-
-      // Wait for all sounds to be fetched and added to zip
-      await Promise.all(soundPromises.filter(Boolean));
       
       const content = await zip.generateAsync({ type: 'blob' });
       saveAs(content, `${activeProject.name}.zip`);
