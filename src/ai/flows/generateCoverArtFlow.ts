@@ -23,7 +23,7 @@ const GenerateCoverArtOutputSchema = z.object({
     enhancedPrompt: z.string().describe('The AI-enhanced prompt that was used to generate the image.'),
     error: z.string().optional().describe('An error message if the image generation failed.'),
 });
-type GenerateCoverArtOutput = z.infer<typeof GenerateCoverArtOutputSchema>;
+export type GenerateCoverArtOutput = z.infer<typeof GenerateCoverArtOutputSchema>;
 
 
 export async function generateCoverArt(input: GenerateCoverArtInput): Promise<GenerateCoverArtOutput> {
@@ -88,7 +88,7 @@ const generateCoverArtFlow = ai.defineFlow(
         
         const enhancementResult = await ai.generate({
             prompt: enhancementPromptText,
-            model: 'googleai/gemini-2.5-flash',
+            model: 'googleai/gemini-pro',
         });
         
         enhancedPrompt = enhancementResult.text;

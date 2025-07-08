@@ -523,6 +523,8 @@ const KitStudioTab = () => {
     // The try/catch is now inside the flow, so we just handle the result object.
     const result = await generateCoverArt({ prompt: imagePrompt });
     
+    setLastEnhancedPrompt(result.enhancedPrompt);
+
     if (result.error) {
         // If the flow returned an error, show it in a toast.
         console.error("Error generating cover art:", result.error);
@@ -530,7 +532,6 @@ const KitStudioTab = () => {
     } else if (result.finalUrl) {
         // On success, update state and show a success toast.
         setAppState(prevState => ({ ...prevState, drumKitProjects: prevState.drumKitProjects.map(p => p.id === activeProjectId ? { ...p, coverArtUrl: result.finalUrl } : p) }));
-        setLastEnhancedPrompt(result.enhancedPrompt);
         toast({ title: "¡Carátula generada!", description: "La nueva imagen para tu kit está lista." });
     }
     
