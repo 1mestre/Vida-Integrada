@@ -28,9 +28,11 @@ const prompt = ai.definePrompt({
   name: 'generateKitNamesPrompt',
   input: {schema: GenerateKitNamesInputSchema},
   output: {schema: GenerateKitNamesOutputSchema},
-  prompt: `You are a creative assistant for a music producer named DANODALS. Your task is to generate 4 creative, modern, and marketable names for a drum kit based on the following description. The names should be unique, catchy, and suitable for the specified genre.
+  prompt: `You are a branding expert specializing in creative names for music products. Generate 4 creative, modern, and marketable names based on the following theme or concept. The names should be concise and evocative.
 
-Description: {{{prompt}}}`,
+**CRITICAL RULE:** Do NOT include generic words like "Kit", "Drum", "Rhythm", "Beat", "Pack", or "Sounds". Just provide the creative names themselves.
+
+Theme: {{{prompt}}}`,
 });
 
 const generateKitNamesFlow = ai.defineFlow(

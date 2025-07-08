@@ -12,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload, Search, ListFilter, Play, Trash2, Loader2, Music4, PlusCircle, Sparkles, Image as ImageIcon, Download } from 'lucide-react';
+import { Upload, Search, ListFilter, Play, Trash2, Loader2, Music4, PlusCircle, Sparkles, Image as ImageIcon, Download, Edit } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '../ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
@@ -25,6 +25,7 @@ import { generateCoverArt } from '@/ai/flows/generateCoverArtFlow';
 import { uploadSound } from '@/ai/flows/uploadSoundFlow';
 import { Label } from '@/components/ui/label';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Separator } from '../ui/separator';
 
 
 const soundCategories: SoundType[] = ['Kick', 'Snare', 'Clap', 'Hi-Hat', 'Hi-Hat Open', 'Hi-Hat Closed', 'Perc', 'Rim', '808 & Bass', 'FX & Texture', 'Vocal', 'Oneshot Melodic', 'Sin Categoría'];
@@ -51,6 +52,8 @@ const KitStudioTab = () => {
   const [activeProjectId, setActiveProjectId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<SoundType | 'all'>('all');
+  
+  const [currentKitName, setCurrentKitName] = useState('');
   const [imagePrompt, setImagePrompt] = useState('');
 
 
@@ -65,12 +68,37 @@ const KitStudioTab = () => {
   }, [appState.drumKitProjects, activeProjectId]);
   
   useEffect(() => {
-      if (activeProject) {
-          setImagePrompt(activeProject.imagePrompt || '');
-      } else {
-          setImagePrompt('');
-      }
+    if (activeProject) {
+        setCurrentKitName(activeProject.name);
+        setImagePrompt(activeProject.imagePrompt || '');
+    } else {
+        setCurrentKitName('');
+        setImagePrompt('');
+    }
   }, [activeProject]);
+  
+  const handleUpdateKitName = (newName: string) => {
+    if (!activeProjectId) return;
+    setAppState(prevState => ({
+      ...prevState,
+      drumKitProjects: prevState.drumKitProjects.map(p => 
+        p.id === activeProjectId ? { ...p, name: newName.trim() } : p
+      )
+    }));
+  };
+  
+  const onKitNameBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const newName = e.target.value.trim();
+    if (!activeProjectId || !newName || newName === activeProject?.name) return;
+    handleUpdateKitName(newName);
+    toast({ title: "Nombre del kit actualizado" });
+  };
+  
+  const onSuggestedNameClick = (name: string) => {
+    setCurrentKitName(name); // update local state for input
+    handleUpdateKitName(name); // update global state immediately
+    toast({ title: "Nombre del kit actualizado", description: `Has seleccionado "${name}".` });
+  };
 
 
   const handlePlaySound = (url: string) => {
@@ -470,6 +498,7 @@ const KitStudioTab = () => {
       </header>
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+        {/* Librería Central */}
         <Card className="glassmorphism-card lg:col-span-1">
           <CardHeader>
             <CardTitle>Librería Central</CardTitle>
@@ -547,18 +576,25 @@ const KitStudioTab = () => {
           </CardContent>
         </Card>
 
+        {/* Ensamblador de Kits */}
         <Card className="glassmorphism-card lg:col-span-1" onDragOver={(e) => e.preventDefault()} onDrop={handleDropOnAssembler}>
           <CardHeader>
-            <CardTitle>Ensamblador de Kits</CardTitle>
-            <CardDescription>Crea un kit arrastrando sonidos desde la librería.</CardDescription>
+            <div className="flex justify-between items-center">
+              <CardTitle>Ensamblador de Kits</CardTitle>
+              <Button onClick={handleDownloadKit} disabled={!activeProject || activeProject.soundIds.length === 0 || isDownloading}>
+                {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+                Descargar Kit
+              </Button>
+            </div>
+            <CardDescription>Arrastra sonidos aquí para crear y personalizar tus kits.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-2">
-                <Select value={activeProjectId?.toString() || ''} onValueChange={(v) => setActiveProjectId(Number(v))}>
-                  <SelectTrigger className='w-full'><SelectValue placeholder="Selecciona un kit..."/></SelectTrigger>
-                  <SelectContent>{appState.drumKitProjects.map(proj => (<SelectItem key={proj.id} value={proj.id.toString()}>{proj.name}</SelectItem>))}</SelectContent>
-                </Select>
-                <div className='flex gap-2'>
+              <div className="flex gap-2 items-center">
+                 <Select value={activeProjectId?.toString() || ''} onValueChange={(v) => setActiveProjectId(Number(v))}>
+                   <SelectTrigger className='w-full'><SelectValue placeholder="Selecciona un kit..."/></SelectTrigger>
+                   <SelectContent>{appState.drumKitProjects.map(proj => (<SelectItem key={proj.id} value={proj.id.toString()}>{proj.name}</SelectItem>))}</SelectContent>
+                 </Select>
+                  <Button onClick={handleCreateNewKit}><PlusCircle className='h-4 w-4'/></Button>
                   {activeProject && (
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
@@ -570,73 +606,84 @@ const KitStudioTab = () => {
                       </AlertDialogContent>
                     </AlertDialog>
                   )}
-                  <Button onClick={handleCreateNewKit} className="w-full"><PlusCircle className='h-4 w-4 mr-2'/>Nuevo</Button>
-                  <Button onClick={handleDownloadKit} disabled={!activeProject || activeProject.soundIds.length === 0 || isDownloading} className="w-full">
-                    {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
-                    Descargar
-                  </Button>
-                </div>
               </div>
+              
+              <Separator />
 
-              {activeProject && (
+              {activeProject ? (
                 <div className="space-y-4">
-                  <div className='flex gap-4 items-start'>
-                    <div className='w-32 h-32 rounded-md bg-muted flex-shrink-0 relative flex items-center justify-center'>
-                      {isGeneratingArt ? <Loader2 className="animate-spin h-8 w-8"/> : 
-                        activeProject.coverArtUrl ? <Image src={activeProject.coverArtUrl} alt="Kit cover art" layout="fill" className="object-cover rounded-md" /> :
-                        <ImageIcon className="h-8 w-8 text-muted-foreground"/>
-                      }
-                    </div>
-                    <div className='space-y-2 flex-grow'>
-                      <Label htmlFor="kit-prompt">Descripción del Kit (para la IA)</Label>
-                      <Input id="kit-prompt" placeholder="Ej: Dark trap, estilo Travis Scott..." value={imagePrompt} onChange={(e) => setImagePrompt(e.target.value)}/>
-                       <div className="flex gap-2">
-                          <Button onClick={handleGenerateArt} disabled={isGeneratingArt || !imagePrompt} className="w-full"><Sparkles className='mr-2'/>Generar Carátula</Button>
-                          <Button onClick={handleGenerateNames} disabled={isGeneratingNames || !imagePrompt} className="w-full"><Sparkles className='mr-2'/>Generar Nombres</Button>
-                       </div>
-                    </div>
+                  <div>
+                      <Label htmlFor="kit-name">Nombre Final del Kit</Label>
+                      <Input 
+                        id="kit-name"
+                        value={currentKitName}
+                        onChange={(e) => setCurrentKitName(e.target.value)}
+                        onBlur={onKitNameBlur}
+                        placeholder="Escribe el nombre final del kit"
+                      />
                   </div>
-                  {activeProject.seoNames.length > 0 && (
-                    <div className="space-y-2">
-                      <Label>Nombres Sugeridos:</Label>
-                      <div className="flex flex-wrap gap-2">{activeProject.seoNames.map((name, i) => (<Badge key={i} variant="outline">{name}</Badge>))}</div>
+                  <div className='p-4 border rounded-lg space-y-4 bg-background/30'>
+                    <div className='flex gap-4 items-start'>
+                        <div className='w-32 h-32 rounded-md bg-muted flex-shrink-0 relative flex items-center justify-center'>
+                          {isGeneratingArt ? <Loader2 className="animate-spin h-8 w-8"/> : 
+                            activeProject.coverArtUrl ? <Image src={activeProject.coverArtUrl} alt="Kit cover art" layout="fill" className="object-cover rounded-md" /> :
+                            <ImageIcon className="h-8 w-8 text-muted-foreground"/>
+                          }
+                        </div>
+                        <div className='space-y-2 flex-grow'>
+                          <Label htmlFor="kit-prompt">Descripción para la IA</Label>
+                          <Input id="kit-prompt" placeholder="Ej: Dark trap, estilo Travis Scott..." value={imagePrompt} onChange={(e) => setImagePrompt(e.target.value)}/>
+                           <div className="flex gap-2">
+                              <Button onClick={handleGenerateNames} disabled={isGeneratingNames || !imagePrompt} className="w-full"><Sparkles className='mr-2'/>Sugerir Nombres</Button>
+                              <Button onClick={handleGenerateArt} disabled={isGeneratingArt || !imagePrompt} className="w-full"><Sparkles className='mr-2'/>Generar Carátula</Button>
+                           </div>
+                        </div>
                     </div>
-                  )}
+                     {activeProject.seoNames.length > 0 && (
+                        <div className="space-y-2">
+                          <Label>Nombres Sugeridos (haz clic para usar):</Label>
+                          <div className="flex flex-wrap gap-2">{activeProject.seoNames.map((name, i) => (<Badge key={i} variant="outline" className="cursor-pointer" onClick={() => onSuggestedNameClick(name)}>{name}</Badge>))}</div>
+                        </div>
+                      )}
+                  </div>
+                  
+                  <ScrollArea className={cn("h-[250px] rounded-md border p-4 space-y-2", activeProjectId && "border-primary/50")}>
+                    <AnimatePresence>
+                    {activeProject.soundIds.length === 0 ? (
+                        <div className='text-center text-muted-foreground pt-16'><p>Arrastra y suelta sonidos aquí.</p></div>
+                    ) : (
+                        activeProject.soundIds.map(soundId => {
+                          const soundInfo = appState.soundLibrary.find(s => s.id === soundId);
+                          const nameInKit = activeProject.soundNamesInKit[soundId] || soundInfo?.originalName || 'Cargando...';
+                          const isLoadingName = nameInKit === 'Generando nombre...';
+
+                          return (
+                            <motion.div
+                              key={soundId} layout initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, x: 20 }}
+                              className="flex items-center gap-2 p-2 rounded-md bg-secondary/50"
+                            >
+                              <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => soundInfo && handlePlaySound(soundInfo.storageUrl)} disabled={!soundInfo}><Play className="h-4 w-4"/></Button>
+                              <p className="flex-grow text-sm truncate" title={soundInfo?.originalName}>
+                                  {isLoadingName ? 
+                                    <span className='flex items-center gap-2 text-muted-foreground'><Loader2 className='h-4 w-4 animate-spin'/>Generando...</span> 
+                                    : nameInKit
+                                  }
+                              </p>
+                              {soundInfo && <Badge variant="outline" className="text-xs">{soundInfo.soundType}</Badge>}
+                              <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0 text-destructive" onClick={() => handleRemoveFromKit(soundId)}><Trash2 className="h-4 w-4"/></Button>
+                            </motion.div>
+                          )
+                        })
+                    )}
+                    </AnimatePresence>
+                  </ScrollArea>
+                </div>
+              ) : (
+                <div className='text-center text-muted-foreground h-[50vh] flex flex-col items-center justify-center'>
+                    <Music4 className="mx-auto h-16 w-16" />
+                    <p className="mt-4">Crea un nuevo kit o selecciona uno para empezar.</p>
                 </div>
               )}
-              
-              <ScrollArea className={cn("h-[300px] rounded-md border p-4 space-y-2", activeProjectId && "border-primary/50")}>
-                <AnimatePresence>
-                {!activeProject ? (
-                    <div className='text-center text-muted-foreground pt-16'><Music4 className="mx-auto h-16 w-16" /><p className="mt-4">Crea un nuevo kit o selecciona uno.</p></div>
-                ) : activeProject.soundIds.length === 0 ? (
-                    <div className='text-center text-muted-foreground pt-16'><p>Arrastra y suelta sonidos aquí.</p></div>
-                ) : (
-                    activeProject.soundIds.map(soundId => {
-                      const soundInfo = appState.soundLibrary.find(s => s.id === soundId);
-                      const nameInKit = activeProject.soundNamesInKit[soundId] || soundInfo?.originalName || 'Cargando...';
-                      const isLoadingName = nameInKit === 'Generando nombre...';
-
-                      return (
-                        <motion.div
-                          key={soundId} layout initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, x: 20 }}
-                          className="flex items-center gap-2 p-2 rounded-md bg-secondary/50"
-                        >
-                          <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => soundInfo && handlePlaySound(soundInfo.storageUrl)} disabled={!soundInfo}><Play className="h-4 w-4"/></Button>
-                          <p className="flex-grow text-sm truncate" title={soundInfo?.originalName}>
-                              {isLoadingName ? 
-                                <span className='flex items-center gap-2 text-muted-foreground'><Loader2 className='h-4 w-4 animate-spin'/>Generando...</span> 
-                                : nameInKit
-                              }
-                          </p>
-                          {soundInfo && <Badge variant="outline" className="text-xs">{soundInfo.soundType}</Badge>}
-                          <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0 text-destructive" onClick={() => handleRemoveFromKit(soundId)}><Trash2 className="h-4 w-4"/></Button>
-                        </motion.div>
-                      )
-                    })
-                )}
-                </AnimatePresence>
-              </ScrollArea>
           </CardContent>
         </Card>
       </div>
@@ -645,5 +692,3 @@ const KitStudioTab = () => {
 };
 
 export default KitStudioTab;
-
-    
