@@ -4,6 +4,7 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import Image from 'next/image';
 import { useDropzone } from 'react-dropzone';
+import { saveAs } from 'file-saver';
 import JSZip from 'jszip';
 import { v4 as uuidv4 } from 'uuid';
 import { useAppState, SoundLibraryItem, SoundType, DrumKitProject } from '@/context/AppStateContext';
@@ -11,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload, Search, ListFilter, Play, Trash2, Loader2, Music4, PlusCircle, Sparkles, Image as ImageIcon } from 'lucide-react';
+import { Upload, Search, ListFilter, Play, Trash2, Loader2, Music4, PlusCircle, Sparkles, Image as ImageIcon, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '../ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
@@ -43,6 +44,7 @@ const KitStudioTab = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isGeneratingNames, setIsGeneratingNames] = useState(false);
   const [isGeneratingArt, setIsGeneratingArt] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   const [processingStatus, setProcessingStatus] = useState<string[]>([]);
   const [activeAudio, setActiveAudio] = useState<HTMLAudioElement | null>(null);
   
@@ -72,7 +74,7 @@ const KitStudioTab = () => {
 
 
   const handlePlaySound = (url: string) => {
-    if (!url) {
+    if (!url || !url.startsWith('http')) {
       toast({
         variant: "destructive",
         title: "URL de Sonido Inválida",
@@ -339,6 +341,79 @@ const KitStudioTab = () => {
       }));
   };
 
+  const handleDownloadKit = async () => {
+    if (!activeProject || activeProject.soundIds.length === 0) {
+        toast({
+            variant: "destructive",
+            title: "Kit Vacío",
+            description: "Añade sonidos al kit antes de descargarlo.",
+        });
+        return;
+    }
+
+    setIsDownloading(true);
+    toast({
+        title: "Iniciando descarga...",
+        description: `Preparando "${activeProject.name}.zip". Esto puede tardar un momento.`,
+    });
+
+    const zip = new JSZip();
+
+    try {
+        if (activeProject.coverArtUrl) {
+            const artworkFolder = zip.folder("Artwork");
+            try {
+                const response = await fetch(activeProject.coverArtUrl);
+                const blob = await response.blob();
+                const extension = blob.type.split('/')[1] || 'png';
+                artworkFolder?.file(`cover.${extension}`, blob);
+            } catch (e) {
+                console.error("Failed to fetch cover art:", e);
+            }
+        }
+
+        if (activeProject.seoNames.length > 0) {
+            const namesText = `Suggested names for this kit:\n\n- ${activeProject.seoNames.join('\n- ')}`;
+            zip.file("Suggested Names.txt", namesText);
+        }
+
+        const soundsFolder = zip.folder("Sounds");
+        await Promise.all(
+            activeProject.soundIds.map(async (soundId) => {
+                const soundInfo = appState.soundLibrary.find(s => s.id === soundId);
+                const nameInKit = activeProject.soundNamesInKit[soundId];
+
+                if (soundInfo && nameInKit) {
+                    try {
+                        const response = await fetch(soundInfo.storageUrl);
+                        if (!response.ok) throw new Error(`Failed to fetch ${soundInfo.storageUrl}`);
+                        const blob = await response.blob();
+                        const extension = soundInfo.originalName.split('.').pop() || 'wav';
+                        const safeNameInKit = nameInKit.replace(/[\\/:\*\?"<>\|]/g, '');
+                        soundsFolder?.file(`${safeNameInKit} [${soundInfo.key || 'NK'}] [${soundInfo.soundType}].${extension}`, blob);
+                    } catch (e) {
+                         console.error(`Error descargando el sonido ${soundInfo.originalName}:`, e);
+                    }
+                }
+            })
+        );
+        
+        const content = await zip.generateAsync({ type: 'blob' });
+        saveAs(content, `${activeProject.name}.zip`);
+
+    } catch (error) {
+        console.error("Error creating zip file:", error);
+        toast({
+            variant: "destructive",
+            title: "Error de Descarga",
+            description: "No se pudo generar el archivo ZIP.",
+        });
+    } finally {
+        setIsDownloading(false);
+    }
+  };
+
+
   const filteredSoundLibrary = useMemo(() => {
     return appState.soundLibrary.filter(item => {
         const matchesSearch = item.originalName.toLowerCase().includes(searchTerm.toLowerCase());
@@ -353,9 +428,10 @@ const KitStudioTab = () => {
         return;
     }
     setIsGeneratingNames(true);
+    setAppState(prevState => ({ ...prevState, drumKitProjects: prevState.drumKitProjects.map(p => p.id === activeProjectId ? { ...p, imagePrompt: imagePrompt } : p) }));
     try {
         const result = await generateKitNames({ prompt: imagePrompt });
-        setAppState(prevState => ({ ...prevState, drumKitProjects: prevState.drumKitProjects.map(p => p.id === activeProjectId ? { ...p, seoNames: result.names, imagePrompt: imagePrompt } : p) }));
+        setAppState(prevState => ({ ...prevState, drumKitProjects: prevState.drumKitProjects.map(p => p.id === activeProjectId ? { ...p, seoNames: result.names } : p) }));
         toast({ title: "Nombres generados", description: "La IA ha sugerido algunos nombres para tu kit." });
     } catch (error) {
         console.error("Error generating names:", error);
@@ -371,9 +447,10 @@ const KitStudioTab = () => {
         return;
     }
     setIsGeneratingArt(true);
+    setAppState(prevState => ({ ...prevState, drumKitProjects: prevState.drumKitProjects.map(p => p.id === activeProjectId ? { ...p, imagePrompt: imagePrompt } : p) }));
     try {
         const imageUrl = await generateCoverArt({ prompt: imagePrompt });
-        setAppState(prevState => ({ ...prevState, drumKitProjects: prevState.drumKitProjects.map(p => p.id === activeProjectId ? { ...p, coverArtUrl: imageUrl, imagePrompt: imagePrompt } : p) }));
+        setAppState(prevState => ({ ...prevState, drumKitProjects: prevState.drumKitProjects.map(p => p.id === activeProjectId ? { ...p, coverArtUrl: imageUrl } : p) }));
         toast({ title: "¡Carátula generada!", description: "La nueva imagen para tu kit está lista." });
     } catch (error) {
         console.error("Error generating cover art:", error);
@@ -476,23 +553,29 @@ const KitStudioTab = () => {
             <CardDescription>Crea un kit arrastrando sonidos desde la librería.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-              <div className="flex gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 <Select value={activeProjectId?.toString() || ''} onValueChange={(v) => setActiveProjectId(Number(v))}>
-                  <SelectTrigger className='flex-grow'><SelectValue placeholder="Selecciona un kit..."/></SelectTrigger>
+                  <SelectTrigger className='w-full'><SelectValue placeholder="Selecciona un kit..."/></SelectTrigger>
                   <SelectContent>{appState.drumKitProjects.map(proj => (<SelectItem key={proj.id} value={proj.id.toString()}>{proj.name}</SelectItem>))}</SelectContent>
                 </Select>
-                {activeProject && (
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="destructive" size="icon"><Trash2 className="h-4 w-4"/></Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader><AlertDialogTitle>¿Seguro que quieres eliminar este kit?</AlertDialogTitle><AlertDialogDescription>Esta acción no se puede deshacer. Se borrará permanentemente el proyecto del kit "{activeProject.name}". Los sonidos originales permanecerán en tu librería.</AlertDialogDescription></AlertDialogHeader>
-                      <AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction onClick={() => handleDeleteKit(activeProject.id)}>Eliminar</AlertDialogAction></AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                )}
-                <Button onClick={handleCreateNewKit}><PlusCircle className='h-4 w-4 mr-2'/>Nuevo Kit</Button>
+                <div className='flex gap-2'>
+                  {activeProject && (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="destructive" size="icon"><Trash2 className="h-4 w-4"/></Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader><AlertDialogTitle>¿Seguro que quieres eliminar este kit?</AlertDialogTitle><AlertDialogDescription>Esta acción no se puede deshacer. Se borrará permanentemente el proyecto del kit "{activeProject.name}". Los sonidos originales permanecerán en tu librería.</AlertDialogDescription></AlertDialogHeader>
+                        <AlertDialogFooter><AlertDialogCancel>Cancelar</AlertDialogCancel><AlertDialogAction onClick={() => handleDeleteKit(activeProject.id)}>Eliminar</AlertDialogAction></AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
+                  <Button onClick={handleCreateNewKit} className="w-full"><PlusCircle className='h-4 w-4 mr-2'/>Nuevo</Button>
+                  <Button onClick={handleDownloadKit} disabled={!activeProject || activeProject.soundIds.length === 0 || isDownloading} className="w-full">
+                    {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+                    Descargar
+                  </Button>
+                </div>
               </div>
 
               {activeProject && (
@@ -562,3 +645,5 @@ const KitStudioTab = () => {
 };
 
 export default KitStudioTab;
+
+    
