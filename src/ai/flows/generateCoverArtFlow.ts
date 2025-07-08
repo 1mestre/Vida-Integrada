@@ -58,11 +58,37 @@ const generateCoverArtFlow = ai.defineFlow(
     outputSchema: z.string().url().describe('The public URL of the generated image in Cloudflare R2.'),
   },
   async ({prompt}) => {
-    // ---- PASO 1: GENERACIÓN INICIAL DE LA IMAGEN ----
-    // Se utiliza el modelo de generación de imágenes de Gemini con un prompt detallado para lograr un estilo orgánico y realista.
+    // ---- PASO 0: MEJORA DEL PROMPT ----
+    // Usamos Gemini 2.5 para tomar el concepto simple del usuario y convertirlo en una descripción rica y detallada
+    // para la IA de generación de imágenes. Esto mejora drásticamente la calidad y creatividad del resultado.
+    const enhancementPrompt = `You are a creative director and expert prompt engineer for an advanced image generation AI. Your task is to take a user's core concept and expand it into a rich, detailed, and artistic prompt. This new prompt will be used to generate a premium, 3D-rendered product packaging image.
+
+    **Core Concept:** "${prompt}"
+
+    **Instructions:**
+    1.  **Elaborate on the Concept:** Expand on the core concept with evocative details. Think about mood, atmosphere, and underlying story.
+    2.  **Describe Visuals:** Detail specific visual elements, textures, materials, and lighting. Use cinematic and artistic language.
+    3.  **Maintain Structure:** The final output should be a single, coherent paragraph.
+    4.  **Do NOT add any text like "Prompt:" or titles.** Just return the pure, enhanced prompt.
+    
+    Example:
+    User Concept: "Dark trap, Travis Scott style"
+    Your Output: "A moody, cinematic 3D render of a premium product box with a dark, enigmatic aesthetic inspired by Travis Scott's 'Astroworld'. The packaging features a blend of matte black textures and subtle, iridescent details that catch the light. The scene is lit with atmospheric neon glows in deep purples and reds, casting long, soft shadows. The overall composition feels grounded yet otherworldly, with a focus on tactile realism and a hint of cosmic mystery."`;
+    
+    const enhancementResult = await ai.generate({
+        prompt: enhancementPrompt,
+        model: 'googleai/gemini-2.5-flash', // Usando explícitamente el modelo solicitado.
+    });
+    
+    const enhancedPrompt = enhancementResult.text;
+    if (!enhancedPrompt) {
+        throw new Error('Failed to enhance the prompt. The AI did not return a description.');
+    }
+
+    // ---- PASO 1: GENERACIÓN INICIAL DE LA IMAGEN (usando el prompt mejorado) ----
     const initialGeneration = await ai.generate({
       model: 'googleai/gemini-2.0-flash-preview-image-generation',
-      prompt: `A realistic, handcrafted 3D-rendered product packaging. The box should appear modern and premium with a natural, organic aesthetic. Emphasize depth, physicality, and tactile design — soft textures, subtle imperfections, and smooth transitions between surfaces. Lighting should feel cinematic and ambient, avoiding overly sharp digital edges. The composition must appear thoughtfully layered, grounded in realism, and artistically composed as if designed by a human with a focus on elegance and authenticity. The visual theme for the packaging is: "${prompt}". The design MUST include artistic graphical elements and typography that are directly inspired by this theme. The text must be legible and masterfully integrated into the artwork.`,
+      prompt: `A realistic, handcrafted 3D-rendered product packaging. The box should appear modern and premium with a natural, organic aesthetic. Emphasize depth, physicality, and tactile design — soft textures, subtle imperfections, and smooth transitions between surfaces. Lighting should feel cinematic and ambient, avoiding overly sharp digital edges. The composition must appear thoughtfully layered, grounded in realism, and artistically composed as if designed by a human with a focus on elegance and authenticity. The visual theme for the packaging is: "${enhancedPrompt}". The design MUST include artistic graphical elements and typography that are directly inspired by this theme. The text must be legible and masterfully integrated into the artwork.`,
       config: {
         responseModalities: ['TEXT', 'IMAGE'],
       },
