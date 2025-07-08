@@ -391,7 +391,7 @@ const KitStudioTab = () => {
       // Handle cover art at the root level
       if (activeProject.coverArtUrl) {
         try {
-          const response = await fetch(activeProject.coverArtUrl);
+          const response = await fetch(`/api/r2-proxy?url=${encodeURIComponent(activeProject.coverArtUrl)}`);
           if (response.ok) {
             const blob = await response.blob();
             const extension = blob.type.split('/')[1] || 'png';
@@ -429,7 +429,7 @@ const KitStudioTab = () => {
                   const nameInKit = activeProject.soundNamesInKit[soundInfo.id];
                   if (!nameInKit || !soundInfo.storageUrl) return Promise.resolve();
 
-                  return fetch(soundInfo.storageUrl)
+                  return fetch(`/api/r2-proxy?url=${encodeURIComponent(soundInfo.storageUrl)}`)
                       .then(response => {
                           if (!response.ok) {
                               throw new Error(`Failed to fetch ${soundInfo.originalName}: ${response.statusText}`);
