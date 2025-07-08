@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils';
 import { ScrollArea } from '../ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { AnimatePresence, motion } from 'framer-motion';
+import { Badge } from '@/components/ui/badge';
 
 
 const soundCategories: SoundType[] = ['Kick', 'Snare', 'Clap', 'Hi-Hat', 'Hi-Hat Open', 'Hi-Hat Closed', 'Perc', 'Rim', '808 & Bass', 'FX & Texture', 'Vocal', 'Oneshot Melodic', 'Sin Categoría'];
@@ -165,10 +166,10 @@ const KitStudioTab = () => {
           audioFilesToProcess.map(f => handleFileUpload(f.file, f.name))
       );
 
-      setAppState(prevState => ({
-          ...prevState,
-          soundLibrary: [...prevState.soundLibrary, ...newLibraryItems]
-      }));
+      setAppState(prevState => {
+        const updatedState = { ...prevState, soundLibrary: [...prevState.soundLibrary, ...newLibraryItems] };
+        return updatedState;
+      });
       
       toast({
         title: "¡Éxito!",
@@ -440,3 +441,5 @@ const KitStudioTab = () => {
 };
 
 export default KitStudioTab;
+
+    
