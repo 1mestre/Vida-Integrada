@@ -94,23 +94,33 @@ const generateCoverArtFlow = ai.defineFlow(
     }
 
     // ---- PASO 1: GENERACIÓN DE LA IMAGEN ----
-    // Este prompt es extremadamente explícito para evitar la generación de texto.
+    // This prompt is extremely explicit to avoid the generation of text.
     const imageGenerationPrompt = `A realistic, handcrafted 3D-rendered product packaging. The box should appear modern and premium with a natural, organic aesthetic. Emphasize depth, physicality, and tactile design—soft textures, subtle imperfections, and smooth transitions between surfaces. Lighting should feel cinematic and ambient, avoiding overly sharp digital edges. The composition must appear thoughtfully layered, grounded in realism, and artistically composed.
     
     CRITICAL COMMAND: The packaging design MUST BE PURELY GRAPHICAL. It must not contain any words, letters, text, typography, or numbers of any kind. This is a visual-only template. I will reject any image that contains text.
     
     The visual theme that inspires the packaging's graphical elements is: "${enhancedPrompt}".`;
 
-    const { media } = await ai.generate({
-      model: 'googleai/gemini-2.0-flash-preview-image-generation',
-      prompt: imageGenerationPrompt,
-      config: {
-        responseModalities: ['TEXT', 'IMAGE'],
-      },
-    });
+    let media;
+    try {
+        const generationResult = await ai.generate({
+          model: 'googleai/gemini-2.0-flash-preview-image-generation',
+          prompt: imageGenerationPrompt,
+          config: {
+            responseModalities: ['TEXT', 'IMAGE'],
+          },
+        });
+        media = generationResult.media;
+    } catch (e: any) {
+        if (e.message && (e.message.includes('429') || e.message.toLowerCase().includes('quota'))) {
+            throw new Error('Límite de cuota de API alcanzado. Por favor, intenta de nuevo más tarde o añade nuevas API keys de un proyecto de Google Cloud diferente.');
+        }
+        throw new Error(`Error inesperado en la generación de imagen: ${e.message}`);
+    }
 
-    if (!media.url) {
-      throw new Error('Initial image generation failed.');
+
+    if (!media || !media.url) {
+      throw new Error('La IA no devolvió una imagen. Intenta con una descripción diferente.');
     }
     
     // ---- PASO 2: DECODIFICACIÓN Y SUBIDA ----
