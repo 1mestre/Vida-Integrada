@@ -527,7 +527,6 @@ const KitStudioTab = () => {
 
     if (result.error) {
         // If the flow returned an error, show it in a toast.
-        console.error("Error generating cover art:", result.error);
         toast({ variant: "destructive", title: "Error de IA", description: result.error });
     } else if (result.finalUrl) {
         // On success, update state and show a success toast.
