@@ -519,17 +519,22 @@ const KitStudioTab = () => {
     }
     setIsGeneratingArt(true);
     setAppState(prevState => ({ ...prevState, drumKitProjects: prevState.drumKitProjects.map(p => p.id === activeProjectId ? { ...p, imagePrompt: imagePrompt } : p) }));
-    try {
-        const { finalUrl, enhancedPrompt } = await generateCoverArt({ prompt: imagePrompt });
-        setAppState(prevState => ({ ...prevState, drumKitProjects: prevState.drumKitProjects.map(p => p.id === activeProjectId ? { ...p, coverArtUrl: finalUrl } : p) }));
-        setLastEnhancedPrompt(enhancedPrompt);
+    
+    // The try/catch is now inside the flow, so we just handle the result object.
+    const result = await generateCoverArt({ prompt: imagePrompt });
+    
+    if (result.error) {
+        // If the flow returned an error, show it in a toast.
+        console.error("Error generating cover art:", result.error);
+        toast({ variant: "destructive", title: "Error de IA", description: result.error });
+    } else if (result.finalUrl) {
+        // On success, update state and show a success toast.
+        setAppState(prevState => ({ ...prevState, drumKitProjects: prevState.drumKitProjects.map(p => p.id === activeProjectId ? { ...p, coverArtUrl: result.finalUrl } : p) }));
+        setLastEnhancedPrompt(result.enhancedPrompt);
         toast({ title: "¡Carátula generada!", description: "La nueva imagen para tu kit está lista." });
-    } catch (error: any) {
-        console.error("Error generating cover art:", error);
-        toast({ variant: "destructive", title: "Error de IA", description: error?.message || "No se pudo generar la imagen." });
-    } finally {
-        setIsGeneratingArt(false);
     }
+    
+    setIsGeneratingArt(false);
   };
 
   return (

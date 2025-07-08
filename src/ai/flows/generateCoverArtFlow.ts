@@ -17,10 +17,11 @@ const GenerateCoverArtInputSchema = z.object({
 });
 type GenerateCoverArtInput = z.infer<typeof GenerateCoverArtInputSchema>;
 
-// The new output schema that includes the final URL and the enhanced prompt
+// The new output schema that includes the final URL, the enhanced prompt, and a potential error.
 const GenerateCoverArtOutputSchema = z.object({
-    finalUrl: z.string().url().describe('The public URL of the generated image in Cloudflare R2.'),
+    finalUrl: z.string().url().nullable().describe('The public URL of the generated image, or null if an error occurred.'),
     enhancedPrompt: z.string().describe('The AI-enhanced prompt that was used to generate the image.'),
+    error: z.string().optional().describe('An error message if the image generation failed.'),
 });
 type GenerateCoverArtOutput = z.infer<typeof GenerateCoverArtOutputSchema>;
 
@@ -68,82 +69,84 @@ const generateCoverArtFlow = ai.defineFlow(
     outputSchema: GenerateCoverArtOutputSchema, // Use the new output schema
   },
   async ({prompt}) => {
-    // ---- PASO 0: MEJORA DEL PROMPT ----
-    const enhancementPromptText = `You are a creative director for a music brand. A user has provided a core concept for a product's packaging. Your task is to expand this concept into a slightly more detailed and descriptive paragraph that an image generation AI can use.
-
-    **Core Concept:** "${prompt}"
-
-    **Instructions:**
-    1.  **Extend, Don't Invent:** Your main goal is to elaborate on the user's core concept. Do not introduce new, unrelated themes or elements.
-    2.  **Translate to a Visual for a Box:** Describe how the core concept could be represented visually *on a product box*. Focus on mood, atmosphere, color palettes, and textures that are directly relatable to the concept provided.
-    3.  **Describe the Vibe:** Use evocative, artistic language to describe the overall feeling and aesthetic of the packaging.
-    4.  **Single Paragraph Output:** The final output must be a single, coherent paragraph, without any titles or labels.
-    
-    Example:
-    User Concept: "Dark trap, Travis Scott style"
-    Your Output: "A moody, cinematic 3D render of a premium product box with a dark, enigmatic aesthetic inspired by Travis Scott's 'Astroworld'. The packaging features a blend of matte black textures and subtle, iridescent details that catch the light. The scene is lit with atmospheric neon glows in deep purples and reds, casting long, soft shadows. The overall composition feels grounded yet otherworldly, with a focus on tactile realism, and a hint of cosmic mystery."`;
-    
-    const enhancementResult = await ai.generate({
-        prompt: enhancementPromptText,
-        model: 'googleai/gemini-2.5-flash',
-    });
-    
-    const enhancedPrompt = enhancementResult.text;
-    if (!enhancedPrompt) {
-        throw new Error('Failed to enhance the prompt. The AI did not return a description.');
-    }
-
-    // ---- PASO 1: GENERACIÓN DE LA IMAGEN ----
-    // This prompt is extremely explicit to avoid the generation of text.
-    const imageGenerationPrompt = `A realistic, handcrafted 3D-rendered product packaging. The box should appear modern and premium with a natural, organic aesthetic. Emphasize depth, physicality, and tactile design—soft textures, subtle imperfections, and smooth transitions between surfaces. Lighting should feel cinematic and ambient, avoiding overly sharp digital edges. The composition must appear thoughtfully layered, grounded in realism, and artistically composed.
-    
-    CRITICAL COMMAND: The packaging design MUST BE PURELY GRAPHICAL. It must not contain any words, letters, text, typography, or numbers of any kind. This is a visual-only template. I will reject any image that contains text.
-    
-    The visual theme that inspires the packaging's graphical elements is: "${enhancedPrompt}".`;
-
-    let media;
+    let enhancedPrompt = '';
     try {
-        const generationResult = await ai.generate({
-          model: 'googleai/gemini-2.0-flash-preview-image-generation',
-          prompt: imageGenerationPrompt,
-          config: {
-            responseModalities: ['TEXT', 'IMAGE'],
-          },
+        // ---- PASO 0: MEJORA DEL PROMPT ----
+        const enhancementPromptText = `You are a creative director AI. A user has provided a core concept. Your task is to expand this into a vivid, single-paragraph visual description for an image generation AI.
+
+        **Core Concept:** ${prompt}
+        
+        **CRITICAL INSTRUCTIONS:**
+        1.  **NO TEXT WORDS:** Do NOT use words like "typography", "text", "letters", "words", "font", or "type" in your output.
+        2.  **VISUALS ONLY:** Describe only visual elements: colors, textures, lighting, mood, composition, and objects.
+        3.  **DESCRIBE A SCENE:** Frame your description as a scene for a 3D render of a product box.
+        4.  **SINGLE PARAGRAPH:** Output a single, coherent paragraph.
+        
+        Example:
+        User Concept: "Dark trap, Travis Scott style"
+        Your Output: "A moody, cinematic 3D render of a premium product box with a dark, enigmatic aesthetic. The packaging features a blend of matte black textures and subtle, iridescent details that catch the light. The scene is lit with atmospheric neon glows in deep purples and reds, casting long, soft shadows. The overall composition feels grounded yet otherworldly, with a focus on tactile realism, and a hint of cosmic mystery."`;
+        
+        const enhancementResult = await ai.generate({
+            prompt: enhancementPromptText,
+            model: 'googleai/gemini-2.5-flash',
         });
-        media = generationResult.media;
-    } catch (e: any) {
-        if (e.message && (e.message.includes('429') || e.message.toLowerCase().includes('quota'))) {
-            throw new Error('Límite de cuota de API alcanzado. Por favor, intenta de nuevo más tarde o añade nuevas API keys de un proyecto de Google Cloud diferente.');
+        
+        enhancedPrompt = enhancementResult.text;
+        if (!enhancedPrompt) {
+            throw new Error('Failed to enhance the prompt. The AI did not return a description.');
         }
-        throw new Error(`Error inesperado en la generación de imagen: ${e.message}`);
+
+        // ---- PASO 1: GENERACIÓN DE LA IMAGEN ----
+        const imageGenerationPrompt = `You are a 3D artist creating a piece of packaging art.
+        
+        **THE SINGLE MOST IMPORTANT RULE:** The design must be PURELY GRAPHICAL and ABSTRACT. It must NOT contain any words, letters, text, typography, numbers, or characters of any kind. I will reject any image that contains elements that even resemble letters.
+        
+        **INSPIRATION FOR THE VISUALS (Do NOT write these words):** ${enhancedPrompt}`;
+
+        const generationResult = await ai.generate({
+            model: 'googleai/gemini-2.0-flash-preview-image-generation',
+            prompt: imageGenerationPrompt,
+            config: {
+                responseModalities: ['TEXT', 'IMAGE'],
+            },
+        });
+        
+        const media = generationResult.media;
+
+        if (!media || !media.url) {
+          throw new Error('La IA no devolvió una imagen. Intenta con una descripción diferente.');
+        }
+        
+        // ---- PASO 2: DECODIFICACIÓN Y SUBIDA ----
+        const base64Data = media.url.split(';base64,').pop();
+        if (!base64Data) {
+            throw new Error('Invalid data URI format.');
+        }
+        const imageBuffer = Buffer.from(base64Data, 'base64');
+        const contentType = media.url.substring(media.url.indexOf(':') + 1, media.url.indexOf(';'));
+
+        const filename = `cover-art/${uuidv4()}.png`;
+        
+        await s3.send(
+          new PutObjectCommand({
+            Bucket: bucketName,
+            Key: filename,
+            Body: imageBuffer,
+            ContentType: contentType,
+          })
+        );
+
+        // ---- PASO 3: DEVOLUCIÓN DE RESULTADOS ----
+        const finalUrl = `${publicUrl}/${filename}`;
+        return { finalUrl, enhancedPrompt };
+
+    } catch (e: any) {
+        let errorMessage = `Error inesperado en la generación de imagen: ${e.message}`;
+        if (e.message && (e.message.includes('429') || e.message.toLowerCase().includes('quota'))) {
+            errorMessage = 'Límite de cuota de API alcanzado. Por favor, intenta de nuevo más tarde o añade nuevas API keys de un proyecto de Google Cloud diferente.';
+        }
+        // Instead of throwing, return the error in the payload
+        return { finalUrl: null, enhancedPrompt: enhancedPrompt || prompt, error: errorMessage };
     }
-
-
-    if (!media || !media.url) {
-      throw new Error('La IA no devolvió una imagen. Intenta con una descripción diferente.');
-    }
-    
-    // ---- PASO 2: DECODIFICACIÓN Y SUBIDA ----
-    const base64Data = media.url.split(';base64,').pop();
-    if (!base64Data) {
-        throw new Error('Invalid data URI format.');
-    }
-    const imageBuffer = Buffer.from(base64Data, 'base64');
-    const contentType = media.url.substring(media.url.indexOf(':') + 1, media.url.indexOf(';'));
-
-    const filename = `cover-art/${uuidv4()}.png`;
-    
-    await s3.send(
-      new PutObjectCommand({
-        Bucket: bucketName,
-        Key: filename,
-        Body: imageBuffer,
-        ContentType: contentType,
-      })
-    );
-
-    // ---- PASO 3: DEVOLUCIÓN DE RESULTADOS ----
-    const finalUrl = `${publicUrl}/${filename}`;
-    return { finalUrl, enhancedPrompt };
   }
 );
