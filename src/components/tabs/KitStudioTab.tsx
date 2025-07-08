@@ -1,19 +1,20 @@
 
 "use client";
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import JSZip from 'jszip';
 import { v4 as uuidv4 } from 'uuid';
-import { useAppState, SoundLibraryItem, SoundType } from '@/context/AppStateContext';
+import { useAppState, SoundLibraryItem, SoundType, DrumKitProject } from '@/context/AppStateContext';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload, Search, ListFilter, Play, Trash2, Loader2, Music4 } from 'lucide-react';
+import { Upload, Search, ListFilter, Play, Trash2, Loader2, Music4, PlusCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '../ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
+import { AnimatePresence, motion } from 'framer-motion';
 
 
 const soundCategories: SoundType[] = ['Kick', 'Snare', 'Clap', 'Hi-Hat', 'Hi-Hat Open', 'Hi-Hat Closed', 'Perc', 'Rim', '808 & Bass', 'FX & Texture', 'Vocal', 'Oneshot Melodic', 'Sin Categoría'];
@@ -24,6 +25,16 @@ const KitStudioTab = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingStatus, setProcessingStatus] = useState<string[]>([]);
   const [activeAudio, setActiveAudio] = useState<HTMLAudioElement | null>(null);
+  
+  const [activeProjectId, setActiveProjectId] = useState<number | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterType, setFilterType] = useState<SoundType | 'all'>('all');
+
+  useEffect(() => {
+    if (!activeProjectId && appState.drumKitProjects.length > 0) {
+        setActiveProjectId(appState.drumKitProjects[0].id);
+    }
+  }, [appState.drumKitProjects, activeProjectId]);
 
   const handlePlaySound = (url: string) => {
     if (activeAudio) {
@@ -54,10 +65,18 @@ const KitStudioTab = () => {
   };
 
   const handleDeleteSound = (id: string) => {
-    setAppState(prevState => ({
+    setAppState(prevState => {
+      const updatedProjects = prevState.drumKitProjects.map(proj => ({
+        ...proj,
+        soundIds: proj.soundIds.filter(soundId => soundId !== id)
+      }));
+
+      return {
         ...prevState,
-        soundLibrary: prevState.soundLibrary.filter(item => item.id !== id)
-    }));
+        soundLibrary: prevState.soundLibrary.filter(item => item.id !== id),
+        drumKitProjects: updatedProjects,
+      }
+    });
   };
 
   const handleFileUpload = useCallback(async (file: File, originalName: string) => {
@@ -98,13 +117,12 @@ const KitStudioTab = () => {
                 for (const relativePath in zip.files) {
                     const zipEntry = zip.files[relativePath];
 
-                    // Skip directories and Mac-specific metadata folders
                     if (zipEntry.dir || relativePath.startsWith('__MACOSX/')) {
                         continue;
                     }
                     
-                    const normalizedName = zipEntry.name.trim().toLowerCase();
-                    if (normalizedName.endsWith('.wav') || normalizedName.endsWith('.mp3')) {
+                    const normalizedName = (zipEntry.name.split('/').pop() || zipEntry.name).trim().toLowerCase();
+                    if (normalizedName && (normalizedName.endsWith('.wav') || normalizedName.endsWith('.mp3'))) {
                         foundInZip++;
                         const promise = async () => {
                             const fileData = await zipEntry.async('blob');
@@ -171,6 +189,96 @@ const KitStudioTab = () => {
       }
   });
 
+  const handleCreateNewKit = () => {
+    const newKit: DrumKitProject = {
+        id: Date.now(),
+        name: `Nuevo Kit - ${new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' })}`,
+        coverArtUrl: null,
+        imagePrompt: '',
+        seoNames: [],
+        soundIds: [],
+    };
+    setAppState(prevState => ({
+        ...prevState,
+        drumKitProjects: [...prevState.drumKitProjects, newKit]
+    }));
+    setActiveProjectId(newKit.id);
+  };
+
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>, soundId: string) => {
+      e.dataTransfer.setData("soundId", soundId);
+  };
+
+  const handleDropOnAssembler = (e: React.DragEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      if (!activeProjectId) {
+          toast({
+              variant: 'destructive',
+              title: "No hay un kit seleccionado",
+              description: "Por favor, crea o selecciona un kit antes de añadirle sonidos.",
+          });
+          return;
+      }
+
+      const soundId = e.dataTransfer.getData("soundId");
+      if (!soundId) return;
+      
+      setAppState(prevState => {
+          const activeProject = prevState.drumKitProjects.find(p => p.id === activeProjectId);
+          if (!activeProject || activeProject.soundIds.includes(soundId)) {
+              return prevState; 
+          }
+
+          const updatedProject = {
+              ...activeProject,
+              soundIds: [...activeProject.soundIds, soundId]
+          };
+
+          return { 
+            ...prevState,
+            drumKitProjects: prevState.drumKitProjects.map(p => p.id === activeProjectId ? updatedProject : p) 
+          };
+      });
+  };
+  
+  const handleRemoveFromKit = (soundId: string) => {
+      if (!activeProjectId) return;
+
+      setAppState(prevState => {
+           const activeProject = prevState.drumKitProjects.find(p => p.id === activeProjectId);
+           if (!activeProject) return prevState;
+
+           const updatedProject = {
+               ...activeProject,
+               soundIds: activeProject.soundIds.filter(id => id !== soundId)
+           };
+          
+           return { 
+            ...prevState,
+            drumKitProjects: prevState.drumKitProjects.map(p => p.id === activeProjectId ? updatedProject : p) 
+          };
+      });
+  };
+
+  const filteredSoundLibrary = useMemo(() => {
+    return appState.soundLibrary.filter(item => {
+        const matchesSearch = item.originalName.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesFilter = filterType === 'all' || item.soundType === filterType;
+        return matchesSearch && matchesFilter;
+    });
+  }, [appState.soundLibrary, searchTerm, filterType]);
+
+  const activeProject = useMemo(() => {
+      return appState.drumKitProjects.find(p => p.id === activeProjectId);
+  }, [appState.drumKitProjects, activeProjectId]);
+
+  const soundsInKit = useMemo(() => {
+      if (!activeProject) return [];
+      return activeProject.soundIds.map(id => 
+          appState.soundLibrary.find(s => s.id === id)
+      ).filter((s): s is SoundLibraryItem => s !== undefined);
+  }, [activeProject, appState.soundLibrary]);
+
   return (
     <div className="space-y-8">
       <header className="text-center space-y-2">
@@ -210,14 +318,15 @@ const KitStudioTab = () => {
             <div className="flex gap-2">
               <div className="relative flex-grow">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Buscar en la librería..." className="pl-10" />
+                <Input placeholder="Buscar en la librería..." className="pl-10" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
               </div>
-              <Select>
+              <Select value={filterType} onValueChange={(v) => setFilterType(v as SoundType | 'all')}>
                   <SelectTrigger className="w-[180px]">
                       <ListFilter className="mr-2 h-4 w-4" />
                       <SelectValue placeholder="Filtrar por tipo" />
                   </SelectTrigger>
                   <SelectContent>
+                      <SelectItem value="all">Todos</SelectItem>
                       {soundCategories.map(category => (
                         <SelectItem key={category} value={category}>{category}</SelectItem>
                       ))}
@@ -226,46 +335,103 @@ const KitStudioTab = () => {
             </div>
             <ScrollArea className="h-96 rounded-md border">
               <div className='p-4 space-y-2'>
-                {appState.soundLibrary.length === 0 && !isProcessing ? (
-                  <p className="text-muted-foreground text-center py-16">
-                    Tu librería está vacía. ¡Sube algunos sonidos para empezar!
-                  </p>
-                ) : (
-                  appState.soundLibrary.map(item => (
-                    <div key={item.id} className="flex items-center gap-2 p-2 rounded-md bg-secondary/50">
-                      <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => handlePlaySound(item.storageUrl)}><Play className="h-4 w-4"/></Button>
-                      <p className="flex-grow text-sm truncate" title={item.originalName}>{item.originalName}</p>
-                      <Select value={item.soundType} onValueChange={(v) => handleTypeChange(item.id, v as SoundType)}>
-                          <SelectTrigger className="w-[130px] h-8 text-xs shrink-0"><SelectValue/></SelectTrigger>
-                          <SelectContent>{soundCategories.map(c => <SelectItem key={c} value={c} className="text-xs">{c}</SelectItem>)}</SelectContent>
-                      </Select>
-                       <Input 
-                          placeholder="Key" 
-                          value={item.key || ''}
-                          onChange={(e) => handleKeyChange(item.id, e.target.value)}
-                          className="w-[70px] h-8 text-xs shrink-0" 
-                       />
-                       <Button size="icon" variant="destructive" className="h-8 w-8 shrink-0" onClick={() => handleDeleteSound(item.id)}><Trash2 className="h-4 w-4"/></Button>
-                    </div>
-                  ))
-                )}
+                <AnimatePresence>
+                  {filteredSoundLibrary.length === 0 && !isProcessing ? (
+                    <p className="text-muted-foreground text-center py-16">
+                      Tu librería está vacía o no hay coincidencias.
+                    </p>
+                  ) : (
+                    filteredSoundLibrary.map(item => (
+                      <motion.div 
+                        key={item.id} 
+                        layout
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, item.id)}
+                        className="flex items-center gap-2 p-2 rounded-md bg-secondary/50 cursor-grab active:cursor-grabbing">
+                        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => handlePlaySound(item.storageUrl)}><Play className="h-4 w-4"/></Button>
+                        <p className="flex-grow text-sm truncate" title={item.originalName}>{item.originalName}</p>
+                        <Select value={item.soundType} onValueChange={(v) => handleTypeChange(item.id, v as SoundType)}>
+                            <SelectTrigger className="w-[130px] h-8 text-xs shrink-0"><SelectValue/></SelectTrigger>
+                            <SelectContent>{soundCategories.map(c => <SelectItem key={c} value={c} className="text-xs">{c}</SelectItem>)}</SelectContent>
+                        </Select>
+                        <Input 
+                            placeholder="Key" 
+                            value={item.key || ''}
+                            onChange={(e) => handleKeyChange(item.id, e.target.value)}
+                            className="w-[70px] h-8 text-xs shrink-0" 
+                        />
+                        <Button size="icon" variant="destructive" className="h-8 w-8 shrink-0" onClick={() => handleDeleteSound(item.id)}><Trash2 className="h-4 w-4"/></Button>
+                      </motion.div>
+                    ))
+                  )}
+                </AnimatePresence>
               </div>
             </ScrollArea>
           </CardContent>
         </Card>
 
-        <Card className="glassmorphism-card lg:col-span-1">
+        <Card 
+            className="glassmorphism-card lg:col-span-1"
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={handleDropOnAssembler}
+        >
           <CardHeader>
             <CardTitle>Ensamblador de Kits</CardTitle>
-            <CardDescription>Crea un nuevo kit arrastrando sonidos desde la librería.</CardDescription>
+            <CardDescription>Crea un kit arrastrando sonidos desde la librería.</CardDescription>
           </CardHeader>
-          <CardContent className="h-[500px] flex items-center justify-center">
-            <div className='text-center text-muted-foreground'>
-              <Music4 className="mx-auto h-16 w-16" />
-              <p className="mt-4">
-                El ensamblador de kits estará aquí.
-              </p>
-            </div>
+          <CardContent className="space-y-4">
+              <div className="flex gap-2">
+                <Select value={activeProjectId?.toString() || ''} onValueChange={(v) => setActiveProjectId(Number(v))}>
+                  <SelectTrigger className='flex-grow'>
+                    <SelectValue placeholder="Selecciona un kit..."/>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {appState.drumKitProjects.map(proj => (
+                      <SelectItem key={proj.id} value={proj.id.toString()}>{proj.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button onClick={handleCreateNewKit}>
+                  <PlusCircle className='h-4 w-4 mr-2'/>
+                  Nuevo Kit
+                </Button>
+              </div>
+              
+              <ScrollArea className={cn("h-[450px] rounded-md border p-4 space-y-2", activeProjectId && "border-primary/50")}>
+                <AnimatePresence>
+                {!activeProject ? (
+                    <div className='text-center text-muted-foreground pt-16'>
+                      <Music4 className="mx-auto h-16 w-16" />
+                      <p className="mt-4">
+                        Crea un nuevo kit o selecciona uno existente para empezar a añadir sonidos.
+                      </p>
+                    </div>
+                ) : soundsInKit.length === 0 ? (
+                    <div className='text-center text-muted-foreground pt-16'>
+                      <p>Arrastra y suelta sonidos aquí para construir tu kit.</p>
+                    </div>
+                ) : (
+                    soundsInKit.map(item => (
+                      <motion.div
+                        key={item.id}
+                        layout
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, x: 20 }}
+                        className="flex items-center gap-2 p-2 rounded-md bg-secondary/50"
+                      >
+                        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => handlePlaySound(item.storageUrl)}><Play className="h-4 w-4"/></Button>
+                        <p className="flex-grow text-sm truncate" title={item.originalName}>{item.originalName}</p>
+                        <Badge variant="outline" className="text-xs">{item.soundType}</Badge>
+                        <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0 text-destructive" onClick={() => handleRemoveFromKit(item.id)}><Trash2 className="h-4 w-4"/></Button>
+                      </motion.div>
+                    ))
+                )}
+                </AnimatePresence>
+              </ScrollArea>
           </CardContent>
         </Card>
       </div>
@@ -274,5 +440,3 @@ const KitStudioTab = () => {
 };
 
 export default KitStudioTab;
-
-    
