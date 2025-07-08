@@ -10,12 +10,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload, Search, ListFilter, Play, Trash2, Loader2, Music4, PlusCircle } from 'lucide-react';
+import { Upload, Search, ListFilter, Play, Trash2, Loader2, Music4, PlusCircle, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '../ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
+import { generateKitNames } from '@/ai/flows/generate-kit-names-flow';
 
 
 const soundCategories: SoundType[] = ['Kick', 'Snare', 'Clap', 'Hi-Hat', 'Hi-Hat Open', 'Hi-Hat Closed', 'Perc', 'Rim', '808 & Bass', 'FX & Texture', 'Vocal', 'Oneshot Melodic', 'Sin Categoría'];
@@ -24,6 +25,7 @@ const KitStudioTab = () => {
   const { appState, setAppState } = useAppState();
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isGeneratingNames, setIsGeneratingNames] = useState(false);
   const [processingStatus, setProcessingStatus] = useState<string[]>([]);
   const [activeAudio, setActiveAudio] = useState<HTMLAudioElement | null>(null);
   
@@ -280,6 +282,40 @@ const KitStudioTab = () => {
       ).filter((s): s is SoundLibraryItem => s !== undefined);
   }, [activeProject, appState.soundLibrary]);
 
+  const handlePromptChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!activeProject) return;
+    const newPrompt = e.target.value;
+    setAppState(prevState => ({
+        ...prevState,
+        drumKitProjects: prevState.drumKitProjects.map(p =>
+            p.id === activeProjectId ? { ...p, imagePrompt: newPrompt } : p
+        )
+    }));
+  };
+
+  const handleGenerateNames = async () => {
+    if (!activeProject || !activeProject.imagePrompt) {
+        toast({ variant: "destructive", title: "Error", description: "Por favor, escribe una descripción para el kit." });
+        return;
+    }
+    setIsGeneratingNames(true);
+    try {
+        const result = await generateKitNames({ prompt: activeProject.imagePrompt });
+        setAppState(prevState => ({
+            ...prevState,
+            drumKitProjects: prevState.drumKitProjects.map(p =>
+                p.id === activeProjectId ? { ...p, seoNames: result.names } : p
+            )
+        }));
+        toast({ title: "Nombres generados", description: "La IA ha sugerido algunos nombres para tu kit." });
+    } catch (error) {
+        console.error("Error generating names:", error);
+        toast({ variant: "destructive", title: "Error de IA", description: "No se pudieron generar los nombres." });
+    } finally {
+        setIsGeneratingNames(false);
+    }
+  };
+
   return (
     <div className="space-y-8">
       <header className="text-center space-y-2">
@@ -400,6 +436,36 @@ const KitStudioTab = () => {
                   Nuevo Kit
                 </Button>
               </div>
+
+              {activeProject && (
+                <div className="space-y-4">
+                  <div className='space-y-2'>
+                    <Label htmlFor="kit-prompt">Descripción del Kit (para la IA)</Label>
+                    <div className="flex gap-2">
+                      <Input 
+                        id="kit-prompt"
+                        placeholder="Ej: Dark trap, estilo Travis Scott..."
+                        value={activeProject.imagePrompt}
+                        onChange={handlePromptChange}
+                      />
+                      <Button onClick={handleGenerateNames} disabled={isGeneratingNames}>
+                        {isGeneratingNames ? <Loader2 className="animate-spin" /> : <Sparkles />}
+                        Generar Nombres
+                      </Button>
+                    </div>
+                  </div>
+                  {activeProject.seoNames.length > 0 && (
+                    <div className="space-y-2">
+                      <Label>Nombres Sugeridos:</Label>
+                      <div className="flex flex-wrap gap-2">
+                        {activeProject.seoNames.map((name, i) => (
+                          <Badge key={i} variant="outline">{name}</Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
               
               <ScrollArea className={cn("h-[450px] rounded-md border p-4 space-y-2", activeProjectId && "border-primary/50")}>
                 <AnimatePresence>
@@ -441,5 +507,3 @@ const KitStudioTab = () => {
 };
 
 export default KitStudioTab;
-
-    
