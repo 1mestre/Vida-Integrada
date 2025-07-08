@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useMemo, lazy } from 'react';
 import { getAuth, onAuthStateChanged, type User } from 'firebase/auth';
-import { Calendar, University, Rocket, Briefcase } from 'lucide-react';
+import { Calendar, University, Rocket, Briefcase, PackageSearch } from 'lucide-react';
 
 import { app } from '@/lib/firebase';
 import { AppStateProvider } from '@/context/AppStateContext';
@@ -16,12 +16,14 @@ const CalendarTab = lazy(() => import('@/components/tabs/CalendarTab'));
 const UniversityTab = lazy(() => import('@/components/tabs/UniversityTab'));
 const ProductivityTab = lazy(() => import('@/components/tabs/ProductivityTab'));
 const WorkTab = lazy(() => import('@/components/tabs/WorkTab'));
+const KitStudioTab = lazy(() => import('@/components/tabs/KitStudioTab'));
 
-type Tab = 'calendar' | 'university' | 'productivity' | 'work';
+type Tab = 'calendar' | 'university' | 'productivity' | 'work' | 'kit-studio';
 
 const TABS: { id: Tab; label: string; icon: React.ElementType }[] = [
   { id: 'productivity', label: 'Productividad', icon: Rocket },
   { id: 'work', label: 'Work', icon: Briefcase },
+  { id: 'kit-studio', label: 'Kit Studio', icon: PackageSearch },
   { id: 'calendar', label: 'Calendario', icon: Calendar },
   { id: 'university', label: 'Universidad', icon: University },
 ];
@@ -56,6 +58,8 @@ export default function Home() {
         return <ProductivityTab />;
       case 'work':
         return <WorkTab />;
+      case 'kit-studio':
+        return <KitStudioTab />;
       default:
         return null;
     }
@@ -115,7 +119,7 @@ export default function Home() {
                   setActiveTab(tab.id);
                   playSound('tabChange');
                 }}
-                className={`group flex h-full w-1/4 flex-col items-center justify-center p-1 text-center transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                className={`group flex h-full w-1/5 flex-col items-center justify-center p-1 text-center transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                   activeTab === tab.id ? 'text-primary' : 'text-muted-foreground hover:text-primary'
                 }`}
               >

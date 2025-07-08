@@ -97,6 +97,26 @@ export interface UniversityTask {
   status: 'pendiente' | 'en progreso' | 'completado';
 }
 
+export type SoundType = 'Kick' | 'Snare' | 'Clap' | 'Hi-Hat' | 'Hi-Hat Open' | 'Hi-Hat Closed' | 'Perc' | 'Rim' | '808 & Bass' | 'FX & Texture' | 'Vocal' | 'Oneshot Melodic' | 'Sin Categoría';
+
+export interface SoundLibraryItem {
+  id: string;
+  originalName: string;
+  storageUrl: string;
+  soundType: SoundType;
+  key: string | null;
+}
+
+export interface DrumKitProject {
+  id: number;
+  name: string;
+  coverArtUrl: string | null;
+  imagePrompt: string;
+  seoNames: string[];
+  soundIds: string[];
+  wordpressProductId?: number | null;
+}
+
 interface AppState {
   contributions: Contribution[];
   monthlyTargets: Record<string, number>;
@@ -107,6 +127,8 @@ interface AppState {
   tasks: KanbanTask[];
   universityTasks: UniversityTask[];
   workPackageTemplates: WorkPackageTemplate[];
+  soundLibrary: SoundLibraryItem[];
+  drumKitProjects: DrumKitProject[];
 }
 
 const initialAppState: AppState = {
@@ -168,6 +190,8 @@ const initialAppState: AppState = {
       colorClassName: 'bg-green-600 hover:bg-green-700',
     }
   ],
+  soundLibrary: [],
+  drumKitProjects: [],
 };
 
 interface AppStateContextType {
@@ -251,6 +275,27 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
               return { ...defaults, ...template, id: template.id || uuidv4(), colorClassName: template.colorClassName || 'bg-gray-500' };
           });
 
+          const sanitizedSoundLibrary = (data.soundLibrary || []).map((item: Partial<SoundLibraryItem>): SoundLibraryItem => {
+            const defaults: Omit<SoundLibraryItem, 'id'> = {
+              originalName: 'sonido_desconocido.wav',
+              storageUrl: '',
+              soundType: 'Sin Categoría',
+              key: null,
+            };
+            return { ...defaults, ...item, id: item.id || uuidv4() };
+          });
+
+          const sanitizedDrumKitProjects = (data.drumKitProjects || []).map((project: Partial<DrumKitProject>): DrumKitProject => {
+            const defaults: Omit<DrumKitProject, 'id'> = {
+              name: 'Nuevo Kit',
+              coverArtUrl: null,
+              imagePrompt: '',
+              seoNames: [],
+              soundIds: [],
+            };
+            return { ...defaults, ...project, id: project.id || Date.now() };
+          });
+
           const sanitizedState: AppState = {
             contributions: sanitizedContributions,
             monthlyTargets: data.monthlyTargets || initialAppState.monthlyTargets,
@@ -261,6 +306,8 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
             tasks: sanitizedTasks,
             universityTasks: sanitizedUniversityTasks,
             workPackageTemplates: sanitizedTemplates.length > 0 ? sanitizedTemplates : initialAppState.workPackageTemplates,
+            soundLibrary: sanitizedSoundLibrary,
+            drumKitProjects: sanitizedDrumKitProjects,
           };
           
           setAppState(sanitizedState);
