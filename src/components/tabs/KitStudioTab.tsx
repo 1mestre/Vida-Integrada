@@ -12,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload, Search, ListFilter, Play, Trash2, Loader2, Music4, PlusCircle, Sparkles, Image as ImageIcon, Download, Edit } from 'lucide-react';
+import { Upload, Search, ListFilter, Play, Trash2, Loader2, Music4, PlusCircle, Sparkles, Image as ImageIcon, Download, Edit, ZoomIn } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '../ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
@@ -624,9 +624,16 @@ const KitStudioTab = () => {
                   </div>
                   <div className='p-4 border rounded-lg space-y-4 bg-background/30'>
                     <div className='flex gap-4 items-start'>
-                        <div className='w-32 h-32 rounded-md bg-muted flex-shrink-0 relative flex items-center justify-center'>
+                        <div className='w-32 h-32 rounded-md bg-muted flex-shrink-0 relative flex items-center justify-center group'>
                           {isGeneratingArt ? <Loader2 className="animate-spin h-8 w-8"/> : 
-                            activeProject.coverArtUrl ? <Image src={activeProject.coverArtUrl} alt="Kit cover art" layout="fill" className="object-cover rounded-md" /> :
+                            activeProject.coverArtUrl ? (
+                              <a href={activeProject.coverArtUrl} target="_blank" rel="noopener noreferrer" className="block w-full h-full cursor-pointer">
+                                <Image src={activeProject.coverArtUrl} alt="Kit cover art" layout="fill" className="object-cover rounded-md" />
+                                <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-md">
+                                  <ZoomIn className="h-8 w-8 text-white" />
+                                </div>
+                              </a>
+                            ) :
                             <ImageIcon className="h-8 w-8 text-muted-foreground"/>
                           }
                         </div>
