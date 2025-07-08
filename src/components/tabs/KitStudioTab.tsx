@@ -12,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload, Search, ListFilter, Play, Trash2, Loader2, Music4, PlusCircle, Sparkles, Image as ImageIcon, Download, Edit, ZoomIn } from 'lucide-react';
+import { Upload, Search, ListFilter, Play, Trash2, Loader2, Music4, PlusCircle, Sparkles, Image as ImageIcon, Download, Edit, ZoomIn, Quote, ClipboardCopy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '../ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
@@ -55,6 +55,7 @@ const KitStudioTab = () => {
   
   const [currentKitName, setCurrentKitName] = useState('');
   const [imagePrompt, setImagePrompt] = useState('');
+  const [lastEnhancedPrompt, setLastEnhancedPrompt] = useState<string | null>(null);
 
 
   useEffect(() => {
@@ -74,6 +75,7 @@ const KitStudioTab = () => {
     } else {
         setCurrentKitName('');
         setImagePrompt('');
+        setLastEnhancedPrompt(null);
     }
   }, [activeProject]);
   
@@ -521,12 +523,13 @@ const KitStudioTab = () => {
     setIsGeneratingArt(true);
     setAppState(prevState => ({ ...prevState, drumKitProjects: prevState.drumKitProjects.map(p => p.id === activeProjectId ? { ...p, imagePrompt: imagePrompt } : p) }));
     try {
-        const imageUrl = await generateCoverArt({ prompt: imagePrompt });
-        setAppState(prevState => ({ ...prevState, drumKitProjects: prevState.drumKitProjects.map(p => p.id === activeProjectId ? { ...p, coverArtUrl: imageUrl } : p) }));
+        const { finalUrl, enhancedPrompt } = await generateCoverArt({ prompt: imagePrompt });
+        setAppState(prevState => ({ ...prevState, drumKitProjects: prevState.drumKitProjects.map(p => p.id === activeProjectId ? { ...p, coverArtUrl: finalUrl } : p) }));
+        setLastEnhancedPrompt(enhancedPrompt);
         toast({ title: "¡Carátula generada!", description: "La nueva imagen para tu kit está lista." });
-    } catch (error) {
+    } catch (error: any) {
         console.error("Error generating cover art:", error);
-        toast({ variant: "destructive", title: "Error de IA", description: "No se pudo generar la imagen." });
+        toast({ variant: "destructive", title: "Error de IA", description: error?.message || "No se pudo generar la imagen." });
     } finally {
         setIsGeneratingArt(false);
     }
@@ -695,6 +698,39 @@ const KitStudioTab = () => {
                           <Label>Nombres Sugeridos:</Label>
                           <div className="flex flex-wrap gap-2">{activeProject.seoNames.map((name, i) => (<Badge key={i} variant="outline" className="cursor-pointer" onClick={() => onSuggestedNameClick(name)}>{name}</Badge>))}</div>
                         </div>
+                      )}
+                      {lastEnhancedPrompt && (
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button variant="outline" className="w-full mt-2">
+                                    <Quote className="mr-2 h-4 w-4" />
+                                    Ver Prompt Final Usado
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Prompt Final Generado por IA</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        Este fue el prompt mejorado que se utilizó para generar la última carátula. Puedes copiarlo para usarlo como referencia.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <div className="max-h-64 overflow-y-auto rounded-md border bg-muted p-4">
+                                    <pre className="text-sm text-foreground whitespace-pre-wrap font-sans">
+                                        {lastEnhancedPrompt}
+                                    </pre>
+                                </div>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Cerrar</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => {
+                                        navigator.clipboard.writeText(lastEnhancedPrompt);
+                                        toast({ title: "Prompt copiado!" });
+                                    }}>
+                                        <ClipboardCopy className="mr-2 h-4 w-4" />
+                                        Copiar Prompt
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
                       )}
                   </div>
                   

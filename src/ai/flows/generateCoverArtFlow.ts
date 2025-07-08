@@ -3,8 +3,9 @@
 /**
  * @fileOverview An AI flow to generate cover art and upload it to object storage.
  *
- * - generateCoverArt - A function that generates an image and returns its public URL.
+ * - generateCoverArt - A function that generates an image and returns its public URL and the enhanced prompt used.
  * - GenerateCoverArtInput - The input type for the generateCoverArt function.
+ * - GenerateCoverArtOutput - The return type for the generateCoverArt function.
  */
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
@@ -16,7 +17,15 @@ const GenerateCoverArtInputSchema = z.object({
 });
 export type GenerateCoverArtInput = z.infer<typeof GenerateCoverArtInputSchema>;
 
-export async function generateCoverArt(input: GenerateCoverArtInput): Promise<string> {
+// The new output schema that includes the final URL and the enhanced prompt
+const GenerateCoverArtOutputSchema = z.object({
+    finalUrl: z.string().url().describe('The public URL of the generated image in Cloudflare R2.'),
+    enhancedPrompt: z.string().describe('The AI-enhanced prompt that was used to generate the image.'),
+});
+export type GenerateCoverArtOutput = z.infer<typeof GenerateCoverArtOutputSchema>;
+
+
+export async function generateCoverArt(input: GenerateCoverArtInput): Promise<GenerateCoverArtOutput> {
     return generateCoverArtFlow(input);
 }
 
@@ -56,7 +65,7 @@ const generateCoverArtFlow = ai.defineFlow(
   {
     name: 'generateCoverArtFlow',
     inputSchema: GenerateCoverArtInputSchema,
-    outputSchema: z.string().url().describe('The public URL of the generated image in Cloudflare R2.'),
+    outputSchema: GenerateCoverArtOutputSchema, // Use the new output schema
   },
   async ({prompt}) => {
     // ---- PASO 0: MEJORA DEL PROMPT ----
@@ -145,6 +154,6 @@ const generateCoverArtFlow = ai.defineFlow(
     // ---- PASO 5: DEVOLUCIÓN DE LA URL PÚBLICA ----
     // Se construye y devuelve la URL pública final de la imagen, que es la que se guardará y mostrará en la aplicación.
     const finalUrl = `${publicUrl}/${filename}`;
-    return finalUrl;
+    return { finalUrl, enhancedPrompt }; // Return the object with the URL and the prompt
   }
 );
