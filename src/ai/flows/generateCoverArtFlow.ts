@@ -62,7 +62,7 @@ const generateCoverArtFlow = ai.defineFlow(
     // Se utiliza el modelo de generación de imágenes de Gemini con un prompt detallado para lograr un estilo orgánico y realista.
     const initialGeneration = await ai.generate({
       model: 'googleai/gemini-2.0-flash-preview-image-generation',
-      prompt: `A realistic, handcrafted 3D-rendered product packaging. The box should appear modern and premium with a natural, organic aesthetic. Emphasize depth, physicality, and tactile design — soft textures, subtle imperfections, and smooth transitions between surfaces. Lighting should feel cinematic and ambient, avoiding overly sharp digital edges. The composition must appear thoughtfully layered, grounded in realism, and artistically composed as if designed by a human with a focus on elegance and authenticity. The visual theme for the packaging is: "${prompt}". Do not include any text.`,
+      prompt: `A realistic, handcrafted 3D-rendered product packaging. The box should appear modern and premium with a natural, organic aesthetic. Emphasize depth, physicality, and tactile design — soft textures, subtle imperfections, and smooth transitions between surfaces. Lighting should feel cinematic and ambient, avoiding overly sharp digital edges. The composition must appear thoughtfully layered, grounded in realism, and artistically composed as if designed by a human with a focus on elegance and authenticity. The visual theme for the packaging is: "${prompt}". The design MUST include artistic graphical elements and typography that are directly inspired by this theme. The text must be legible and masterfully integrated into the artwork.`,
       config: {
         responseModalities: ['TEXT', 'IMAGE'],
       },
