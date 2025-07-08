@@ -371,73 +371,105 @@ const KitStudioTab = () => {
 
   const handleDownloadKit = async () => {
     if (!activeProject || activeProject.soundIds.length === 0) {
-        toast({
-            variant: "destructive",
-            title: "Kit Vacío",
-            description: "Añade sonidos al kit antes de descargarlo.",
-        });
-        return;
+      toast({
+        variant: "destructive",
+        title: "Kit Vacío",
+        description: "Añade sonidos al kit antes de descargarlo.",
+      });
+      return;
     }
 
     setIsDownloading(true);
     toast({
-        title: "Iniciando descarga...",
-        description: `Preparando "${activeProject.name}.zip". Esto puede tardar un momento.`,
+      title: "Iniciando descarga...",
+      description: `Preparando "${activeProject.name}.zip". Esto puede tardar un momento.`,
     });
 
     const zip = new JSZip();
 
     try {
-        if (activeProject.coverArtUrl) {
-            const artworkFolder = zip.folder("Artwork");
-            try {
-                const response = await fetch(activeProject.coverArtUrl);
-                const blob = await response.blob();
-                const extension = blob.type.split('/')[1] || 'png';
-                artworkFolder?.file(`cover.${extension}`, blob);
-            } catch (e) {
-                console.error("Failed to fetch cover art:", e);
-            }
+      // Handle cover art at the root level
+      if (activeProject.coverArtUrl) {
+        try {
+          const response = await fetch(activeProject.coverArtUrl);
+          if (response.ok) {
+            const blob = await response.blob();
+            const extension = blob.type.split('/')[1] || 'png';
+            zip.file(`cover.${extension}`, blob);
+          } else {
+             console.error("Failed to fetch cover art, status:", response.status);
+          }
+        } catch (e) {
+          console.error("Error fetching cover art:", e);
         }
+      }
 
-        if (activeProject.seoNames.length > 0) {
-            const namesText = `Suggested names for this kit:\n\n- ${activeProject.seoNames.join('\n- ')}`;
-            zip.file("Suggested Names.txt", namesText);
+      // Group sounds by category
+      const soundsByCategory = activeProject.soundIds.reduce((acc, soundId) => {
+        const soundInfo = appState.soundLibrary.find(s => s.id === soundId);
+        if (soundInfo) {
+          let category = soundInfo.soundType;
+          if (category === 'Sin Categoría') {
+            category = 'EXTRAS';
+          }
+          if (!acc[category]) {
+            acc[category] = [];
+          }
+          acc[category].push(soundInfo);
         }
+        return acc;
+      }, {} as Record<string, SoundLibraryItem[]>);
 
-        const soundsFolder = zip.folder("Sounds");
-        await Promise.all(
-            activeProject.soundIds.map(async (soundId) => {
-                const soundInfo = appState.soundLibrary.find(s => s.id === soundId);
-                const nameInKit = activeProject.soundNamesInKit[soundId];
 
-                if (soundInfo && nameInKit) {
-                    try {
-                        const response = await fetch(soundInfo.storageUrl);
-                        if (!response.ok) throw new Error(`Failed to fetch ${soundInfo.storageUrl}`);
-                        const blob = await response.blob();
-                        const extension = soundInfo.originalName.split('.').pop() || 'wav';
-                        const safeNameInKit = nameInKit.replace(/[\\/:\*\?"<>\|]/g, '');
-                        soundsFolder?.file(`${safeNameInKit} [${soundInfo.key || 'NK'}] [${soundInfo.soundType}].${extension}`, blob);
-                    } catch (e) {
-                         console.error(`Error descargando el sonido ${soundInfo.originalName}:`, e);
-                    }
-                }
-            })
-        );
-        
-        const content = await zip.generateAsync({ type: 'blob' });
-        saveAs(content, `${activeProject.name}.zip`);
+      // Create promises for fetching all sounds
+      const soundPromises = Object.entries(soundsByCategory).flatMap(([category, sounds]) => {
+          if (sounds.length > 0) {
+              const categoryFolder = zip.folder(category);
+              return sounds.map(soundInfo => {
+                  const nameInKit = activeProject.soundNamesInKit[soundInfo.id];
+                  if (!nameInKit || !soundInfo.storageUrl) return Promise.resolve();
+
+                  return fetch(soundInfo.storageUrl)
+                      .then(response => {
+                          if (!response.ok) {
+                              throw new Error(`Failed to fetch ${soundInfo.originalName}: ${response.statusText}`);
+                          }
+                          return response.blob();
+                      })
+                      .then(blob => {
+                          const extension = soundInfo.originalName.split('.').pop() || 'wav';
+                          const safeNameInKit = nameInKit.replace(/[\\/:\*\?"<>\|]/g, '');
+                          const finalName = `${safeNameInKit} [${soundInfo.key || 'NK'}].${extension}`;
+                          categoryFolder?.file(finalName, blob);
+                      })
+                      .catch(e => {
+                          console.error(`Error downloading sound ${soundInfo.originalName}:`, e);
+                          toast({
+                              variant: "destructive",
+                              title: `Error en Sonido`,
+                              description: `No se pudo descargar "${soundInfo.originalName}".`,
+                          });
+                      });
+              });
+          }
+          return [];
+      });
+
+      // Wait for all sounds to be fetched and added to zip
+      await Promise.all(soundPromises.filter(Boolean));
+      
+      const content = await zip.generateAsync({ type: 'blob' });
+      saveAs(content, `${activeProject.name}.zip`);
 
     } catch (error) {
-        console.error("Error creating zip file:", error);
-        toast({
-            variant: "destructive",
-            title: "Error de Descarga",
-            description: "No se pudo generar el archivo ZIP.",
-        });
+      console.error("Error creating zip file:", error);
+      toast({
+        variant: "destructive",
+        title: "Error de Descarga",
+        description: "No se pudo generar el archivo ZIP.",
+      });
     } finally {
-        setIsDownloading(false);
+      setIsDownloading(false);
     }
   };
 
