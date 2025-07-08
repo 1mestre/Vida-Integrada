@@ -210,7 +210,8 @@ const KitStudioTab = () => {
     for (const file of acceptedFiles) {
       setProcessingStatus(prev => [...prev, `Leyendo ${file.name}...`]);
 
-      if (file.name.toLowerCase().endsWith('.zip')) {
+      const fileNameLower = file.name.toLowerCase();
+      if (fileNameLower.endsWith('.zip')) {
         await processZip(file);
       } else if (file.type.startsWith('audio/')) {
         audioFilesToProcess.push({ file: file, name: file.name });
@@ -419,7 +420,7 @@ const KitStudioTab = () => {
       const soundsByCategory = activeProject.soundIds.reduce((acc, soundId) => {
         const soundInfo = appState.soundLibrary.find(s => s.id === soundId);
         if (soundInfo) {
-          let category = soundInfo.soundType;
+          let category: string = soundInfo.soundType;
           if (category === 'Sin Categoría') {
             category = 'EXTRAS';
           }
