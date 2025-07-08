@@ -19,15 +19,22 @@ export async function generateCoverArt(input: GenerateCoverArtInput): Promise<st
     return generateCoverArtFlow(input);
 }
 
-// Ensure environment variables are loaded
+// --- R2 Configuration and Validation ---
 const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
 const accessKeyId = process.env.R2_ACCESS_KEY_ID;
 const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
 const bucketName = process.env.R2_BUCKET_NAME;
 const publicUrl = process.env.R2_PUBLIC_URL || process.env.NEXT_PUBLIC_R2_PUBLIC_URL;
 
-if (!accountId || !accessKeyId || !secretAccessKey || !bucketName || !publicUrl) {
-    throw new Error('Cloudflare R2 environment variables are not properly configured.');
+const missingVars = [];
+if (!accountId) missingVars.push('CLOUDFLARE_ACCOUNT_ID');
+if (!accessKeyId) missingVars.push('R2_ACCESS_KEY_ID');
+if (!secretAccessKey) missingVars.push('R2_SECRET_ACCESS_KEY');
+if (!bucketName) missingVars.push('R2_BUCKET_NAME');
+if (!publicUrl) missingVars.push('R2_PUBLIC_URL or NEXT_PUBLIC_R2_PUBLIC_URL');
+
+if (missingVars.length > 0) {
+    throw new Error(`R2 Configuration Error: The following environment variables are missing on the server: ${missingVars.join(', ')}`);
 }
 
 const s3 = new S3Client({
@@ -38,6 +45,7 @@ const s3 = new S3Client({
         secretAccessKey,
     },
 });
+// --- End Configuration ---
 
 const generateCoverArtFlow = ai.defineFlow(
   {
