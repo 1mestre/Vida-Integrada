@@ -59,11 +59,10 @@ const generateCoverArtFlow = ai.defineFlow(
   },
   async ({prompt}) => {
     // ---- PASO 1: GENERACIÓN INICIAL DE LA IMAGEN ----
-    // Se utiliza el modelo de generación de imágenes de Gemini.
-    // Se le pasa el prompt del usuario y se le añaden instrucciones de estilo para asegurar un resultado de alta calidad.
+    // Se utiliza el modelo de generación de imágenes de Gemini con un prompt detallado para lograr un estilo orgánico y realista.
     const initialGeneration = await ai.generate({
       model: 'googleai/gemini-2.0-flash-preview-image-generation',
-      prompt: `Artwork for a drum kit with the following theme: "${prompt}". Style: modern, high-resolution, cinematic, suitable for a music product cover. Do not include any text unless explicitly asked.`,
+      prompt: `A realistic, handcrafted 3D-rendered product packaging. The box should appear modern and premium with a natural, organic aesthetic. Emphasize depth, physicality, and tactile design — soft textures, subtle imperfections, and smooth transitions between surfaces. Lighting should feel cinematic and ambient, avoiding overly sharp digital edges. The composition must appear thoughtfully layered, grounded in realism, and artistically composed as if designed by a human with a focus on elegance and authenticity. The visual theme for the packaging is: "${prompt}". Do not include any text.`,
       config: {
         responseModalities: ['TEXT', 'IMAGE'],
       },
