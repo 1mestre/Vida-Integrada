@@ -21,6 +21,12 @@ const nextConfig: NextConfig = {
         hostname: 'actions.google.com',
         port: '',
         pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'pub-5804ade5c38a4481b5e4e0c00e3d63c8.r2.dev',
+        port: '',
+        pathname: '/**',
       }
     ],
   },
