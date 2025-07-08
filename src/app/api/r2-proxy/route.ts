@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
   }
   
   // Basic validation that the URL is an R2 URL to prevent this becoming an open proxy
-  const r2PublicUrl = process.env.R2_PUBLIC_URL;
+  const r2PublicUrl = process.env.R2_PUBLIC_URL || process.env.NEXT_PUBLIC_R2_PUBLIC_URL;
   if (!r2PublicUrl || !fileUrl.startsWith(r2PublicUrl)) {
      return new NextResponse('Invalid file domain', {status: 403});
   }
