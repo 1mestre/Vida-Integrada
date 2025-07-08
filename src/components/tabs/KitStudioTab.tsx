@@ -13,11 +13,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Upload, Search, ListFilter, Play, Trash2, Loader2, Music4 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '../ui/scroll-area';
+import { useToast } from '@/hooks/use-toast';
+
 
 const soundCategories: SoundType[] = ['Kick', 'Snare', 'Clap', 'Hi-Hat', 'Hi-Hat Open', 'Hi-Hat Closed', 'Perc', 'Rim', '808 & Bass', 'FX & Texture', 'Vocal', 'Oneshot Melodic', 'Sin Categoría'];
 
 const KitStudioTab = () => {
   const { appState, setAppState } = useAppState();
+  const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingStatus, setProcessingStatus] = useState<string[]>([]);
   const [activeAudio, setActiveAudio] = useState<HTMLAudioElement | null>(null);
@@ -25,14 +28,16 @@ const KitStudioTab = () => {
   const handlePlaySound = (url: string) => {
     if (activeAudio) {
       activeAudio.pause();
+      activeAudio.currentTime = 0;
     }
     const audio = new Audio(url);
     setActiveAudio(audio);
-    audio.play();
+    audio.play().catch(e => console.error("Error playing audio:", e));
   };
   
   const handleTypeChange = (id: string, newType: SoundType) => {
     setAppState(prevState => ({
+        ...prevState,
         soundLibrary: prevState.soundLibrary.map(item => 
             item.id === id ? { ...item, soundType: newType } : item
         )
@@ -41,6 +46,7 @@ const KitStudioTab = () => {
 
   const handleKeyChange = (id: string, newKey: string) => {
      setAppState(prevState => ({
+        ...prevState,
         soundLibrary: prevState.soundLibrary.map(item => 
             item.id === id ? { ...item, key: newKey || null } : item
         )
@@ -48,18 +54,14 @@ const KitStudioTab = () => {
   };
 
   const handleDeleteSound = (id: string) => {
-    // TODO: Implement R2 file deletion via API
     setAppState(prevState => ({
+        ...prevState,
         soundLibrary: prevState.soundLibrary.filter(item => item.id !== id)
     }));
   };
 
   const handleFileUpload = useCallback(async (file: File, originalName: string) => {
-    console.log(`Processing: ${originalName}`);
-    // 1. TODO: API call to get a presigned URL for R2 upload
-    // 2. TODO: Upload the file to R2
-    // 3. TODO: API call to categorize the sound
-    // 4. Simulate the process for now
+    // This is a simulation. In the next step, we'll replace this with a real API call.
     return new Promise<SoundLibraryItem>(resolve => {
         setTimeout(() => {
             const randomCategoryIndex = Math.floor(Math.random() * (soundCategories.length - 1));
@@ -71,52 +73,87 @@ const KitStudioTab = () => {
                 key: ['C', 'G', 'Am', null][Math.floor(Math.random() * 4)],
             };
             resolve(newItem);
-        }, 500 + Math.random() * 800);
+        }, 300 + Math.random() * 500); // Faster simulation
     });
   }, []);
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
+      if (acceptedFiles.length === 0) {
+        return;
+      }
+
       setIsProcessing(true);
-      setProcessingStatus([]);
+      setProcessingStatus([`Iniciando proceso para ${acceptedFiles.length} archivo(s)...`]);
 
       const audioFilesToProcess: { file: File, name: string }[] = [];
 
       for (const file of acceptedFiles) {
           setProcessingStatus(prev => [...prev, `Leyendo ${file.name}...`]);
-          if (file.name.endsWith('.zip')) {
+          if (file.name.toLowerCase().endsWith('.zip')) {
               try {
                 const zip = await JSZip.loadAsync(file);
+                let foundInZip = 0;
+                const zipPromises = [];
+
                 for (const relativePath in zip.files) {
                     const zipEntry = zip.files[relativePath];
                     if (!zipEntry.dir && (zipEntry.name.toLowerCase().endsWith('.wav') || zipEntry.name.toLowerCase().endsWith('.mp3'))) {
-                        const fileData = await zipEntry.async('blob');
-                        const audioFile = new File([fileData], zipEntry.name.split('/').pop() || zipEntry.name, { type: fileData.type });
-                        audioFilesToProcess.push({ file: audioFile, name: audioFile.name });
+                        foundInZip++;
+                        const promise = async () => {
+                            const fileData = await zipEntry.async('blob');
+                            const audioFile = new File([fileData], zipEntry.name.split('/').pop() || zipEntry.name, { type: fileData.type });
+                            audioFilesToProcess.push({ file: audioFile, name: audioFile.name });
+                        };
+                        zipPromises.push(promise());
                     }
                 }
+                await Promise.all(zipPromises);
+                setProcessingStatus(prev => [...prev, `Se encontraron ${foundInZip} sonidos en ${file.name}.`]);
               } catch (e) {
                 console.error("Error al descomprimir el ZIP:", e);
                 setProcessingStatus(prev => [...prev, `Error al leer ${file.name}`]);
+                toast({
+                  variant: "destructive",
+                  title: "Error de ZIP",
+                  description: `No se pudo procesar el archivo ${file.name}.`,
+                });
               }
           } else if (file.type.startsWith('audio/')) {
               audioFilesToProcess.push({ file: file, name: file.name });
           }
       }
       
-      setProcessingStatus(audioFilesToProcess.map(f => `Procesando: ${f.name}`));
+      if (audioFilesToProcess.length === 0) {
+        toast({
+          variant: "destructive",
+          title: "No se encontraron archivos",
+          description: "No se encontraron archivos de audio (.wav o .mp3) válidos en la selección.",
+        });
+        setIsProcessing(false);
+        setProcessingStatus([]);
+        return;
+      }
+
+      setProcessingStatus(prev => [...prev, `Procesando ${audioFilesToProcess.length} sonidos...`]);
 
       const newLibraryItems = await Promise.all(
           audioFilesToProcess.map(f => handleFileUpload(f.file, f.name))
       );
 
       setAppState(prevState => ({
+          ...prevState,
           soundLibrary: [...prevState.soundLibrary, ...newLibraryItems]
       }));
       
+      toast({
+        title: "¡Éxito!",
+        description: `Se añadieron ${newLibraryItems.length} nuevos sonidos a tu librería.`,
+      });
+
       setIsProcessing(false);
       setProcessingStatus([]);
 
-  }, [handleFileUpload, setAppState]);
+  }, [handleFileUpload, setAppState, toast]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
       onDrop,
@@ -230,3 +267,5 @@ const KitStudioTab = () => {
 };
 
 export default KitStudioTab;
+
+    
