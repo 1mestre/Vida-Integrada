@@ -224,9 +224,9 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
           const data = docSnap.data();
           
           const sanitizedSoundLibrary = (data.soundLibrary || []).reduce((acc: SoundLibraryItem[], item: Partial<SoundLibraryItem>) => {
-            // Only include items that have a valid, non-empty storageUrl.
-            // This filters out old/invalid data and ensures data integrity.
-            if (item && typeof item.storageUrl === 'string' && item.storageUrl) {
+            // Stricter validation: URL must be a string and start with 'http'.
+            // This filters out old/invalid data (like data: URIs) and ensures data integrity.
+            if (item && typeof item.storageUrl === 'string' && item.storageUrl.startsWith('http')) {
               const defaults: Omit<SoundLibraryItem, 'id'> = {
                 originalName: 'sonido_desconocido.wav',
                 storageUrl: '',
