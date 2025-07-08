@@ -89,7 +89,7 @@ const generateCoverArtFlow = ai.defineFlow(
         
         const enhancementResult = await ai.generate({
             prompt: enhancementPromptText,
-            model: 'googleai/gemini-pro',
+            model: 'googleai/gemini-2.5-flash',
         });
         
         enhancedPrompt = enhancementResult.text;
