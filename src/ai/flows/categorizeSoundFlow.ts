@@ -33,21 +33,29 @@ const prompt = ai.definePrompt({
   name: 'categorizeSoundPrompt',
   input: {schema: CategorizeSoundInputSchema},
   output: {schema: CategorizeSoundOutputSchema},
-  prompt: `You are an expert audio production assistant for the brand DANODALS. Your task is to analyze the name of an audio file and return a JSON object with its type and musical key.
+  prompt: `You are a strict file categorization engine for a music production brand. Your task is to analyze ONLY the filename of an audio file and return a JSON object with its \`soundType\` and \`key\`.
 
-You must strictly adhere to the following rules:
-1.  **Valid Types**: The only valid values for the 'soundType' field are: 'Kick', 'Snare', 'Clap', 'Hi-Hat', 'Hi-Hat Open', 'Hi-Hat Closed', 'Perc', 'Rim', '808 & Bass', 'FX & Texture', 'Vocal', 'Oneshot Melodic'.
-2.  **Default Type**: If you cannot determine the category from the name, you MUST use 'Sin Categoría'.
-3.  **Hi-Hat Logic**:
-    - If the name contains "open" or "oh", use 'Hi-Hat Open'.
-    - If the name contains "closed" or "ch", use 'Hi-Hat Closed'.
-    - Otherwise, if it's a hi-hat, use 'Hi-Hat'.
-4.  **Key Detection**:
-    - Only extract the key if it is explicitly in the name (e.g., "C#m", "Fmaj", "G#", "Amin").
-    - For sounds in the 'Oneshot Melodic' category that do NOT have an explicit key, you MUST assume the key is 'C'.
-    - For all other sound types (Kick, Snare, Perc, etc.), the key MUST be null unless explicitly stated in the filename.
+**CRITICAL RULES:**
+1.  **BASIS OF ANALYSIS:** Your entire analysis MUST be based *only* on the text of the filename. Do not infer or guess based on word meanings. If the filename is "explaining.wav", you do not know if it is a vocal. You only know the word is "explaining".
+2.  **CATEGORY MATCHING:** Match the filename against the following keywords to determine the \`soundType\`. You MUST use the exact category name from this list. If no keyword is found, you MUST return 'Sin Categoría'.
+    *   'Kick': "kick", "kik"
+    *   'Snare': "snare", "snr"
+    *   'Clap': "clap", "clp"
+    *   'Hi-Hat': "hat", "hh", "hihat"
+    *   'Perc': "perc", "percussion"
+    *   'Rim': "rim", "rimshot"
+    *   '808 & Bass': "808", "bass", "sub"
+    *   'FX & Texture': "fx", "riser", "impact", "texture", "foley"
+    *   'Vocal': "vocal", "vox", "chant", "phrase"
+    *   'Oneshot Melodic': "melody", "oneshot", "pluck", "lead", "synth"
+3.  **HI-HAT SPECIFIC LOGIC:** If the category is 'Hi-Hat', check for "open" or "oh" to assign 'Hi-Hat Open'. Check for "closed" or "ch" to assign 'Hi-Hat Closed'. Otherwise, use 'Hi-Hat'.
+4.  **KEY DETECTION (TONALITY):** This is extremely strict.
+    *   A \`key\` MUST be \`null\` unless it is EXPLICITLY present in the filename.
+    *   Explicit keys look like: "C", "C#", "Db", "Gmaj", "Am", "F#m".
+    *   If the sound is categorized as 'Oneshot Melodic' AND no key is found, the key MUST be 'C'.
+    *   For ALL other categories, if no explicit key is found, the key MUST be \`null\`. Do NOT guess.
 
-Analyze this filename: {{{filename}}}`,
+Analyze this filename and provide ONLY the JSON output: \`{{{filename}}}\``,
 });
 
 const categorizeSoundFlow = ai.defineFlow(

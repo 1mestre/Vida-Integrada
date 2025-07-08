@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useDropzone } from 'react-dropzone';
 import JSZip from 'jszip';
 import { v4 as uuidv4 } from 'uuid';
-import { useAppState, SoundLibraryItem, SoundType, DrumKitProject, KitSound } from '@/context/AppStateContext';
+import { useAppState, SoundLibraryItem, SoundType, DrumKitProject } from '@/context/AppStateContext';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -79,10 +79,17 @@ const KitStudioTab = () => {
     if (!soundToDelete) return;
 
     setAppState(prevState => {
-      const updatedProjects = prevState.drumKitProjects.map(proj => ({
-        ...proj,
-        sounds: proj.sounds.filter(sound => sound.soundId !== id)
-      }));
+      const updatedProjects = prevState.drumKitProjects.map(proj => {
+        const soundIndex = proj.soundIds.indexOf(id);
+        if (soundIndex > -1) {
+          const newSoundIds = [...proj.soundIds];
+          newSoundIds.splice(soundIndex, 1);
+          const newSoundNamesInKit = { ...proj.soundNamesInKit };
+          delete newSoundNamesInKit[id];
+          return { ...proj, soundIds: newSoundIds, soundNamesInKit: newSoundNamesInKit };
+        }
+        return proj;
+      });
 
       return {
         ...prevState,
@@ -192,7 +199,7 @@ const KitStudioTab = () => {
 
     const newKit: DrumKitProject = {
       id: Date.now(), name: finalName, coverArtUrl: null, imagePrompt: '',
-      seoNames: [], sounds: [],
+      seoNames: [], soundIds: [], soundNamesInKit: {},
     };
 
     setAppState(prevState => ({ ...prevState, drumKitProjects: [...prevState.drumKitProjects, newKit] }));
@@ -223,36 +230,62 @@ const KitStudioTab = () => {
       const soundId = e.dataTransfer.getData("soundId");
       const sound = appState.soundLibrary.find(s => s.id === soundId);
       const activeProject = appState.drumKitProjects.find(p => p.id === activeProjectId);
-      if (!sound || !activeProject || activeProject.sounds.some(s => s.soundId === soundId)) return;
+      if (!sound || !activeProject || activeProject.soundIds.includes(soundId)) return;
       
-      const newKitSoundId = uuidv4();
-      const placeholderSound: KitSound = { id: newKitSoundId, soundId, nameInKit: 'Generando nombre...' };
-
+      // Add sound immediately with a placeholder name
       setAppState(prevState => ({
         ...prevState,
-        drumKitProjects: prevState.drumKitProjects.map(p => p.id === activeProjectId ? { ...p, sounds: [...p.sounds, placeholderSound] } : p)
+        drumKitProjects: prevState.drumKitProjects.map(p => {
+            if (p.id === activeProjectId) {
+                const newSoundIds = [...p.soundIds, soundId];
+                const newSoundNamesInKit = { ...p.soundNamesInKit, [soundId]: 'Generando nombre...' };
+                return { ...p, soundIds: newSoundIds, soundNamesInKit: newSoundNamesInKit };
+            }
+            return p;
+        })
       }));
 
+      // Then, call the AI to get the real name
       try {
         const { newName } = await renameSound({ originalName: sound.originalName, kitDescription: activeProject.imagePrompt || 'general purpose' });
         setAppState(prevState => ({
             ...prevState,
-            drumKitProjects: prevState.drumKitProjects.map(p => p.id === activeProjectId ? { ...p, sounds: p.sounds.map(s => s.id === newKitSoundId ? { ...s, nameInKit: newName } : s) } : p)
+            drumKitProjects: prevState.drumKitProjects.map(p => {
+                if (p.id === activeProjectId) {
+                    const newSoundNamesInKit = { ...p.soundNamesInKit, [soundId]: newName };
+                    return { ...p, soundNamesInKit: newSoundNamesInKit };
+                }
+                return p;
+            })
         }));
       } catch (error) {
          setAppState(prevState => ({
             ...prevState,
-            drumKitProjects: prevState.drumKitProjects.map(p => p.id === activeProjectId ? { ...p, sounds: p.sounds.map(s => s.id === newKitSoundId ? { ...s, nameInKit: sound.originalName } : s) } : p)
+            drumKitProjects: prevState.drumKitProjects.map(p => {
+                if (p.id === activeProjectId) {
+                    const newSoundNamesInKit = { ...p.soundNamesInKit, [soundId]: sound.originalName };
+                    return { ...p, soundNamesInKit: newSoundNamesInKit };
+                }
+                return p;
+            })
         }));
         toast({ variant: "destructive", title: "Error de IA", description: "No se pudo generar el nuevo nombre." });
       }
   };
   
-  const handleRemoveFromKit = (kitSoundId: string) => {
+  const handleRemoveFromKit = (soundIdToRemove: string) => {
       if (!activeProjectId) return;
       setAppState(prevState => ({
            ...prevState,
-           drumKitProjects: prevState.drumKitProjects.map(p => p.id === activeProjectId ? { ...p, sounds: p.sounds.filter(s => s.id !== kitSoundId) } : p)
+           drumKitProjects: prevState.drumKitProjects.map(p => {
+                if (p.id === activeProjectId) {
+                    const newSoundIds = p.soundIds.filter(id => id !== soundIdToRemove);
+                    const newSoundNamesInKit = { ...p.soundNamesInKit };
+                    delete newSoundNamesInKit[soundIdToRemove];
+                    return { ...p, soundIds: newSoundIds, soundNamesInKit: newSoundNamesInKit };
+                }
+                return p;
+           })
       }));
   };
 
@@ -453,20 +486,28 @@ const KitStudioTab = () => {
                 <AnimatePresence>
                 {!activeProject ? (
                     <div className='text-center text-muted-foreground pt-16'><Music4 className="mx-auto h-16 w-16" /><p className="mt-4">Crea un nuevo kit o selecciona uno.</p></div>
-                ) : activeProject.sounds.length === 0 ? (
+                ) : activeProject.soundIds.length === 0 ? (
                     <div className='text-center text-muted-foreground pt-16'><p>Arrastra y suelta sonidos aquí.</p></div>
                 ) : (
-                    activeProject.sounds.map(sound => {
-                      const soundInfo = appState.soundLibrary.find(s => s.id === sound.soundId);
+                    activeProject.soundIds.map(soundId => {
+                      const soundInfo = appState.soundLibrary.find(s => s.id === soundId);
+                      const nameInKit = activeProject.soundNamesInKit[soundId] || soundInfo?.originalName || 'Cargando...';
+                      const isLoadingName = nameInKit === 'Generando nombre...';
+
                       return (
                         <motion.div
-                          key={sound.id} layout initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, x: 20 }}
+                          key={soundId} layout initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, x: 20 }}
                           className="flex items-center gap-2 p-2 rounded-md bg-secondary/50"
                         >
                           <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => soundInfo && handlePlaySound(soundInfo.storageUrl)} disabled={!soundInfo}><Play className="h-4 w-4"/></Button>
-                          <p className="flex-grow text-sm truncate" title={soundInfo?.originalName}>{sound.nameInKit === 'Generando nombre...' ? <span className='flex items-center gap-2 text-muted-foreground'><Loader2 className='h-4 w-4 animate-spin'/>Generando...</span> : sound.nameInKit}</p>
+                          <p className="flex-grow text-sm truncate" title={soundInfo?.originalName}>
+                              {isLoadingName ? 
+                                <span className='flex items-center gap-2 text-muted-foreground'><Loader2 className='h-4 w-4 animate-spin'/>Generando...</span> 
+                                : nameInKit
+                              }
+                          </p>
                           {soundInfo && <Badge variant="outline" className="text-xs">{soundInfo.soundType}</Badge>}
-                          <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0 text-destructive" onClick={() => handleRemoveFromKit(sound.id)}><Trash2 className="h-4 w-4"/></Button>
+                          <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0 text-destructive" onClick={() => handleRemoveFromKit(soundId)}><Trash2 className="h-4 w-4"/></Button>
                         </motion.div>
                       )
                     })

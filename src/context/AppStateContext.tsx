@@ -107,19 +107,14 @@ export interface SoundLibraryItem {
   key: string | null;
 }
 
-export interface KitSound {
-  id: string; // Unique ID for this entry within the kit
-  soundId: string; // Reference to SoundLibraryItem
-  nameInKit: string; // The (potentially AI-generated) name for the sound in this kit
-}
-
 export interface DrumKitProject {
   id: number;
   name: string;
   coverArtUrl: string | null;
   imagePrompt: string;
   seoNames: string[];
-  sounds: KitSound[];
+  soundIds: string[];
+  soundNamesInKit: { [soundId: string]: string };
   wordpressProductId?: number | null;
 }
 
@@ -290,26 +285,38 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
               };
               return { ...defaults, ...template, id: template.id || uuidv4(), colorClassName: template.colorClassName || 'bg-gray-500' };
           });
-
+          
           const sanitizedDrumKitProjects = (data.drumKitProjects || []).map((project: any): DrumKitProject => {
             const defaults: Omit<DrumKitProject, 'id'> = {
-              name: 'Nuevo Kit',
-              coverArtUrl: null,
-              imagePrompt: '',
-              seoNames: [],
-              sounds: [],
+                name: 'Nuevo Kit', coverArtUrl: null, imagePrompt: '', seoNames: [],
+                soundIds: [], soundNamesInKit: {},
             };
-             // Migration from old soundIds structure
-            if (project.soundIds && !project.sounds) {
-              project.sounds = project.soundIds.map((soundId: string) => ({
-                id: uuidv4(),
-                soundId: soundId,
-                nameInKit: sanitizedSoundLibrary.find(s => s.id === soundId)?.originalName || 'Migrated Sound'
-              }));
-              delete project.soundIds;
+        
+            const migratedProject: DrumKitProject = { 
+                ...defaults, 
+                ...project, 
+                id: project.id || Date.now(),
+                soundIds: project.soundIds || [],
+                soundNamesInKit: project.soundNamesInKit || {},
+            };
+        
+            // Check for the old 'sounds' array of objects and migrate it
+            if (project.sounds && Array.isArray(project.sounds) && project.sounds.length > 0) {
+                migratedProject.soundIds = [];
+                migratedProject.soundNamesInKit = {};
+                project.sounds.forEach((soundObj: any) => {
+                    if (soundObj && soundObj.soundId) {
+                        migratedProject.soundIds.push(soundObj.soundId);
+                        migratedProject.soundNamesInKit[soundObj.soundId] = soundObj.nameInKit || 'Migrated';
+                    }
+                });
             }
-            return { ...defaults, ...project, id: project.id || Date.now(), sounds: project.sounds || [] };
-          });
+            
+            // This is a temporary property and should not be saved
+            delete (migratedProject as any).sounds;
+        
+            return migratedProject;
+        });
 
           const sanitizedState: AppState = {
             contributions: sanitizedContributions,
