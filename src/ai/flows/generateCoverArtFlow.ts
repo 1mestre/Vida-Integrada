@@ -79,7 +79,8 @@ const generateCoverArtFlow = ai.defineFlow(
         1.  **NO TEXT WORDS:** Do NOT use words like "typography", "text", "letters", "words", "font", or "type" in your output.
         2.  **VISUALS ONLY:** Describe only visual elements: colors, textures, lighting, mood, composition, and objects.
         3.  **DESCRIBE A SCENE:** Frame your description as a scene for a 3D render of a product box.
-        4.  **SINGLE PARAGRAPH:** Output a single, coherent paragraph.
+        4.  **THEMATIC ELEMENTS:** The scene surrounding the box should include subtle, thematic elements that relate to the creative context. For example, if the context is 'soft and bouncy', you could include soft, plush objects nearby.
+        5.  **SINGLE PARAGRAPH:** Output a single, coherent paragraph.
         
         Example:
         User Concept: "Dark trap, Travis Scott style"
@@ -111,12 +112,12 @@ The scene must be abstract, highly stylized, and cinematic. Use only visual elem
 
 — SPECIAL TEXT INSTRUCTIONS —
 The design must include **exactly one word or phrase**, rendered as part of the product case in a clean, futuristic, or grunge typographic style: "${kitName}".
+This text must be large, legible, and occupy a significant portion of the packaging front.
 This text must appear on the product box, label, or front cover, as if it were real packaging.
 Do NOT include any other words, numbers, or characters anywhere in the image.
 
 — BOX & ENVIRONMENT DETAILS —
-1.  **Thematic Elements:** The scene surrounding the box should include subtle, thematic elements that relate to the creative context. For example, if the context is 'soft and bouncy', you could include soft, plush objects nearby.
-2.  **Audio Motif:** The background of the image MUST include a subtle, out-of-focus element related to audio or music. This could be a synthesizer, headphones, a microphone, speakers, or a radio. This element should be integrated naturally into the scene and not be the main focus.
+**Audio Motif:** The background of the image MUST include a subtle, out-of-focus element related to audio or music. This could be a synthesizer, headphones, a microphone, speakers, or a radio. This element should be integrated naturally into the scene and not be the main focus.
 
 — CREATIVE CONTEXT (USE FOR INSPIRATION, DON’T OUTPUT THIS TEXT) —
 ${creativeContext}
