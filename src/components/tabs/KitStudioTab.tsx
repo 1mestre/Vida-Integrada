@@ -21,7 +21,7 @@ import { Badge } from '@/components/ui/badge';
 import { generateKitNames } from '@/ai/flows/generate-kit-names-flow';
 import { categorizeSound } from '@/ai/flows/categorizeSoundFlow';
 import { renameSound } from '@/ai/flows/renameSoundFlow';
-import { generateCoverArt } from '@/ai/flows/generateCoverArtFlow';
+import { generateArtPrompt } from '@/ai/flows/generateCoverArtFlow';
 import { uploadSound } from '@/ai/flows/uploadSoundFlow';
 import { uploadCoverArt } from '@/ai/flows/uploadCoverArtFlow';
 import { Label } from '@/components/ui/label';
@@ -46,7 +46,7 @@ const KitStudioTab = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isUploadingCover, setIsUploadingCover] = useState(false);
   const [isGeneratingNames, setIsGeneratingNames] = useState(false);
-  const [isGeneratingArt, setIsGeneratingArt] = useState(false);
+  const [isGeneratingPrompt, setIsGeneratingPrompt] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [processingStatus, setProcessingStatus] = useState<string[]>([]);
   const activeAudio = useRef<HTMLAudioElement | null>(null);
@@ -557,35 +557,34 @@ const KitStudioTab = () => {
     }
   };
 
-  const handleGenerateArt = async () => {
+  const handleGenerateArtPrompt = async () => {
     if (!activeProject) {
-        toast({ variant: "destructive", title: "Error", description: "Por favor, crea o selecciona un kit primero." });
-        return;
+      toast({ variant: "destructive", title: "Error", description: "Por favor, crea o selecciona un kit primero." });
+      return;
     }
     if (!imagePrompt) {
-        toast({ variant: "destructive", title: "Error", description: "La descripción para la IA no puede estar vacía." });
-        return;
+      toast({ variant: "destructive", title: "Error", description: "La descripción para la IA no puede estar vacía." });
+      return;
     }
     if (!currentKitName.trim()) {
-        toast({ variant: "destructive", title: "Error", description: "El nombre del kit no puede estar vacío para generar la carátula." });
-        return;
+      toast({ variant: "destructive", title: "Error", description: "El nombre del kit no puede estar vacío para generar el prompt." });
+      return;
     }
 
-    setIsGeneratingArt(true);
+    setIsGeneratingPrompt(true);
     setAppState(prevState => ({ ...prevState, drumKitProjects: prevState.drumKitProjects.map(p => p.id === activeProjectId ? { ...p, imagePrompt: imagePrompt, name: currentKitName.trim() } : p) }));
     
-    const result = await generateCoverArt({ prompt: imagePrompt, kitName: currentKitName.trim() });
+    const result = await generateArtPrompt({ prompt: imagePrompt, kitName: currentKitName.trim() });
     
-    setLastEnhancedPrompt(result.enhancedPrompt);
-
     if (result.error) {
-        toast({ variant: "destructive", title: "Error de IA", description: result.error });
-    } else if (result.finalUrl) {
-        setAppState(prevState => ({ ...prevState, drumKitProjects: prevState.drumKitProjects.map(p => p.id === activeProjectId ? { ...p, coverArtUrl: result.finalUrl } : p) }));
-        toast({ title: "¡Carátula generada!", description: "La nueva imagen para tu kit está lista." });
+      toast({ variant: "destructive", title: "Error de IA", description: result.error });
+      setLastEnhancedPrompt(null);
+    } else if (result.finalPrompt) {
+      setLastEnhancedPrompt(result.finalPrompt);
+      toast({ title: "¡Prompt de arte generado!", description: "Puedes verlo y copiarlo para usarlo en otra herramienta." });
     }
     
-    setIsGeneratingArt(false);
+    setIsGeneratingPrompt(false);
   };
 
   return (
@@ -737,8 +736,7 @@ const KitStudioTab = () => {
                   
                     <div className='flex gap-4 items-start'>
                         <div className='w-32 h-32 rounded-md bg-muted flex-shrink-0 relative flex items-center justify-center group'>
-                          {isGeneratingArt ? <Loader2 className="animate-spin h-8 w-8"/> : 
-                            activeProject.coverArtUrl ? (
+                          {activeProject.coverArtUrl ? (
                               <a href={activeProject.coverArtUrl} target="_blank" rel="noopener noreferrer" className="block w-full h-full cursor-pointer">
                                 <Image src={activeProject.coverArtUrl} alt="Kit cover art" layout="fill" className="object-cover rounded-md" />
                                 <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-md">
@@ -770,10 +768,28 @@ const KitStudioTab = () => {
                         </div>
                     </div>
                      <div className="flex flex-col gap-2">
-                        <Button onClick={handleGenerateArt} disabled={isGeneratingArt || !imagePrompt || !currentKitName.trim()} className="w-full bg-indigo-600 hover:bg-indigo-700">
-                            <ImageIcon className='mr-2 h-4 w-4'/>Generar Carátula con IA
+                        <Button onClick={handleGenerateArtPrompt} disabled={isGeneratingPrompt || !imagePrompt || !currentKitName.trim()} className="w-full bg-indigo-600 hover:bg-indigo-700">
+                            <Quote className='mr-2 h-4 w-4'/>Generar Prompt de Arte
                         </Button>
                      </div>
+
+                     <div className="text-center text-xs text-muted-foreground my-2">Una vez generado, usa el prompt en una de estas herramientas:</div>
+
+                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <a href="https://aistudio.google.com/gen-media" target="_blank" rel="noopener noreferrer" className="w-full">
+                            <Button variant="outline" className="w-full">
+                                <Sparkles className="mr-2 h-4 w-4" />
+                                AI Studio
+                            </Button>
+                        </a>
+                        <a href="https://labs.google/fx/es-419/tools/whisk" target="_blank" rel="noopener noreferrer" className="w-full">
+                            <Button variant="outline" className="w-full">
+                                <Sparkles className="mr-2 h-4 w-4" />
+                                ImageFX
+                            </Button>
+                        </a>
+                     </div>
+
                      {activeProject.seoNames.length > 0 && (
                         <div className="space-y-2">
                           <Label>Nombres Sugeridos:</Label>
@@ -792,7 +808,7 @@ const KitStudioTab = () => {
                                 <AlertDialogHeader>
                                     <AlertDialogTitle>Prompt Final Generado por IA</AlertDialogTitle>
                                     <AlertDialogDescription>
-                                        Este fue el prompt mejorado que se utilizó para generar la última carátula. Puedes copiarlo para usarlo como referencia.
+                                        Este es el prompt detallado que generó la IA. Cópialo y pégalo en AI Studio o ImageFX para crear tu carátula.
                                     </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <div className="max-h-64 overflow-y-auto rounded-md border bg-muted p-4">
