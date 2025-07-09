@@ -107,20 +107,24 @@ const generateCoverArtFlow = ai.defineFlow(
     }
 
     // --- Define the final image generation prompt ---
-    const finalImagePrompt = `You are a 3D packaging artist. Generate a cinematic 3D render of a product box. 
+    const finalImagePrompt = `You are a 3D packaging artist. Generate a cinematic 3D render of a product box.
 
-        — VISUAL STYLE —
-        The scene must be abstract, highly stylized, and cinematic. Use only visual elements like lighting, textures, reflections, shadows, colors, and mood.
-        
-        — SPECIAL TEXT INSTRUCTIONS —
-        The design must include **exactly one word**, rendered as part of the product case in a clean, futuristic, or grunge typographic style: "${kitName}". 
-        This text must appear on the product box, label, or front cover, as if it were real packaging. 
-        Do NOT include any other words, numbers, or characters anywhere in the image.
-        
-        — CREATIVE CONTEXT (DON’T OUTPUT THIS TEXT) —
-        ${creativeContext}
-        
-        Make sure the text "${kitName}" is clearly visible but naturally blended into the packaging design.`;
+— VISUAL STYLE —
+The scene must be abstract, highly stylized, and cinematic. Use only visual elements like lighting, textures, reflections, shadows, colors, and mood.
+
+— SPECIAL TEXT INSTRUCTIONS —
+The design must include **exactly one word or phrase**, rendered as part of the product case in a clean, futuristic, or grunge typographic style: "${kitName}".
+This text must appear on the product box, label, or front cover, as if it were real packaging.
+Do NOT include any other words, numbers, or characters anywhere in the image.
+
+— BOX & ENVIRONMENT DETAILS —
+1.  **Thematic Elements:** The scene surrounding the box should include subtle, thematic elements that relate to the creative context. For example, if the context is 'soft and bouncy', you could include soft, plush objects nearby.
+2.  **Audio Motif:** The background of the image MUST include a subtle, out-of-focus element related to audio or music. This could be a synthesizer, headphones, a microphone, speakers, or a radio. This element should be integrated naturally into the scene and not be the main focus.
+
+— CREATIVE CONTEXT (USE FOR INSPIRATION, DON’T OUTPUT THIS TEXT) —
+${creativeContext}
+
+Make sure the text "${kitName}" is clearly visible but naturally blended into the packaging design.`;
 
 
     // --- STEP 1 & 2: GENERATE IMAGE & UPLOAD ---
