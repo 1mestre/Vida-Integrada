@@ -104,7 +104,7 @@ export interface SoundLibraryItem {
   originalName: string;
   storageUrl: string;
   soundType: SoundType;
-  key: string | null;
+  key: string;
 }
 
 export interface DrumKitProject {
@@ -229,13 +229,14 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
                 originalName: 'sonido_desconocido.wav',
                 storageUrl: '',
                 soundType: 'EXTRAS',
-                key: null,
+                key: '',
               };
               const completeItem: SoundLibraryItem = {
                   ...defaults,
                   ...item,
                   id: item.id || uuidv4(),
                   storageUrl: item.storageUrl,
+                  key: item.key || '', // Ensure key is always a string
               };
               acc.push(completeItem);
             }
