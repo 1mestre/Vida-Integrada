@@ -1,9 +1,9 @@
 
 'use server';
 /**
- * @fileOverview An AI flow to generate a detailed prompt for cover art generation.
+ * @fileOverview An AI flow to generate a detailed, structured prompt for cover art generation based on a user concept.
  *
- * - generateArtPrompt - A function that enhances a user prompt and returns a structured prompt for an image AI.
+ * - generateArtPrompt - A function that takes a simple concept and returns a complex, structured image generation prompt.
  * - GenerateArtPromptInput - The input type for the function.
  * - GenerateArtPromptOutput - The return type for the function.
  */
@@ -28,6 +28,37 @@ export async function generateArtPrompt(input: GenerateArtPromptInput): Promise<
     return generateArtPromptFlow(input);
 }
 
+
+// Schema for the AI's creative deconstruction output
+const ArtElementsSchema = z.object({
+    color1: z.string().describe("A primary, dominant color from the concept (e.g., 'blood red', 'electric blue')."),
+    color2: z.string().describe("A secondary, background color from the concept (e.g., 'charcoal gray', 'deep indigo')."),
+    material1: z.string().describe("A type of floor material related to the concept (e.g., 'obsidian', 'polished concrete', 'ancient wood')."),
+    contextualInspiration: z.string().describe("A 2-4 word phrase summarizing the art style (e.g., 'samurai noir', 'cyberpunk grit', 'ethereal waves')."),
+    contextualObject1: z.string().describe("A single, distinct, tangible object directly related to the theme (e.g., 'a samurai sword', 'a neon circuit', 'a seashell')."),
+    contextualObject2: z.string().describe("A second, different, tangible object directly related to the theme (e.g., 'a warrior mask', 'a data chip', 'a pearl')."),
+    ambientAtmosphere: z.string().describe("A 2-4 word phrase for the overall mood (e.g., 'moody mystery', 'intense energy', 'serene calm').")
+});
+
+// Define the AI prompt that deconstructs the user's idea
+const deconstructionPrompt = ai.definePrompt({
+    name: 'deconstructArtConceptPrompt',
+    input: { schema: z.object({ prompt: z.string() }) },
+    output: { schema: ArtElementsSchema },
+    prompt: `You are a master creative director. Your task is to deconstruct a user's musical concept into specific visual elements for a 3D product shot. Analyze the user's prompt and fill in the following JSON fields. Be creative but stay true to the core concept.
+
+**User's Concept:** "{{{prompt}}}"
+
+**CRITICAL RULES:**
+1.  **Colors:** Choose two distinct but complementary colors. \`color1\` should be the main accent, and \`color2\` the background. Be descriptive (e.g., "fiery orange" not just "orange").
+2.  **Material:** The \`material1\` must be a plausible floor surface.
+3.  **Inspiration/Atmosphere:** These must be short, evocative phrases (2-4 words max).
+4.  **Objects:** \`contextualObject1\` and \`contextualObject2\` must be distinct, tangible items directly related to the concept.
+
+Provide ONLY the JSON object as your output.`,
+});
+
+
 const generateArtPromptFlow = ai.defineFlow(
   {
     name: 'generateArtPromptFlow',
@@ -35,83 +66,30 @@ const generateArtPromptFlow = ai.defineFlow(
     outputSchema: GenerateArtPromptOutputSchema,
   },
   async ({prompt, kitName, model}) => {
-    let creativeContext = '';
-    
-    // --- STEP 1: ENHANCE PROMPT (CREATIVE DIRECTOR AI) ---
-    // This step takes the user's simple idea and expands it into a description of visuals and mood.
+    let artElements;
+
+    // --- STEP 1: Deconstruct the user's concept with AI ---
     try {
-      const enhancementPromptText = `You are a visual creative director AI. Your task is to take a user's simple concept and transform it into a rich, detailed, single-paragraph visual description. This description will inspire the abstract patterns and textures for a product design.
+        const { output } = await deconstructionPrompt(
+            { prompt },
+            { model: model ? `googleai/${model}` : 'googleai/gemini-2.0-flash' }
+        );
 
-**Core Concept from user:** "${prompt}"
-
-**Your Mission:**
-1.  **Analyze the Core Concept:** Deeply understand the mood, style, and key elements of the user's idea. Stick closely to the words provided.
-2.  **Describe Abstract Visuals:** Create a description focusing exclusively on:
-    *   **Lighting:** Is it bright, moody, neon, natural, dramatic?
-    *   **Color Palette:** What are the dominant and accent colors?
-    *   **Textures & Patterns:** What abstract materials, patterns, or feelings are evoked (e.g., smooth chrome, rough stone, flowing energy, sharp geometric lines)?
-3.  **Critical Rules:**
-    *   Produce a single, coherent paragraph.
-    *   Your entire output MUST be based on and expand upon the user's Core Concept. Do not invent new, unrelated themes.
-    *   Focus ONLY on abstract visual descriptions of light, color, and texture.
-    *   DO NOT describe a specific scene or any real-world objects. The background is fixed later.
-    *   DO NOT mention text, fonts, or typography.
-
-Now, generate the enhanced visual description based on the user's Core Concept provided above.`;
-        
-        const enhancementResult = await ai.generate({
-            prompt: enhancementPromptText,
-            model: model ? `googleai/${model}` : 'googleai/gemini-2.0-flash',
-        });
-        
-        creativeContext = enhancementResult.text;
-        if (!creativeContext) {
-            throw new Error('The AI failed to return an enhanced description.');
+        if (!output) {
+            throw new Error('The AI failed to return the structured art elements.');
         }
+        artElements = output;
     } catch (e: any) {
-        return { 
-            finalPrompt: '', 
-            error: `Failed to enhance prompt: ${e.message}` 
+        console.error("AI deconstruction failed:", e);
+        return {
+            finalPrompt: '',
+            error: `Failed to deconstruct prompt with AI: ${e.message}`
         };
     }
 
-    // --- STEP 2: SUMMARIZE SENSATION (MOOD AI) ---
-    // This step distills the creative context into a short, evocative phrase.
-    let visualSensation = '';
-    try {
-      const sensationPromptText = `Analyze the following visual description and summarize its core mood and feeling into a short, two-to-three word phrase. Provide ONLY the phrase.
+    // --- STEP 2: Assemble the final prompt using the user's exact template ---
+    const finalPrompt = `imagine prompt: Photorealistic 3D product shot of a slightly floating over the ${artElements.color1} floor ${artElements.material1} angled ${artElements.color2} box 10–15 degrees with patterns and textures inspired by the art of ${artElements.contextualInspiration}. The box prominently displays the large, stylish, and perfectly legible text "${kitName}" in ${artElements.contextualInspiration} inspired typography / font as a central design element. In the background, a heavily blurred, subtly visible, distorted ${artElements.contextualObject1} is laid down and ${artElements.contextualObject2} scattered across the floor, creating a strong bokeh effect and emphasizing the sharply focused box. The overall lighting and color palette should evoke a sense of ${artElements.ambientAtmosphere} atmosphere and a cinematic, high-quality render of soft, blurred ${artElements.color1} smoke on a deep ${artElements.color2} background. The smoke is dense but smooth, with a feathered, diffused texture — no sharp details — appearing as a glowing fog or vapor cloud.`;
 
-**Examples:**
-- Description about a beach concept -> "summer heat"
-- Description about a mystery concept -> "moody mystery"
-- Description about a vibrant concept -> "vibrant energy"
-
-**Visual Description to Analyze:**
->>>
-${creativeContext}
->>>
-
-Now, provide ONLY the summary phrase.`;
-
-        const sensationResult = await ai.generate({
-            prompt: sensationPromptText,
-            model: model ? `googleai/${model}` : 'googleai/gemini-2.0-flash',
-        });
-        
-        visualSensation = sensationResult.text.trim().replace(/["']/g, ''); // Clean up output
-        if (!visualSensation) {
-            throw new Error('The AI failed to generate a visual sensation summary.');
-        }
-    } catch (e: any) {
-        console.warn("Could not generate visual sensation, using a fallback.", e);
-        visualSensation = 'a unique and striking atmosphere'; // Provide a generic but useful fallback
-    }
-
-
-    // --- STEP 3: ASSEMBLE THE FINAL, ROBUST PROMPT (3D ARTIST AI) ---
-    // This step combines all elements into the user-specified template.
-    const finalImagePrompt = `imagine prompt: Photorealistic 3D product shot of a slightly angled rectangular and vertical box (10-15 degrees) with abstract patterns and textures inspired (${creativeContext}). The box prominently displays the large, stylish, and perfectly legible text "${kitName}" as a central design element. The background features a heavily blurred, subtly visible, distorted black over-ear headphones and a synth rests on a surface black electronic keyboard with white keys and various knobs and sliders, creating a strong bokeh effect and emphasizing the sharply focused box. The overall lighting and color palette should evoke a sense of (${visualSensation}).`;
-
-    return { finalPrompt: finalImagePrompt, error: undefined };
+    return { finalPrompt, error: undefined };
   }
 );
