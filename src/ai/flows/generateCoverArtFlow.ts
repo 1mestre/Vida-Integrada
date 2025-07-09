@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview An AI flow to generate cover art and upload it to object storage.
@@ -112,13 +111,18 @@ const generateCoverArtFlow = ai.defineFlow(
 - These patterns should be inspired by the "Creative Context" below.
 - The box MUST NOT have any pictures or illustrations of real-world objects on it. NO speakers, NO instruments, NO people, NO landscapes. The surface is for abstract art.
 
-**RULE 2: THE BOX MUST DISPLAY TEXT.**
+**RULE 2: THE BOX MUST DISPLAY LARGE, CLEAR TEXT.**
 - The box MUST visibly display the text: "${kitName}".
-- This text must be large, stylish, and a central part of the design.
+- This text must be **large, stylish, perfectly legible, and a central, dominant part of the design.**
 
 **RULE 3: THE BACKGROUND SCENE.**
 - The scene around the box must contain ONE subtle, out-of-focus object related to music creation (like a synthesizer, headphones, or a vintage radio).
 - This object is ALWAYS in the background, NEVER on the box.
+
+**RULE 4: CAMERA AND COMPOSITION.**
+- **Product Focus:** This is a professional product shot. The box is the hero. It must be in sharp focus.
+- **Box Angle:** The box should be angled slightly, about 10-15 degrees, to show its front and one side, emphasizing its 3D form.
+- **Background Blur:** The background must be heavily blurred using a very shallow depth of field (bokeh effect) to make the main product box pop.
 
 **CREATIVE CONTEXT (For mood, color, and texture inspiration):**
 >>>
@@ -127,8 +131,9 @@ ${creativeContext}
 
 **FINAL CHECKLIST (YOU MUST OBEY):**
 1. Does the box surface have pictures of real things on it? **IT MUST BE NO.** Only abstract patterns.
-2. Is the text "${kitName}" on the box? **IT MUST BE YES.**
-3. Is there a music item in the background, separate from the box? **IT MUST BE YES.**`;
+2. Is the text "${kitName}" on the box, large and easy to read? **IT MUST BE YES.**
+3. Is there a music item in the background, separate from the box? **IT MUST BE YES.**
+4. Is the background heavily blurred and the box in sharp focus? **IT MUST BE YES.**`;
 
 
     // --- STEP 1 & 2: GENERATE IMAGE & UPLOAD ---
