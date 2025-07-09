@@ -21,34 +21,6 @@ export async function uploadSound(input: UploadSoundInput): Promise<string> {
     return uploadSoundFlow(input);
 }
 
-// --- R2 Configuration and Validation ---
-const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
-const accessKeyId = process.env.R2_ACCESS_KEY_ID;
-const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
-const bucketName = process.env.R2_BUCKET_NAME;
-const publicUrl = process.env.R2_PUBLIC_URL || process.env.NEXT_PUBLIC_R2_PUBLIC_URL;
-
-const missingVars = [];
-if (!accountId) missingVars.push('CLOUDFLARE_ACCOUNT_ID');
-if (!accessKeyId) missingVars.push('R2_ACCESS_KEY_ID');
-if (!secretAccessKey) missingVars.push('R2_SECRET_ACCESS_KEY');
-if (!bucketName) missingVars.push('R2_BUCKET_NAME');
-if (!publicUrl) missingVars.push('R2_PUBLIC_URL or NEXT_PUBLIC_R2_PUBLIC_URL');
-
-if (missingVars.length > 0) {
-    throw new Error(`R2 Configuration Error: The following environment variables are missing on the server: ${missingVars.join(', ')}`);
-}
-
-const s3 = new S3Client({
-    region: 'auto',
-    endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
-    credentials: {
-        accessKeyId,
-        secretAccessKey,
-    },
-});
-// --- End Configuration ---
-
 const uploadSoundFlow = ai.defineFlow(
   {
     name: 'uploadSoundFlow',
@@ -56,6 +28,34 @@ const uploadSoundFlow = ai.defineFlow(
     outputSchema: z.string().url().describe('The public URL of the uploaded sound in Cloudflare R2.'),
   },
   async ({soundDataUri, filename}) => {
+    // --- R2 Configuration moved inside the flow ---
+    const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
+    const accessKeyId = process.env.R2_ACCESS_KEY_ID;
+    const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
+    const bucketName = process.env.R2_BUCKET_NAME;
+    const publicUrl = process.env.R2_PUBLIC_URL || process.env.NEXT_PUBLIC_R2_PUBLIC_URL;
+
+    const missingVars = [];
+    if (!accountId) missingVars.push('CLOUDFLARE_ACCOUNT_ID');
+    if (!accessKeyId) missingVars.push('R2_ACCESS_KEY_ID');
+    if (!secretAccessKey) missingVars.push('R2_SECRET_ACCESS_KEY');
+    if (!bucketName) missingVars.push('R2_BUCKET_NAME');
+    if (!publicUrl) missingVars.push('R2_PUBLIC_URL or NEXT_PUBLIC_R2_PUBLIC_URL');
+
+    if (missingVars.length > 0) {
+        throw new Error(`R2 Configuration Error: The following environment variables are missing on the server: ${missingVars.join(', ')}`);
+    }
+
+    const s3 = new S3Client({
+        region: 'auto',
+        endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
+        credentials: {
+            accessKeyId,
+            secretAccessKey,
+        },
+    });
+    // --- End Configuration ---
+
     // Step 1: Decode the base64 data URI
     const base64Data = soundDataUri.split(';base64,').pop();
     if (!base64Data) {

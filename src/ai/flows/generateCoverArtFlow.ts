@@ -31,38 +31,6 @@ export async function generateCoverArt(input: GenerateCoverArtInput): Promise<Ge
     return generateCoverArtFlow(input);
 }
 
-// --- R2 Configuration and Validation ---
-// Se leen las credenciales y la configuración de Cloudflare R2 desde las variables de entorno.
-// Estas deben estar configuradas tanto en tu entorno local (.env) como en Vercel.
-const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
-const accessKeyId = process.env.R2_ACCESS_KEY_ID;
-const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
-const bucketName = process.env.R2_BUCKET_NAME;
-const publicUrl = process.env.R2_PUBLIC_URL || process.env.NEXT_PUBLIC_R2_PUBLIC_URL;
-
-// Validación: Si falta alguna de las variables, el servidor lanzará un error claro y específico.
-const missingVars = [];
-if (!accountId) missingVars.push('CLOUDFLARE_ACCOUNT_ID');
-if (!accessKeyId) missingVars.push('R2_ACCESS_KEY_ID');
-if (!secretAccessKey) missingVars.push('R2_SECRET_ACCESS_KEY');
-if (!bucketName) missingVars.push('R2_BUCKET_NAME');
-if (!publicUrl) missingVars.push('R2_PUBLIC_URL or NEXT_PUBLIC_R2_PUBLIC_URL');
-
-if (missingVars.length > 0) {
-    throw new Error(`R2 Configuration Error: The following environment variables are missing on the server: ${missingVars.join(', ')}`);
-}
-
-// Se crea un cliente S3 para interactuar con el almacenamiento de R2.
-const s3 = new S3Client({
-    region: 'auto',
-    endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
-    credentials: {
-        accessKeyId,
-        secretAccessKey,
-    },
-});
-// --- End Configuration ---
-
 const generateCoverArtFlow = ai.defineFlow(
   {
     name: 'generateCoverArtFlow',
@@ -70,6 +38,35 @@ const generateCoverArtFlow = ai.defineFlow(
     outputSchema: GenerateCoverArtOutputSchema,
   },
   async ({prompt, kitName}) => {
+    // --- R2 Configuration moved inside the flow ---
+    const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
+    const accessKeyId = process.env.R2_ACCESS_KEY_ID;
+    const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
+    const bucketName = process.env.R2_BUCKET_NAME;
+    const publicUrl = process.env.R2_PUBLIC_URL || process.env.NEXT_PUBLIC_R2_PUBLIC_URL;
+
+    const missingVars = [];
+    if (!accountId) missingVars.push('CLOUDFLARE_ACCOUNT_ID');
+    if (!accessKeyId) missingVars.push('R2_ACCESS_KEY_ID');
+    if (!secretAccessKey) missingVars.push('R2_SECRET_ACCESS_KEY');
+    if (!bucketName) missingVars.push('R2_BUCKET_NAME');
+    if (!publicUrl) missingVars.push('R2_PUBLIC_URL or NEXT_PUBLIC_R2_PUBLIC_URL');
+    
+    if (missingVars.length > 0) {
+      const errorMsg = `R2 Configuration Error: The following environment variables are missing on the server: ${missingVars.join(', ')}`;
+      return { finalUrl: null, enhancedPrompt: prompt, error: errorMsg };
+    }
+
+    const s3 = new S3Client({
+      region: 'auto',
+      endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
+      credentials: {
+          accessKeyId,
+          secretAccessKey,
+      },
+    });
+    // --- End Configuration ---
+    
     let creativeContext = '';
     
     // --- STEP 0: ENHANCE PROMPT ---
@@ -162,7 +159,7 @@ Make sure the text "${kitName}" is clearly visible but naturally blended into th
         );
 
         const finalUrl = `${publicUrl}/${filename}`;
-        return { finalUrl, enhancedPrompt: finalImagePrompt };
+        return { finalUrl, enhancedPrompt: finalImagePrompt, error: undefined };
 
     } catch (e: any) {
         let errorMessage = `Error inesperado en la generación de imagen: ${e.message}`;
