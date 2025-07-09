@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview An AI flow to generate a detailed prompt for cover art generation.
@@ -37,20 +38,27 @@ const generateArtPromptFlow = ai.defineFlow(
     
     // --- STEP 1: ENHANCE PROMPT ---
     try {
-      const enhancementPromptText = `You are a creative director AI. A user has provided a core concept. Your task is to expand this into a vivid, single-paragraph visual description for an image generation AI.
+      const enhancementPromptText = `You are a visual enhancement AI. Your task is to take a user's simple concept and transform it into a rich, detailed, single-paragraph visual scene description for an image generation AI.
 
-        **Core Concept:** ${prompt}
-        
-        **CRITICAL INSTRUCTIONS:**
-        1.  **NO TEXT WORDS:** Do NOT use words like "typography", "text", "letters", "words", "font", or "type" in your output.
-        2.  **VISUALS ONLY:** Describe only visual elements: colors, textures, lighting, mood, composition, and objects.
-        3.  **DESCRIBE A SCENE:** Frame your description as a scene for a 3D render.
-        4.  **THEMATIC ELEMENTS:** The scene surrounding the box should include subtle, thematic elements that relate to the creative context. For example, if the context is 'soft and bouncy', you could include soft, plush objects nearby.
-        5.  **SINGLE PARAGRAPH:** Output a single, coherent paragraph.
-        
-        Example:
-        User Concept: "Dark trap, Travis Scott style"
-        Your Output: "A moody, cinematic 3D render of a premium product box with a dark, enigmatic aesthetic. The packaging features a blend of matte black textures and subtle, iridescent details that catch the light. The scene is lit with atmospheric neon glows in deep purples and reds, casting long, soft shadows. The overall composition feels grounded yet otherworldly, with a focus on tactile realism, and a hint of cosmic mystery."`;
+**Core Concept from user:** "${prompt}"
+
+**Your Mission:**
+1.  **Analyze the Core Concept:** Deeply understand the mood, style, and key elements of the user's idea.
+2.  **Build a Detailed Scene:** Describe a complete scene for a 3D render. Include specific details about:
+    *   **Lighting:** Is it bright, moody, neon, natural?
+    *   **Colors:** What is the dominant color palette?
+    *   **Textures:** What materials are present (e.g., chrome, matte, wood, stone)?
+    *   **Environment:** What objects or natural elements surround the main subject? These elements MUST be directly inspired by the Core Concept. For example, if the concept is "ocean vibes", describe sand, water, and palm trees. If it's "space odyssey", describe nebulae and stars.
+3.  **Output Style:**
+    *   Produce a single, coherent paragraph.
+    *   Focus ONLY on visual descriptions. Do NOT mention text, fonts, or typography.
+    *   Your entire output must be based on and expand upon the user's Core Concept.
+
+**Example Transformation:**
+*   **User's Core Concept:** "lo-fi, chill, study vibes"
+*   **Your Enhanced Output:** "A cozy, dimly-lit room at dusk, with soft rain streaking down a large window. A gentle, warm glow emanates from a vintage-style lamp, casting long, soft shadows across a worn wooden desk. Steam rises from a ceramic mug, and a few potted succulents sit quietly on a nearby shelf. The atmosphere is calm, introspective, and perfect for focused study, with a palette of muted blues, warm oranges, and deep browns."
+
+Now, create the enhanced visual description based on the user's Core Concept provided above.`;
         
         const enhancementResult = await ai.generate({
             prompt: enhancementPromptText,
