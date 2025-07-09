@@ -38,6 +38,7 @@ export async function renameSound(input: RenameSoundInput): Promise<RenameSoundO
 // This prompt is lean. It only asks the AI for the creative part of the name.
 const prompt = ai.definePrompt({
   name: 'renameSoundPrompt',
+  model: 'googleai/gemini-2.5-flash',
   input: {schema: RenamePromptInputSchema},
   // The AI's output is just the creative name, not the final formatted string.
   output: {schema: z.object({ newName: z.string() })}, 
