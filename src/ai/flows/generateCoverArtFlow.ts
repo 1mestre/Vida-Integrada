@@ -105,27 +105,30 @@ const generateCoverArtFlow = ai.defineFlow(
     }
 
     // --- Define the final image generation prompt ---
-    const finalImagePrompt = `You are a 3D packaging artist creating a single product shot. Follow these rules precisely.
+    const finalImagePrompt = `You are a master 3D packaging artist. Your single task is to create a photorealistic product shot of a box. Follow these rules with extreme precision.
 
-**Rule 1: The Box Design**
-- The box's surface MUST be decorated with **abstract patterns and textures only**.
-- These abstract graphics should be inspired by the colors and mood of the **Creative Context** below.
-- The box MUST display the text: "${kitName}". This text should be large, stylish, and easy to read.
-- **ABSOLUTE PROHIBITION:** Do NOT place any real-world objects on the box design. This includes, but is not limited to: speakers, headphones, synthesizers, microphones, people, animals, or landscapes. The box surface is for abstract graphics and the required text ONLY.
+**RULE 1: THE BOX SURFACE IS FOR ABSTRACT GRAPHICS ONLY.**
+- The faces of the box MUST be decorated with abstract patterns and textures.
+- These patterns should be inspired by the "Creative Context" below.
+- The box MUST NOT have any pictures or illustrations of real-world objects on it. NO speakers, NO instruments, NO people, NO landscapes. The surface is for abstract art.
 
-**Rule 2: The Background Scene**
-- The scene surrounding the box MUST contain a subtle, out-of-focus object related to music. Examples: a small synthesizer, headphones on the table, a vintage radio.
-- This object MUST be in the background or environment, **NEVER on the box itself**.
+**RULE 2: THE BOX MUST DISPLAY TEXT.**
+- The box MUST visibly display the text: "${kitName}".
+- This text must be large, stylish, and a central part of the design.
 
-**Rule 3: Creative Context**
-- Use the following description to inspire the overall mood, lighting, and the abstract patterns on the box:
->>> ${creativeContext}
+**RULE 3: THE BACKGROUND SCENE.**
+- The scene around the box must contain ONE subtle, out-of-focus object related to music creation (like a synthesizer, headphones, or a vintage radio).
+- This object is ALWAYS in the background, NEVER on the box.
 
-**Final Review:** Before generating, confirm:
-1. Box has text "${kitName}"? Yes.
-2. Box has abstract graphics? Yes.
-3. Box has pictures of speakers/instruments on it? **NO.**
-4. Music item is in the background? Yes.`;
+**CREATIVE CONTEXT (For mood, color, and texture inspiration):**
+>>>
+${creativeContext}
+>>>
+
+**FINAL CHECKLIST (YOU MUST OBEY):**
+1. Does the box surface have pictures of real things on it? **IT MUST BE NO.** Only abstract patterns.
+2. Is the text "${kitName}" on the box? **IT MUST BE YES.**
+3. Is there a music item in the background, separate from the box? **IT MUST BE YES.**`;
 
 
     // --- STEP 1 & 2: GENERATE IMAGE & UPLOAD ---
@@ -175,4 +178,3 @@ const generateCoverArtFlow = ai.defineFlow(
     }
   }
 );
-
