@@ -35,7 +35,7 @@ const generateArtPromptFlow = ai.defineFlow(
   async ({prompt, kitName}) => {
     let creativeContext = '';
     
-    // --- STEP 0: ENHANCE PROMPT ---
+    // --- STEP 1: ENHANCE PROMPT ---
     try {
       const enhancementPromptText = `You are a creative director AI. A user has provided a core concept. Your task is to expand this into a vivid, single-paragraph visual description for an image generation AI.
 
@@ -68,7 +68,7 @@ const generateArtPromptFlow = ai.defineFlow(
         };
     }
 
-    // --- Define the final image generation prompt ---
+    // --- STEP 2: BUILD THE FINAL, ROBUST PROMPT ---
     const finalImagePrompt = `You are a master 3D packaging artist. Your single task is to create a photorealistic product shot of a box. Follow these rules with extreme precision.
 
 **RULE 1: THE BOX SURFACE IS FOR ABSTRACT GRAPHICS ONLY.**
