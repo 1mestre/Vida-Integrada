@@ -117,7 +117,8 @@ This text must appear on the product box, label, or front cover, as if it were r
 Do NOT include any other words, numbers, or characters anywhere in the image.
 
 — BOX & ENVIRONMENT DETAILS —
-**Audio Motif:** The background of the image MUST include a subtle, out-of-focus element related to audio or music. This could be a synthesizer, headphones, a microphone, speakers, or a radio. This element should be integrated naturally into the scene and not be the main focus.
+**Audio Motif:** The background of the scene MUST include a subtle, out-of-focus element related to audio or music (e.g., a synthesizer, headphones, a microphone, speakers, or a radio).
+**CRITICAL CLARIFICATION:** This audio element must be in the **environment/background ONLY**. Do NOT place it on or inside the product box itself. The box's design should be clean and only contain the required text and abstract graphics inspired by the creative context.
 
 — CREATIVE CONTEXT (USE FOR INSPIRATION, DON’T OUTPUT THIS TEXT) —
 ${creativeContext}
