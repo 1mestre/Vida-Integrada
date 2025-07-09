@@ -22,7 +22,7 @@ import JSZip from 'jszip';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useAppState, WorkItem, WorkPackageTemplate, type Contribution, SoundLibraryItem, SoundType, DrumKitProject } from '@/context/AppStateContext';
-import { TrendingUp, Settings, PlusCircle, Wrench, Music, Link, Edit, MessageSquare, Trash2, FileText, Gift, ClipboardCopy, Loader2, Upload, Search, ListFilter, Play, Music4, Sparkles, Quote, Image as ImageIcon, Download } from 'lucide-react';
+import { TrendingUp, Settings, PlusCircle, Wrench, Music, Link, Edit, MessageSquare, Trash2, FileText, Gift, ClipboardCopy, Loader2, Upload, Search, ListFilter, Play, Music4, Sparkles, Quote, ImageIcon, Download } from 'lucide-react';
 import WorkItemModal from '@/components/WorkItemModal';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
@@ -888,7 +888,19 @@ const WorkTab = () => {
         }));
         try {
           const descriptionForAI = imagePrompt || activeProject.imagePrompt || 'general purpose';
-          const { newName } = await renameSound({ originalName: sound.originalName, kitDescription: descriptionForAI, soundType: sound.soundType, model: appState.selectedAiModel });
+          
+          // Get the list of existing CREATIVE names (without the " - SoundType" part)
+          const existingCreativeNames = Object.values(activeProject.soundNamesInKit)
+            .map(fullName => fullName.split(' - ')[0].trim())
+            .filter(name => name && name !== 'Generando nombre...');
+
+          const { newName } = await renameSound({ 
+            originalName: sound.originalName, 
+            kitDescription: descriptionForAI, 
+            soundType: sound.soundType, 
+            existingNames: existingCreativeNames, // Pass the list here
+            model: appState.selectedAiModel 
+          });
           setAppState(prevState => ({
               ...prevState,
               drumKitProjects: prevState.drumKitProjects.map(p => {

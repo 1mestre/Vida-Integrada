@@ -11,10 +11,11 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
-// This schema is for the AI prompt itself, which only needs the creative context.
+// This schema is for the AI prompt itself, which needs the creative context.
 const RenamePromptInputSchema = z.object({
   originalName: z.string().describe('The original, often messy, filename of the sound.'),
   kitDescription: z.string().describe('The overall theme or description of the drum kit.'),
+  existingNames: z.array(z.string()).optional().describe('A list of creative names already used in this kit, to avoid duplication.'),
 });
 
 // This is the public-facing input schema for our flow.
@@ -22,6 +23,7 @@ const RenameSoundInputSchema = z.object({
   originalName: z.string().describe('The original filename of the sound.'),
   kitDescription: z.string().describe('The overall theme or description of the drum kit.'),
   soundType: z.string().describe('The category of the sound, e.g., "Snare", "Kick".'),
+  existingNames: z.array(z.string()).optional().describe('A list of creative names already used in this kit, to avoid duplication.'),
   model: z.string().optional(),
 });
 type RenameSoundInput = z.infer<typeof RenameSoundInputSchema>;
@@ -42,24 +44,32 @@ const prompt = ai.definePrompt({
   input: {schema: RenamePromptInputSchema},
   // The AI's output is just the creative name, not the final formatted string.
   output: {schema: z.object({ newName: z.string() })}, 
-  prompt: `You are a master branding expert for DANODALS, a high-end music producer known for unique and impactful sound design. Your task is to coin a powerful, distinct, and marketable name for a single sound file.
+  prompt: `You are a master branding expert for DANODALS, a high-end music producer known for unique and impactful sound design. Your task is to coin a powerful, distinct, and marketable name for a single sound file, ensuring it is unique within its kit.
 
 **MISSION:**
 1.  **Analyze & Deconstruct:** Deeply analyze the **Kit Vibe** and the **Original Sound Name**. Identify key themes, emotions, and objects.
 2.  **Creative Expansion:** Do not just shorten the name. **Expand on the concepts.** Use metaphors, powerful verbs, evocative adjectives, and conceptual associations related to the vibe. The goal is a name that tells a small story.
 3.  **Vibe Cohesion:** The new name MUST feel like it belongs to the kit. It should sound like a premium, professionally named sample.
+4.  **GUARANTEED UNIQUENESS:** The new name you generate MUST NOT be in the list of existing names.
 
 **CONTEXT:**
 -   **Kit Vibe / Description:** '{{kitDescription}}'
 -   **Original Sound Name:** '{{originalName}}'
+{{#if existingNames}}
+-   **Existing Names in this Kit (DO NOT REPEAT):**
+    {{#each existingNames}}
+    - {{{this}}}
+    {{/each}}
+{{/if}}
 
 **EXAMPLES OF TRANSFORMATION:**
 -   **Original:** "808_HARD_TRAP_BASS.wav", **Kit Vibe:** "Ancient samurai warrior" -> **New Name:** "RONIN'S ROAR"
 -   **Original:** "Snare_lofi_vinyl.wav", **Kit Vibe:** "Late night rainy city" -> **New Name:** "NEON PUDDLE"
 -   **Original:** "Kick_punchy_deep.wav", **Kit Vibe:** "Cosmic space journey" -> **New Name:** "ASTEROID IMPACT"
 
-**CRITICAL RULE:**
-Provide ONLY the new creative name. No quotes, no explanations, no sound category. Just the name itself.`,
+**CRITICAL RULES:**
+1.  Provide ONLY the new creative name. No quotes, no explanations, no sound category. Just the name itself.
+2.  The name MUST be unique and not found in the "Existing Names" list.`,
 });
 
 
@@ -74,6 +84,7 @@ const renameSoundFlow = ai.defineFlow(
     const { output } = await prompt({
       originalName: input.originalName,
       kitDescription: input.kitDescription,
+      existingNames: input.existingNames,
     }, { model: input.model ? `googleai/${input.model}` : 'googleai/gemini-2.0-flash' });
 
     if (!output?.newName) {
