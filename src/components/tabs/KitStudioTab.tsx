@@ -682,26 +682,30 @@ const KitStudioTab = () => {
                             <ImageIcon className="h-8 w-8 text-muted-foreground"/>
                           }
                         </div>
-                        <div className='space-y-2 flex-grow'>
-                          <div>
-                            <Label htmlFor="kit-name">Nombre Final del Kit (para carátula)</Label>
-                            <Input 
-                              id="kit-name"
-                              value={currentKitName}
-                              onChange={(e) => setCurrentKitName(e.target.value)}
-                              onBlur={onKitNameBlur}
-                              placeholder="Escribe el nombre del kit"
-                            />
-                          </div>
-                           <div>
-                            <Label htmlFor="kit-prompt">Descripción para la IA</Label>
-                            <Input id="kit-prompt" placeholder="Ej: Dark trap, estilo Travis Scott..." value={imagePrompt} onChange={(e) => setImagePrompt(e.target.value)}/>
-                           </div>
+                        <div className='space-y-4 flex-grow'>
+                            <div>
+                                <Label htmlFor="kit-prompt">1. Describe el concepto</Label>
+                                <Input id="kit-prompt" placeholder="Ej: Dark trap, estilo Travis Scott..." value={imagePrompt} onChange={(e) => setImagePrompt(e.target.value)}/>
+                            </div>
+                             <Button onClick={handleGenerateNames} disabled={isGeneratingNames || !imagePrompt} size="sm" variant="outline" className="w-full text-purple-400 border-purple-400/50 hover:bg-purple-400/10 hover:text-purple-300">
+                                <Sparkles className='mr-2'/>Sugerir Nombres
+                            </Button>
+                            <div>
+                                <Label htmlFor="kit-name">2. Escribe el nombre final</Label>
+                                <Input 
+                                  id="kit-name"
+                                  value={currentKitName}
+                                  onChange={(e) => setCurrentKitName(e.target.value)}
+                                  onBlur={onKitNameBlur}
+                                  placeholder="Escribe el nombre del kit"
+                                />
+                            </div>
                         </div>
                     </div>
                      <div className="flex flex-col gap-2">
-                        <Button onClick={handleGenerateNames} disabled={isGeneratingNames || !imagePrompt} className="w-full"><Sparkles className='mr-2'/>Sugerir Nombres</Button>
-                        <Button onClick={handleGenerateArt} disabled={isGeneratingArt || !imagePrompt || !currentKitName.trim()} className="w-full"><Sparkles className='mr-2'/>Generar Carátula</Button>
+                        <Button onClick={handleGenerateArt} disabled={isGeneratingArt || !imagePrompt || !currentKitName.trim()} className="w-full bg-indigo-600 hover:bg-indigo-700">
+                            <ImageIcon className='mr-2 h-4 w-4'/>Generar Carátula
+                        </Button>
                      </div>
                      {activeProject.seoNames.length > 0 && (
                         <div className="space-y-2">
