@@ -37,7 +37,8 @@ const generateArtPromptFlow = ai.defineFlow(
   async ({prompt, kitName, model}) => {
     let creativeContext = '';
     
-    // --- STEP 1: ENHANCE PROMPT ---
+    // --- STEP 1: ENHANCE PROMPT (CREATIVE DIRECTOR AI) ---
+    // This step takes the user's simple idea and expands it into a full scene description.
     try {
       const enhancementPromptText = `You are a visual enhancement AI. Your task is to take a user's simple concept and transform it into a rich, detailed, single-paragraph visual scene description for an image generation AI.
 
@@ -49,15 +50,11 @@ const generateArtPromptFlow = ai.defineFlow(
     *   **Lighting:** Is it bright, moody, neon, natural?
     *   **Colors:** What is the dominant color palette?
     *   **Textures:** What materials are present (e.g., chrome, matte, wood, stone)?
-    *   **Environment:** What objects or natural elements surround the main subject? These elements MUST be directly inspired by the Core Concept. For example, if the concept is "ocean vibes", describe sand, water, and palm trees. If it's "space odyssey", describe nebulae and stars.
+    *   **Environment:** What subtle, out-of-focus objects or natural elements surround the main subject? These elements MUST be directly inspired by the Core Concept. For example, if the concept is "ocean vibes", describe sand, water, and palm trees. If it's "space odyssey", describe nebulae and stars.
 3.  **Output Style:**
     *   Produce a single, coherent paragraph.
     *   Focus ONLY on visual descriptions. Do NOT mention text, fonts, or typography.
     *   Your entire output must be based on and expand upon the user's Core Concept.
-
-**Example Transformation:**
-*   **User's Core Concept:** "lo-fi, chill, study vibes"
-*   **Your Enhanced Output:** "A cozy, dimly-lit room at dusk, with soft rain streaking down a large window. A gentle, warm glow emanates from a vintage-style lamp, casting long, soft shadows across a worn wooden desk. Steam rises from a ceramic mug, and a few potted succulents sit quietly on a nearby shelf. The atmosphere is calm, introspective, and perfect for focused study, with a palette of muted blues, warm oranges, and deep browns."
 
 Now, create the enhanced visual description based on the user's Core Concept provided above.`;
         
@@ -77,37 +74,47 @@ Now, create the enhanced visual description based on the user's Core Concept pro
         };
     }
 
-    // --- STEP 2: BUILD THE FINAL, ROBUST PROMPT ---
-    const finalImagePrompt = `You are a master 3D packaging artist. Your single task is to create a photorealistic product shot of a box. Follow these rules with extreme precision.
+    // --- STEP 2: SUMMARIZE SENSATION (MOOD AI) ---
+    // This step distills the creative context into a short, evocative phrase.
+    let visualSensation = '';
+    try {
+        const sensationPromptText = `Analyze the following visual description and summarize its core mood and feeling into a short, two-to-three word phrase (e.g., "moody mystery", "vibrant energy", "calm nostalgia"). Provide ONLY the phrase.
 
-**RULE 1: THE BOX SURFACE IS FOR ABSTRACT GRAPHICS ONLY.**
-- The faces of the box MUST be decorated with abstract patterns and textures.
-- These patterns should be inspired by the "Creative Context" below.
-- The box MUST NOT have any pictures or illustrations of real-world objects on it. NO speakers, NO instruments, NO people, NO landscapes. The surface is for abstract art.
-
-**RULE 2: THE BOX MUST DISPLAY LARGE, CLEAR TEXT.**
-- The box MUST visibly display the text: "${kitName}".
-- This text must be **large, stylish, perfectly legible, and a central, dominant part of the design.**
-
-**RULE 3: THE BACKGROUND SCENE.**
-- The scene around the box must contain ONE subtle, out-of-focus object related to music creation (like a synthesizer, headphones, or a vintage radio).
-- **CRITICAL CLARIFICATION:** This audio element must be in the **environment/background ONLY**. Do NOT place it on or inside the product box itself. The box's design should be clean and only contain the required text and abstract graphics inspired by the creative context.
-
-**RULE 4: CAMERA AND COMPOSITION.**
-- **Product Focus:** This is a professional product shot. The box is the hero. It must be in sharp focus.
-- **Box Angle:** The box should be angled slightly, about 10-15 degrees, to show its front and one side, emphasizing its 3D form.
-- **Background Blur:** The background must be heavily blurred using a very shallow depth of field (bokeh effect) to make the main product box pop.
-
-**CREATIVE CONTEXT (For mood, color, and texture inspiration):**
+Visual Description:
 >>>
 ${creativeContext}
->>>
+>>>`;
 
-**FINAL CHECKLIST (YOU MUST OBEY):**
-1. Does the box surface have pictures of real things on it? **IT MUST BE NO.** Only abstract patterns.
-2. Is the text "${kitName}" on the box, large and easy to read? **IT MUST BE YES.**
-3. Is there a music item in the background, separate from the box? **IT MUST BE YES.**
-4. Is the background heavily blurred and the box in sharp focus? **IT MUST BE YES.**`;
+        const sensationResult = await ai.generate({
+            prompt: sensationPromptText,
+            model: model ? `googleai/${model}` : 'googleai/gemini-2.0-flash',
+        });
+        
+        visualSensation = sensationResult.text.trim().replace(/["']/g, ''); // Clean up output
+        if (!visualSensation) {
+            throw new Error('The AI failed to generate a visual sensation summary.');
+        }
+    } catch (e: any) {
+        console.warn("Could not generate visual sensation, using a fallback.", e);
+        visualSensation = 'a unique and striking atmosphere'; // Provide a generic but useful fallback
+    }
+
+
+    // --- STEP 3: ASSEMBLE THE FINAL, ROBUST PROMPT (3D ARTIST AI) ---
+    // This step combines all elements into a single, highly-structured prompt for the image AI.
+    const finalImagePrompt = `Create a photorealistic 3D product shot of a modern product box. Follow these instructions precisely.
+
+**Primary Subject: The Box**
+*   **Angle & Focus:** The box is angled slightly (10-15 degrees) to show its front and one side. It must be in sharp, perfect focus.
+*   **Text:** The text "${kitName}" must be displayed prominently on the box. It should be large, stylish, and perfectly legible, serving as a central, dominant design element.
+*   **Surface Design:** The box surface MUST be decorated with abstract patterns and textures. These visuals are directly inspired by the scene description below. Absolutely NO pictures or illustrations of real-world objects on the box itself—only abstract art.
+
+**Background & Scene**
+*   **Scene Description:** The environment surrounding the box is as follows: ${creativeContext}.
+*   **Bokeh Effect:** This background environment MUST be heavily blurred with a very shallow depth of field, creating a strong bokeh effect that makes the main product box pop.
+
+**Overall Mood & Lighting**
+*   **Atmosphere:** The lighting, colors, and overall atmosphere must evoke a sense of ${visualSensation}.`;
 
     return { finalPrompt: finalImagePrompt, error: undefined };
   }
