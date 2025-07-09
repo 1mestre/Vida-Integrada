@@ -70,7 +70,7 @@ const generateCoverArtFlow = ai.defineFlow(
     outputSchema: GenerateCoverArtOutputSchema,
   },
   async ({prompt, kitName}) => {
-    let enhancedPrompt = '';
+    let creativeContext = '';
     
     // --- STEP 0: ENHANCE PROMPT ---
     try {
@@ -93,8 +93,8 @@ const generateCoverArtFlow = ai.defineFlow(
             model: 'googleai/gemini-2.5-flash',
         });
         
-        enhancedPrompt = enhancementResult.text;
-        if (!enhancedPrompt) {
+        creativeContext = enhancementResult.text;
+        if (!creativeContext) {
             throw new Error('The AI failed to return an enhanced description.');
         }
     } catch (e: any) {
@@ -106,9 +106,8 @@ const generateCoverArtFlow = ai.defineFlow(
         };
     }
 
-    // --- STEP 1 & 2: GENERATE IMAGE & UPLOAD ---
-    try {
-        const imageGenerationPrompt = `You are a 3D packaging artist. Generate a cinematic 3D render of a product box. 
+    // --- Define the final image generation prompt ---
+    const finalImagePrompt = `You are a 3D packaging artist. Generate a cinematic 3D render of a product box. 
 
         — VISUAL STYLE —
         The scene must be abstract, highly stylized, and cinematic. Use only visual elements like lighting, textures, reflections, shadows, colors, and mood.
@@ -119,13 +118,16 @@ const generateCoverArtFlow = ai.defineFlow(
         Do NOT include any other words, numbers, or characters anywhere in the image.
         
         — CREATIVE CONTEXT (DON’T OUTPUT THIS TEXT) —
-        ${enhancedPrompt}
+        ${creativeContext}
         
         Make sure the text "${kitName}" is clearly visible but naturally blended into the packaging design.`;
 
+
+    // --- STEP 1 & 2: GENERATE IMAGE & UPLOAD ---
+    try {
         const generationResult = await ai.generate({
             model: 'googleai/gemini-2.0-flash-preview-image-generation',
-            prompt: imageGenerationPrompt,
+            prompt: finalImagePrompt,
             config: {
                 responseModalities: ['TEXT', 'IMAGE'],
             },
@@ -156,15 +158,15 @@ const generateCoverArtFlow = ai.defineFlow(
         );
 
         const finalUrl = `${publicUrl}/${filename}`;
-        return { finalUrl, enhancedPrompt };
+        return { finalUrl, enhancedPrompt: finalImagePrompt };
 
     } catch (e: any) {
         let errorMessage = `Error inesperado en la generación de imagen: ${e.message}`;
         if (e.message && (e.message.includes('429') || e.message.toLowerCase().includes('quota'))) {
             errorMessage = 'Límite de cuota de API alcanzado. Por favor, intenta de nuevo más tarde o añade nuevas API keys de un proyecto de Google Cloud diferente.';
         }
-        // On image generation failure, return the successfully enhanced prompt and the error.
-        return { finalUrl: null, enhancedPrompt: enhancedPrompt, error: errorMessage };
+        // On image generation failure, return the final prompt and the error.
+        return { finalUrl: null, enhancedPrompt: finalImagePrompt, error: errorMessage };
     }
   }
 );
