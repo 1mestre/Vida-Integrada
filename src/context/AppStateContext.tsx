@@ -194,7 +194,7 @@ const initialAppState: AppState = {
   ],
   soundLibrary: [],
   drumKitProjects: [],
-  selectedAiModel: 'gemini-2.0-flash',
+  selectedAiModel: 'gemini-2.5-flash-preview',
 };
 
 interface AppStateContextType {

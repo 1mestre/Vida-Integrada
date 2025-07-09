@@ -460,7 +460,11 @@ const WorkTab = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [filterType, setFilterType] = useState<SoundType | 'all'>('all');
     const [currentKitName, setCurrentKitName] = useState('');
-    const [imagePrompt, setImagePrompt] = useState('');
+    const [artInspiration, setArtInspiration] = useState('');
+    const [artFloorMaterial, setArtFloorMaterial] = useState('');
+    const [artObject1, setArtObject1] = useState('');
+    const [artObject2, setArtObject2] = useState('');
+    const [artAtmosphere, setArtAtmosphere] = useState('');
     const [color1, setColor1] = useState('#FF5733');
     const [color2, setColor2] = useState('#333333');
     const [lastEnhancedPrompt, setLastEnhancedPrompt] = useState<string | null>(null);
@@ -488,10 +492,15 @@ const WorkTab = () => {
     useEffect(() => {
         if (activeProject) {
             setCurrentKitName(activeProject.name);
-            setImagePrompt(activeProject.imagePrompt || '');
+            setLastEnhancedPrompt(null);
+            // Clear granular fields when project changes
+            setArtInspiration('');
+            setArtFloorMaterial('');
+            setArtObject1('');
+            setArtObject2('');
+            setArtAtmosphere('');
         } else {
             setCurrentKitName('');
-            setImagePrompt('');
             setLastEnhancedPrompt(null);
         }
     }, [activeProject]);
@@ -889,7 +898,7 @@ const WorkTab = () => {
           })
         }));
         try {
-          const descriptionForAI = imagePrompt || activeProject.imagePrompt || 'general purpose';
+          const descriptionForAI = artInspiration || activeProject.imagePrompt || 'general purpose';
           
           // Get the list of existing CREATIVE names (without the " - SoundType" part)
           const existingCreativeNames = Object.values(activeProject.soundNamesInKit)
@@ -1007,14 +1016,14 @@ const WorkTab = () => {
         }
     };
     const handleGenerateNames = async () => {
-        if (!activeProject || !imagePrompt) {
-            toast({ variant: "destructive", title: "Error", description: "Por favor, escribe una descripción para el kit." });
+        if (!activeProject || !artInspiration) {
+            toast({ variant: "destructive", title: "Error", description: "Por favor, escribe una inspiración para el kit." });
             return;
         }
         setIsGeneratingNames(true);
-        setAppState(prevState => ({ ...prevState, drumKitProjects: prevState.drumKitProjects.map(p => p.id === activeProjectId ? { ...p, imagePrompt: imagePrompt } : p) }));
+        setAppState(prevState => ({ ...prevState, drumKitProjects: prevState.drumKitProjects.map(p => p.id === activeProjectId ? { ...p, imagePrompt: artInspiration } : p) }));
         try {
-            const result = await generateKitNames({ prompt: imagePrompt, model: appState.selectedAiModel });
+            const result = await generateKitNames({ prompt: artInspiration, model: appState.selectedAiModel });
             setAppState(prevState => ({ ...prevState, drumKitProjects: prevState.drumKitProjects.map(p => p.id === activeProjectId ? { ...p, seoNames: result.names } : p) }));
             toast({ title: "Nombres generados", description: "La IA ha sugerido algunos nombres para tu kit." });
         } catch (error) {
@@ -1028,21 +1037,25 @@ const WorkTab = () => {
           toast({ variant: "destructive", title: "Error", description: "Por favor, crea o selecciona un kit primero." });
           return;
         }
-        if (!imagePrompt) {
-          toast({ variant: "destructive", title: "Error", description: "La descripción para la IA no puede estar vacía." });
+        if (!currentKitName.trim()) {
+          toast({ variant: "destructive", title: "Error", description: "El nombre del kit no puede estar vacío." });
           return;
         }
-        if (!currentKitName.trim()) {
-          toast({ variant: "destructive", title: "Error", description: "El nombre del kit no puede estar vacío para generar el prompt." });
-          return;
+        if (!artInspiration || !artFloorMaterial || !artObject1 || !artObject2 || !artAtmosphere) {
+            toast({ variant: "destructive", title: "Campos incompletos", description: "Por favor, completa todos los campos de concepto de arte para la IA." });
+            return;
         }
         setIsGeneratingPrompt(true);
-        setAppState(prevState => ({ ...prevState, drumKitProjects: prevState.drumKitProjects.map(p => p.id === activeProjectId ? { ...p, imagePrompt: imagePrompt, name: currentKitName.trim() } : p) }));
+        setAppState(prevState => ({ ...prevState, drumKitProjects: prevState.drumKitProjects.map(p => p.id === activeProjectId ? { ...p, name: currentKitName.trim() } : p) }));
         const result = await generateArtPrompt({ 
-            prompt: imagePrompt, 
             kitName: currentKitName.trim(), 
-            color1: color1,
-            color2: color2,
+            color1,
+            color2,
+            inspiration: artInspiration,
+            floorMaterial: artFloorMaterial,
+            object1: artObject1,
+            object2: artObject2,
+            atmosphere: artAtmosphere,
             model: appState.selectedAiModel 
         });
         if (result.error) {
@@ -1362,42 +1375,48 @@ const WorkTab = () => {
                                       </div>
                                       <div className="relative flex items-center justify-center my-2"><Separator className="flex-grow" /><span className="absolute px-2 bg-background/30 text-xs text-muted-foreground">Ó</span></div>
                                       <div className='space-y-4 flex-grow'>
-                                          <div>
-                                              <Label htmlFor="kit-prompt">1. Describe el concepto con IA</Label>
-                                              <Input id="kit-prompt" placeholder="Ej: Dark trap, estilo Travis Scott..." value={imagePrompt} onChange={(e) => setImagePrompt(e.target.value)}/>
+                                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                              <div>
+                                                  <Label htmlFor="art-inspiration">1. Inspiración / Estilo</Label>
+                                                  <Input id="art-inspiration" placeholder="Ej: Samurai noir" value={artInspiration} onChange={(e) => setArtInspiration(e.target.value)} />
+                                              </div>
+                                              <div>
+                                                  <Label htmlFor="art-floor">2. Material del Suelo</Label>
+                                                  <Input id="art-floor" placeholder="Ej: Polished concrete" value={artFloorMaterial} onChange={(e) => setArtFloorMaterial(e.target.value)} />
+                                              </div>
+                                              <div>
+                                                  <Label htmlFor="art-object1">3. Objeto de Fondo 1</Label>
+                                                  <Input id="art-object1" placeholder="Ej: Samurai sword" value={artObject1} onChange={(e) => setArtObject1(e.target.value)} />
+                                              </div>
+                                              <div>
+                                                  <Label htmlFor="art-object2">4. Objeto de Fondo 2</Label>
+                                                  <Input id="art-object2" placeholder="Ej: Warrior mask" value={artObject2} onChange={(e) => setArtObject2(e.target.value)} />
+                                              </div>
+                                              <div className="md:col-span-2">
+                                                  <Label htmlFor="art-atmosphere">5. Atmósfera / Sensación</Label>
+                                                  <Input id="art-atmosphere" placeholder="Ej: Moody mystery" value={artAtmosphere} onChange={(e) => setArtAtmosphere(e.target.value)} />
+                                              </div>
                                           </div>
                                           <div className="grid grid-cols-2 gap-4">
                                               <div>
                                                   <Label htmlFor="color1">Color Primario</Label>
                                                   <div className="flex items-center gap-2 rounded-md border border-input bg-background p-1">
-                                                      <input 
-                                                          id="color1" 
-                                                          type="color" 
-                                                          value={color1} 
-                                                          onChange={(e) => setColor1(e.target.value)}
-                                                          className="h-8 w-8 cursor-pointer appearance-none bg-transparent border-none rounded-sm"
-                                                      />
+                                                      <input id="color1" type="color" value={color1} onChange={(e) => setColor1(e.target.value)} className="h-8 w-8 cursor-pointer appearance-none bg-transparent border-none rounded-sm"/>
                                                       <span className="font-mono text-sm">{color1.toUpperCase()}</span>
                                                   </div>
                                               </div>
                                               <div>
                                                   <Label htmlFor="color2">Color Secundario</Label>
                                                   <div className="flex items-center gap-2 rounded-md border border-input bg-background p-1">
-                                                      <input 
-                                                          id="color2" 
-                                                          type="color" 
-                                                          value={color2} 
-                                                          onChange={(e) => setColor2(e.target.value)}
-                                                          className="h-8 w-8 cursor-pointer appearance-none bg-transparent border-none rounded-sm"
-                                                      />
+                                                      <input id="color2" type="color" value={color2} onChange={(e) => setColor2(e.target.value)} className="h-8 w-8 cursor-pointer appearance-none bg-transparent border-none rounded-sm"/>
                                                       <span className="font-mono text-sm">{color2.toUpperCase()}</span>
                                                   </div>
                                               </div>
                                           </div>
-                                          <Button onClick={handleGenerateNames} disabled={isGeneratingNames || !imagePrompt} size="sm" variant="outline" className="w-full text-purple-400 border-purple-400/50 hover:bg-purple-400/10 hover:text-purple-300"><Sparkles className='mr-2'/>Sugerir Nombres</Button>
-                                          <div><Label htmlFor="kit-name">2. Nombre final para carátula</Label><Input id="kit-name" value={currentKitName} onChange={(e) => setCurrentKitName(e.target.value)} onBlur={onKitNameBlur} placeholder="Escribe el nombre del kit" /></div>
+                                          <Button onClick={handleGenerateNames} disabled={isGeneratingNames || !artInspiration} size="sm" variant="outline" className="w-full text-purple-400 border-purple-400/50 hover:bg-purple-400/10 hover:text-purple-300"><Sparkles className='mr-2'/>Sugerir Nombres del Kit</Button>
+                                          <div><Label htmlFor="kit-name">6. Nombre final para carátula</Label><Input id="kit-name" value={currentKitName} onChange={(e) => setCurrentKitName(e.target.value)} onBlur={onKitNameBlur} placeholder="Escribe el nombre del kit" /></div>
                                       </div>
-                                      <div className="flex flex-col gap-2"><Button onClick={handleGenerateArtPrompt} disabled={isGeneratingPrompt || !imagePrompt || !currentKitName.trim()} className="w-full bg-indigo-600 hover:bg-indigo-700"><Quote className='mr-2 h-4 w-4'/>Generar Prompt de Arte</Button></div>
+                                      <div className="flex flex-col gap-2"><Button onClick={handleGenerateArtPrompt} disabled={isGeneratingPrompt || !artInspiration || !currentKitName.trim()} className="w-full bg-indigo-600 hover:bg-indigo-700"><Quote className='mr-2 h-4 w-4'/>Generar Prompt de Arte</Button></div>
                                       <div className="text-center text-xs text-muted-foreground my-2">Una vez generado, usa el prompt en una de estas herramientas:</div>
                                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                           <a href="https://aistudio.google.com/gen-media" target="_blank" rel="noopener noreferrer" className="w-full"><Button variant="outline" className="w-full bg-blue-600 hover:bg-blue-700 text-white"><Sparkles className="mr-2 h-4 w-4" />AI Studio</Button></a>
