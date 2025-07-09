@@ -41,6 +41,179 @@ const fileToDataUri = (file: File): Promise<string> => {
     });
 };
 
+interface AiArtConfiguratorProps {
+    activeProject: DrumKitProject;
+    onGenerate: (data: any) => void;
+    onGenerateNames: (inspiration: string) => void;
+    onKitNameUpdate: (newName: string) => void;
+    onCoverDrop: (files: File[]) => void;
+    getCoverRootProps: <T extends React.HTMLAttributes<HTMLElement>>(props?: T | undefined) => T;
+    getCoverInputProps: <T extends React.HTMLAttributes<HTMLElement>>(props?: T | undefined) => T;
+    isUploadingCover: boolean;
+    isGeneratingNames: boolean;
+    isGeneratingPrompt: boolean;
+}
+
+const AiArtConfigurator = React.memo(({
+    activeProject,
+    onGenerate,
+    onGenerateNames,
+    onKitNameUpdate,
+    onCoverDrop,
+    getCoverRootProps,
+    getCoverInputProps,
+    isUploadingCover,
+    isGeneratingNames,
+    isGeneratingPrompt
+}: AiArtConfiguratorProps) => {
+
+    const [kitName, setKitName] = useState(activeProject.name);
+    const [inspiration, setInspiration] = useState('');
+    const [floorMaterial, setFloorMaterial] = useState('');
+    const [object1, setObject1] = useState('');
+    const [object2, setObject2] = useState('');
+    const [atmosphere, setAtmosphere] = useState('');
+    const [color1, setColor1] = useState('#FF5733');
+    const [color2, setColor2] = useState('#333333');
+    const { appState, setAppState } = useAppState();
+    const { toast } = useToast();
+
+    useEffect(() => {
+        setKitName(activeProject.name);
+        setInspiration('');
+        setFloorMaterial('');
+        setObject1('');
+        setObject2('');
+        setAtmosphere('');
+    }, [activeProject.id, activeProject.name]);
+
+    const handleGeneratePromptClick = () => {
+        if (!kitName.trim()) {
+          toast({ variant: "destructive", title: "Error", description: "El nombre del kit no puede estar vacío." });
+          return;
+        }
+        if (!inspiration || !floorMaterial || !object1 || !object2 || !atmosphere) {
+            toast({ variant: "destructive", title: "Campos incompletos", description: "Por favor, completa todos los campos de concepto de arte para la IA." });
+            return;
+        }
+        onGenerate({
+            kitName: kitName.trim(),
+            color1,
+            color2,
+            inspiration,
+            floorMaterial,
+            object1,
+            object2,
+            atmosphere,
+            model: appState.selectedAiModel,
+        });
+    };
+    
+    const handleGenerateNamesClick = () => {
+      if (!inspiration) {
+        toast({ variant: "destructive", title: "Error", description: "Por favor, escribe una inspiración para el kit." });
+        return;
+      }
+      onGenerateNames(inspiration);
+    };
+
+    const onKitNameBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+        const newName = e.target.value.trim();
+        if (!newName || newName === activeProject.name) return;
+        onKitNameUpdate(newName);
+    };
+    
+    const onSuggestedNameClick = (name: string) => {
+        setKitName(name);
+        onKitNameUpdate(name);
+        toast({ title: "Nombre del kit actualizado", description: `Has seleccionado "${name}".` });
+    };
+
+    return (
+        <div className="space-y-4">
+            <div className="space-y-2">
+                <h4 className="text-sm font-medium text-muted-foreground">Configuración de IA</h4>
+                <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm bg-background/30">
+                    <Label htmlFor="ai-model-select">Modelo de IA a Utilizar</Label>
+                    <Select
+                        value={appState.selectedAiModel}
+                        onValueChange={(model: 'gemini-2.0-flash' | 'gemini-2.5-flash-preview') => {
+                            setAppState({ selectedAiModel: model });
+                            toast({ title: 'Modelo de IA actualizado', description: `Usando ${model}.` });
+                        }}
+                    >
+                        <SelectTrigger id="ai-model-select" className="w-[240px]">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="gemini-2.0-flash">Gemini 2.0 Flash</SelectItem>
+                            <SelectItem value="gemini-2.5-flash-preview">Gemini 2.5 Flash Preview</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+            </div>
+            <div className='p-4 border rounded-lg space-y-4 bg-background/30'>
+                <div {...getCoverRootProps()} className={cn("border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:bg-muted/20 transition-colors", isUploadingCover && "border-primary bg-primary/10")}>
+                    <input {...getCoverInputProps()} />
+                    <div className="flex flex-col items-center justify-center gap-2">{isUploadingCover ? (<><Loader2 className="h-8 w-8 text-primary animate-spin" /><p className="text-sm text-primary">Subiendo carátula...</p></>) : (<><ImageIcon className="mx-auto h-8 w-8 text-muted-foreground" /><p className="text-sm text-muted-foreground">Arrastra una imagen aquí o haz clic para subir una carátula personalizada</p></>)}</div>
+                </div>
+                <div className="relative flex items-center justify-center my-2"><Separator className="flex-grow" /><span className="absolute px-2 bg-background/30 text-xs text-muted-foreground">Ó</span></div>
+                <div className='space-y-4 flex-grow'>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <Label htmlFor="art-inspiration">1. Inspiración / Estilo</Label>
+                            <Input id="art-inspiration" placeholder="Ej: Samurai noir" value={inspiration} onChange={(e) => setInspiration(e.target.value)} />
+                        </div>
+                        <div>
+                            <Label htmlFor="art-floor">2. Material del Suelo</Label>
+                            <Input id="art-floor" placeholder="Ej: Polished concrete" value={floorMaterial} onChange={(e) => setFloorMaterial(e.target.value)} />
+                        </div>
+                        <div>
+                            <Label htmlFor="art-object1">3. Objeto de Fondo 1</Label>
+                            <Input id="art-object1" placeholder="Ej: Samurai sword" value={object1} onChange={(e) => setObject1(e.target.value)} />
+                        </div>
+                        <div>
+                            <Label htmlFor="art-object2">4. Objeto de Fondo 2</Label>
+                            <Input id="art-object2" placeholder="Ej: Warrior mask" value={object2} onChange={(e) => setObject2(e.target.value)} />
+                        </div>
+                        <div className="md:col-span-2">
+                            <Label htmlFor="art-atmosphere">5. Atmósfera / Sensación</Label>
+                            <Input id="art-atmosphere" placeholder="Ej: Moody mystery" value={atmosphere} onChange={(e) => setAtmosphere(e.target.value)} />
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <Label htmlFor="color1">Color Primario</Label>
+                            <div className="flex items-center gap-2 rounded-md border border-input bg-background p-1">
+                                <input id="color1" type="color" value={color1} onChange={(e) => setColor1(e.target.value)} className="h-8 w-8 cursor-pointer appearance-none bg-transparent border-none rounded-sm"/>
+                                <span className="font-mono text-sm">{color1.toUpperCase()}</span>
+                            </div>
+                        </div>
+                        <div>
+                            <Label htmlFor="color2">Color Secundario</Label>
+                            <div className="flex items-center gap-2 rounded-md border border-input bg-background p-1">
+                                <input id="color2" type="color" value={color2} onChange={(e) => setColor2(e.target.value)} className="h-8 w-8 cursor-pointer appearance-none bg-transparent border-none rounded-sm"/>
+                                <span className="font-mono text-sm">{color2.toUpperCase()}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <Button onClick={handleGenerateNamesClick} disabled={isGeneratingNames || !inspiration} size="sm" variant="outline" className="w-full text-purple-400 border-purple-400/50 hover:bg-purple-400/10 hover:text-purple-300"><Sparkles className='mr-2'/>Sugerir Nombres del Kit</Button>
+                    <div><Label htmlFor="kit-name">6. Nombre final para carátula</Label><Input id="kit-name" value={kitName} onChange={(e) => setKitName(e.target.value)} onBlur={onKitNameBlur} placeholder="Escribe el nombre del kit" /></div>
+                </div>
+                <div className="flex flex-col gap-2"><Button onClick={handleGeneratePromptClick} disabled={isGeneratingPrompt || !inspiration || !kitName.trim()} className="w-full bg-indigo-600 hover:bg-indigo-700"><Quote className='mr-2 h-4 w-4'/>Generar Prompt de Arte</Button></div>
+                <div className="text-center text-xs text-muted-foreground my-2">Una vez generado, usa el prompt en una de estas herramientas:</div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <a href="https://aistudio.google.com/gen-media" target="_blank" rel="noopener noreferrer" className="w-full"><Button variant="outline" className="w-full bg-blue-600 hover:bg-blue-700 text-white"><Sparkles className="mr-2 h-4 w-4" />AI Studio</Button></a>
+                    <a href="https://labs.google/fx/es-419/tools/whisk" target="_blank" rel="noopener noreferrer" className="w-full"><Button variant="outline" className="w-full bg-yellow-500 hover:bg-yellow-600 text-black"><Sparkles className="mr-2 h-4 w-4" />ImageFX</Button></a>
+                </div>
+                {activeProject.seoNames.length > 0 && (<div className="space-y-2"><Label>Nombres Sugeridos:</Label><div className="flex flex-wrap gap-2">{activeProject.seoNames.map((name, i) => (<Badge key={i} variant="outline" className="cursor-pointer" onClick={() => onSuggestedNameClick(name)}>{name}</Badge>))}</div></div>)}
+            </div>
+        </div>
+    );
+});
+AiArtConfigurator.displayName = 'AiArtConfigurator';
+
+
 const KitStudioTab = () => {
     const { appState, setAppState } = useAppState();
     const { toast } = useToast();
@@ -55,14 +228,6 @@ const KitStudioTab = () => {
     const [activeProjectId, setActiveProjectId] = useState<number | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterType, setFilterType] = useState<SoundType | 'all'>('all');
-    const [currentKitName, setCurrentKitName] = useState('');
-    const [artInspiration, setArtInspiration] = useState('');
-    const [artFloorMaterial, setArtFloorMaterial] = useState('');
-    const [artObject1, setArtObject1] = useState('');
-    const [artObject2, setArtObject2] = useState('');
-    const [artAtmosphere, setArtAtmosphere] = useState('');
-    const [color1, setColor1] = useState('#FF5733');
-    const [color2, setColor2] = useState('#333333');
     const [lastEnhancedPrompt, setLastEnhancedPrompt] = useState<string | null>(null);
     const [isPromptModalOpen, setIsPromptModalOpen] = useState(false);
     const activeAudio = useRef<HTMLAudioElement | null>(null);
@@ -77,43 +242,8 @@ const KitStudioTab = () => {
     const activeProject = useMemo(() => {
         return appState.drumKitProjects.find(p => p.id === activeProjectId);
     }, [appState.drumKitProjects, activeProjectId]);
-      
-    useEffect(() => {
-        if (activeProject) {
-            setCurrentKitName(activeProject.name);
-            setLastEnhancedPrompt(null);
-            setArtInspiration('');
-            setArtFloorMaterial('');
-            setArtObject1('');
-            setArtObject2('');
-            setArtAtmosphere('');
-        } else {
-            setCurrentKitName('');
-            setLastEnhancedPrompt(null);
-        }
-    }, [activeProject]);
 
     // --- Handlers for Kit Studio ---
-    const handleUpdateKitName = (newName: string) => {
-        if (!activeProjectId) return;
-        setAppState(prevState => ({
-          ...prevState,
-          drumKitProjects: prevState.drumKitProjects.map(p => 
-            p.id === activeProjectId ? { ...p, name: newName.trim() } : p
-          )
-        }));
-    };
-    const onKitNameBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-        const newName = e.target.value.trim();
-        if (!activeProjectId || !newName || newName === activeProject?.name) return;
-        handleUpdateKitName(newName);
-        toast({ title: "Nombre del kit actualizado" });
-    };
-    const onSuggestedNameClick = (name: string) => {
-        setCurrentKitName(name);
-        handleUpdateKitName(name);
-        toast({ title: "Nombre del kit actualizado", description: `Has seleccionado "${name}".` });
-    };
     const handlePlaySound = useCallback((url: string) => {
         if (!url || !url.startsWith('http')) {
           toast({ variant: "destructive", title: "URL de Sonido Inválida", description: "Este sonido no tiene una fuente válida. Intenta subirlo de nuevo." });
@@ -134,13 +264,13 @@ const KitStudioTab = () => {
           toast({ variant: "destructive", title: "Error de Reproducción", description: "No se pudo cargar el audio. La URL puede ser inválida o el archivo está corrupto." });
         });
     }, [toast]);
-    const handleTypeChange = (id: string, newType: SoundType) => {
+    const handleTypeChange = useCallback((id: string, newType: SoundType) => {
         setAppState(prevState => ({ ...prevState, soundLibrary: prevState.soundLibrary.map(item => item.id === id ? { ...item, soundType: newType } : item) }));
-    };
-    const handleKeyChange = (id: string, newKey: string) => {
+    }, [setAppState]);
+    const handleKeyChange = useCallback((id: string, newKey: string) => {
         setAppState(prevState => ({ ...prevState, soundLibrary: prevState.soundLibrary.map(item => item.id === id ? { ...item, key: newKey } : item) }));
-    };
-    const handleDeleteSound = (id: string) => {
+    }, [setAppState]);
+    const handleDeleteSound = useCallback((id: string) => {
         const soundToDelete = appState.soundLibrary.find(item => item.id === id);
         if (!soundToDelete) return;
         setAppState(prevState => {
@@ -158,7 +288,8 @@ const KitStudioTab = () => {
           return { ...prevState, soundLibrary: prevState.soundLibrary.filter(item => item.id !== id), drumKitProjects: updatedProjects, }
         });
         toast({ title: "Sonido Eliminado", description: `"${soundToDelete.originalName}" ha sido borrado de tu librería.` });
-    };
+    }, [appState.soundLibrary, setAppState, toast]);
+
     const onDrop = useCallback(async (acceptedFiles: File[]) => {
         if (acceptedFiles.length === 0) return;
         setIsProcessing(true);
@@ -242,6 +373,7 @@ const KitStudioTab = () => {
         setProcessingStatus([]);
     }, [setAppState, toast, appState.selectedAiModel]);
     const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop, accept: { 'audio/wav': ['.wav'], 'audio/mpeg': ['.mp3'], 'application/zip': ['.zip'] } });
+    
     const onCoverDrop = useCallback(async (acceptedFiles: File[]) => {
         if (!activeProject || acceptedFiles.length === 0) return;
         const file = acceptedFiles[0];
@@ -260,7 +392,8 @@ const KitStudioTab = () => {
         }
     }, [activeProject, activeProjectId, setAppState, toast]);
     const { getRootProps: getCoverRootProps, getInputProps: getCoverInputProps } = useDropzone({ onDrop: onCoverDrop, accept: { 'image/jpeg': ['.jpeg', '.jpg'], 'image/png': ['.png'], 'image/webp': ['.webp'] }, multiple: false });
-    const handleCreateNewKit = () => {
+    
+    const handleCreateNewKit = useCallback(() => {
         const todayStr = new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'numeric' });
         const baseName = `Nuevo Kit - ${todayStr}`;
         const existingNames = new Set(appState.drumKitProjects.map(p => p.name));
@@ -273,8 +406,9 @@ const KitStudioTab = () => {
         const newKit: DrumKitProject = { id: Date.now(), name: finalName, coverArtUrl: null, imagePrompt: '', seoNames: [], soundIds: [], soundNamesInKit: {} };
         setAppState(prevState => ({ ...prevState, drumKitProjects: [...prevState.drumKitProjects, newKit] }));
         setActiveProjectId(newKit.id);
-    };
-    const handleDeleteKit = (kitId: number) => {
+    }, [appState.drumKitProjects, setAppState]);
+
+    const handleDeleteKit = useCallback((kitId: number) => {
         setAppState(prevState => {
           const updatedProjects = prevState.drumKitProjects.filter(p => p.id !== kitId);
           if (activeProjectId === kitId) {
@@ -283,11 +417,13 @@ const KitStudioTab = () => {
           return { ...prevState, drumKitProjects: updatedProjects };
         });
         toast({ title: 'Kit eliminado', description: 'El proyecto del kit ha sido borrado.' });
-    };
-    const handleDragStart = (e: React.DragEvent<HTMLDivElement>, soundId: string) => {
+    }, [activeProjectId, setAppState, toast]);
+
+    const handleDragStart = useCallback((e: React.DragEvent<HTMLDivElement>, soundId: string) => {
         e.dataTransfer.setData("soundId", soundId);
-    };
-    const handleDropOnAssembler = async (e: React.DragEvent<HTMLDivElement>) => {
+    }, []);
+
+    const handleDropOnAssembler = useCallback(async (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault();
         if (!activeProject) {
             toast({ variant: 'destructive', title: "No hay un kit seleccionado", description: "Por favor, crea o selecciona un kit antes de añadirle sonidos." });
@@ -308,7 +444,7 @@ const KitStudioTab = () => {
           })
         }));
         try {
-          const descriptionForAI = artInspiration || activeProject.imagePrompt || 'general purpose';
+          const descriptionForAI = activeProject.imagePrompt || 'general purpose';
           
           const existingCreativeNames = Object.values(activeProject.soundNamesInKit)
             .map(fullName => fullName.split(' - ')[0].trim())
@@ -344,8 +480,9 @@ const KitStudioTab = () => {
           }));
           toast({ variant: "destructive", title: "Error de IA", description: "No se pudo generar el nuevo nombre." });
         }
-    };
-    const handleRemoveFromKit = (soundIdToRemove: string) => {
+    }, [activeProject, activeProjectId, appState.soundLibrary, appState.selectedAiModel, setAppState, toast]);
+
+    const handleRemoveFromKit = useCallback((soundIdToRemove: string) => {
         if (!activeProjectId) return;
         setAppState(prevState => ({
              ...prevState,
@@ -359,8 +496,9 @@ const KitStudioTab = () => {
                   return p;
              })
         }));
-    };
-    const handleDownloadKit = async () => {
+    }, [activeProjectId, setAppState]);
+
+    const handleDownloadKit = useCallback(async () => {
         if (!activeProject || activeProject.soundIds.length === 0) {
           toast({ variant: "destructive", title: "Kit Vacío", description: "Añade sonidos al kit antes de descargarlo." });
           return;
@@ -423,16 +561,25 @@ const KitStudioTab = () => {
         } finally {
           setIsDownloading(false);
         }
-    };
-    const handleGenerateNames = async () => {
-        if (!activeProject || !artInspiration) {
-            toast({ variant: "destructive", title: "Error", description: "Por favor, escribe una inspiración para el kit." });
-            return;
-        }
+    }, [activeProject, appState.soundLibrary, toast]);
+
+    const handleUpdateKitName = useCallback((newName: string) => {
+        if (!activeProjectId) return;
+        setAppState(prevState => ({
+          ...prevState,
+          drumKitProjects: prevState.drumKitProjects.map(p => 
+            p.id === activeProjectId ? { ...p, name: newName.trim() } : p
+          )
+        }));
+        toast({ title: "Nombre del kit actualizado" });
+    }, [activeProjectId, setAppState, toast]);
+
+    const handleGenerateNames = useCallback(async (inspiration: string) => {
+        if (!activeProject) return;
         setIsGeneratingNames(true);
-        setAppState(prevState => ({ ...prevState, drumKitProjects: prevState.drumKitProjects.map(p => p.id === activeProjectId ? { ...p, imagePrompt: artInspiration } : p) }));
+        setAppState(prevState => ({ ...prevState, drumKitProjects: prevState.drumKitProjects.map(p => p.id === activeProjectId ? { ...p, imagePrompt: inspiration } : p) }));
         try {
-            const result = await generateKitNames({ prompt: artInspiration, model: appState.selectedAiModel });
+            const result = await generateKitNames({ prompt: inspiration, model: appState.selectedAiModel });
             setAppState(prevState => ({ ...prevState, drumKitProjects: prevState.drumKitProjects.map(p => p.id === activeProjectId ? { ...p, seoNames: result.names } : p) }));
             toast({ title: "Nombres generados", description: "La IA ha sugerido algunos nombres para tu kit." });
         } catch (error) {
@@ -440,33 +587,16 @@ const KitStudioTab = () => {
         } finally {
             setIsGeneratingNames(false);
         }
-    };
-    const handleGenerateArtPrompt = async () => {
-        if (!activeProject) {
-          toast({ variant: "destructive", title: "Error", description: "Por favor, crea o selecciona un kit primero." });
-          return;
-        }
-        if (!currentKitName.trim()) {
-          toast({ variant: "destructive", title: "Error", description: "El nombre del kit no puede estar vacío." });
-          return;
-        }
-        if (!artInspiration || !artFloorMaterial || !artObject1 || !artObject2 || !artAtmosphere) {
-            toast({ variant: "destructive", title: "Campos incompletos", description: "Por favor, completa todos los campos de concepto de arte para la IA." });
-            return;
-        }
+    }, [activeProject, activeProjectId, appState.selectedAiModel, setAppState, toast]);
+
+    const handleGenerateArtPrompt = useCallback(async (data: any) => {
+        if (!activeProject) return;
+
         setIsGeneratingPrompt(true);
-        setAppState(prevState => ({ ...prevState, drumKitProjects: prevState.drumKitProjects.map(p => p.id === activeProjectId ? { ...p, name: currentKitName.trim() } : p) }));
-        const result = await generateArtPrompt({ 
-            kitName: currentKitName.trim(), 
-            color1,
-            color2,
-            inspiration: artInspiration,
-            floorMaterial: artFloorMaterial,
-            object1: artObject1,
-            object2: artObject2,
-            atmosphere: artAtmosphere,
-            model: appState.selectedAiModel 
-        });
+        setAppState(prevState => ({ ...prevState, drumKitProjects: prevState.drumKitProjects.map(p => p.id === activeProjectId ? { ...p, name: data.kitName } : p) }));
+        
+        const result = await generateArtPrompt(data);
+
         if (result.error) {
           toast({ variant: "destructive", title: "Error de IA", description: result.error });
           setLastEnhancedPrompt(null);
@@ -476,7 +606,7 @@ const KitStudioTab = () => {
           toast({ title: "¡Prompt de arte generado!", description: "Puedes verlo y copiarlo." });
         }
         setIsGeneratingPrompt(false);
-    };
+    }, [activeProject, activeProjectId, setAppState, toast]);
 
     const filteredSoundLibrary = useMemo(() => {
         return appState.soundLibrary.filter(item => {
@@ -519,88 +649,23 @@ const KitStudioTab = () => {
                         </div>
                         <Separator />
                         {activeProject ? (
-                            <div className="space-y-4">
-                              <div className="space-y-2">
-                                  <h4 className="text-sm font-medium text-muted-foreground">Configuración de IA</h4>
-                                  <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm bg-background/30">
-                                      <Label htmlFor="ai-model-select">Modelo de IA a Utilizar</Label>
-                                      <Select
-                                          value={appState.selectedAiModel}
-                                          onValueChange={(model: 'gemini-2.0-flash' | 'gemini-2.5-flash-preview') => {
-                                              setAppState({ selectedAiModel: model });
-                                              toast({ title: 'Modelo de IA actualizado', description: `Usando ${model}.` });
-                                          }}
-                                      >
-                                          <SelectTrigger id="ai-model-select" className="w-[240px]">
-                                              <SelectValue />
-                                          </SelectTrigger>
-                                          <SelectContent>
-                                              <SelectItem value="gemini-2.0-flash">Gemini 2.0 Flash</SelectItem>
-                                              <SelectItem value="gemini-2.5-flash-preview">Gemini 2.5 Flash Preview</SelectItem>
-                                          </SelectContent>
-                                      </Select>
-                                  </div>
-                              </div>
-                              <div className='p-4 border rounded-lg space-y-4 bg-background/30'>
-                                  <div {...getCoverRootProps()} className={cn("border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:bg-muted/20 transition-colors", isUploadingCover && "border-primary bg-primary/10")}>
-                                      <input {...getCoverInputProps()} />
-                                      <div className="flex flex-col items-center justify-center gap-2">{isUploadingCover ? (<><Loader2 className="h-8 w-8 text-primary animate-spin" /><p className="text-sm text-primary">Subiendo carátula...</p></>) : (<><ImageIcon className="mx-auto h-8 w-8 text-muted-foreground" /><p className="text-sm text-muted-foreground">Arrastra una imagen aquí o haz clic para subir una carátula personalizada</p></>)}</div>
-                                  </div>
-                                  <div className="relative flex items-center justify-center my-2"><Separator className="flex-grow" /><span className="absolute px-2 bg-background/30 text-xs text-muted-foreground">Ó</span></div>
-                                  <div className='space-y-4 flex-grow'>
-                                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                          <div>
-                                              <Label htmlFor="art-inspiration">1. Inspiración / Estilo</Label>
-                                              <Input id="art-inspiration" placeholder="Ej: Samurai noir" value={artInspiration} onChange={(e) => setArtInspiration(e.target.value)} />
-                                          </div>
-                                          <div>
-                                              <Label htmlFor="art-floor">2. Material del Suelo</Label>
-                                              <Input id="art-floor" placeholder="Ej: Polished concrete" value={artFloorMaterial} onChange={(e) => setArtFloorMaterial(e.target.value)} />
-                                          </div>
-                                          <div>
-                                              <Label htmlFor="art-object1">3. Objeto de Fondo 1</Label>
-                                              <Input id="art-object1" placeholder="Ej: Samurai sword" value={artObject1} onChange={(e) => setArtObject1(e.target.value)} />
-                                          </div>
-                                          <div>
-                                              <Label htmlFor="art-object2">4. Objeto de Fondo 2</Label>
-                                              <Input id="art-object2" placeholder="Ej: Warrior mask" value={artObject2} onChange={(e) => setArtObject2(e.target.value)} />
-                                          </div>
-                                          <div className="md:col-span-2">
-                                              <Label htmlFor="art-atmosphere">5. Atmósfera / Sensación</Label>
-                                              <Input id="art-atmosphere" placeholder="Ej: Moody mystery" value={artAtmosphere} onChange={(e) => setArtAtmosphere(e.target.value)} />
-                                          </div>
-                                      </div>
-                                      <div className="grid grid-cols-2 gap-4">
-                                          <div>
-                                              <Label htmlFor="color1">Color Primario</Label>
-                                              <div className="flex items-center gap-2 rounded-md border border-input bg-background p-1">
-                                                  <input id="color1" type="color" value={color1} onChange={(e) => setColor1(e.target.value)} className="h-8 w-8 cursor-pointer appearance-none bg-transparent border-none rounded-sm"/>
-                                                  <span className="font-mono text-sm">{color1.toUpperCase()}</span>
-                                              </div>
-                                          </div>
-                                          <div>
-                                              <Label htmlFor="color2">Color Secundario</Label>
-                                              <div className="flex items-center gap-2 rounded-md border border-input bg-background p-1">
-                                                  <input id="color2" type="color" value={color2} onChange={(e) => setColor2(e.target.value)} className="h-8 w-8 cursor-pointer appearance-none bg-transparent border-none rounded-sm"/>
-                                                  <span className="font-mono text-sm">{color2.toUpperCase()}</span>
-                                              </div>
-                                          </div>
-                                      </div>
-                                      <Button onClick={handleGenerateNames} disabled={isGeneratingNames || !artInspiration} size="sm" variant="outline" className="w-full text-purple-400 border-purple-400/50 hover:bg-purple-400/10 hover:text-purple-300"><Sparkles className='mr-2'/>Sugerir Nombres del Kit</Button>
-                                      <div><Label htmlFor="kit-name">6. Nombre final para carátula</Label><Input id="kit-name" value={currentKitName} onChange={(e) => setCurrentKitName(e.target.value)} onBlur={onKitNameBlur} placeholder="Escribe el nombre del kit" /></div>
-                                  </div>
-                                  <div className="flex flex-col gap-2"><Button onClick={handleGenerateArtPrompt} disabled={isGeneratingPrompt || !artInspiration || !currentKitName.trim()} className="w-full bg-indigo-600 hover:bg-indigo-700"><Quote className='mr-2 h-4 w-4'/>Generar Prompt de Arte</Button></div>
-                                  <div className="text-center text-xs text-muted-foreground my-2">Una vez generado, usa el prompt en una de estas herramientas:</div>
-                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                      <a href="https://aistudio.google.com/gen-media" target="_blank" rel="noopener noreferrer" className="w-full"><Button variant="outline" className="w-full bg-blue-600 hover:bg-blue-700 text-white"><Sparkles className="mr-2 h-4 w-4" />AI Studio</Button></a>
-                                      <a href="https://labs.google/fx/es-419/tools/whisk" target="_blank" rel="noopener noreferrer" className="w-full"><Button variant="outline" className="w-full bg-yellow-500 hover:bg-yellow-600 text-black"><Sparkles className="mr-2 h-4 w-4" />ImageFX</Button></a>
-                                  </div>
-                                  {activeProject.seoNames.length > 0 && (<div className="space-y-2"><Label>Nombres Sugeridos:</Label><div className="flex flex-wrap gap-2">{activeProject.seoNames.map((name, i) => (<Badge key={i} variant="outline" className="cursor-pointer" onClick={() => onSuggestedNameClick(name)}>{name}</Badge>))}</div></div>)}
-                              </div>
-                              <ScrollArea className={cn("h-[250px] rounded-md border p-4 space-y-2", activeProjectId && "border-primary/50")}>
-                                  <AnimatePresence>{activeProject.soundIds.length === 0 ? (<div className='text-center text-muted-foreground pt-16'><p>Arrastra y suelta sonidos aquí.</p></div>) : (activeProject.soundIds.map(soundId => { const soundInfo = appState.soundLibrary.find(s => s.id === soundId); const nameInKit = activeProject.soundNamesInKit[soundId] || soundInfo?.originalName || 'Cargando...'; const isLoadingName = nameInKit === 'Generando nombre...'; return (<motion.div key={soundId} layout initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, x: 20 }} className="flex items-center gap-2 p-2 rounded-md bg-secondary/50"><Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => soundInfo && handlePlaySound(soundInfo.storageUrl)} disabled={!soundInfo}><Play className="h-4 w-4"/></Button><p className="flex-grow text-sm truncate" title={soundInfo?.originalName}>{isLoadingName ? <span className='flex items-center gap-2 text-muted-foreground'><Loader2 className='h-4 w-4 animate-spin'/>Generando...</span> : nameInKit}</p>{soundInfo && <Badge variant="outline" className="text-xs">{soundInfo.soundType}</Badge>}<Button size="icon" variant="ghost" className="h-8 w-8 shrink-0 text-destructive" onClick={() => handleRemoveFromKit(soundId)}><Trash2 className="h-4 w-4"/></Button></motion.div>) }))}</AnimatePresence>
-                              </ScrollArea>
-                            </div>
+                            <>
+                                <AiArtConfigurator
+                                    activeProject={activeProject}
+                                    onGenerate={handleGenerateArtPrompt}
+                                    onGenerateNames={handleGenerateNames}
+                                    onKitNameUpdate={handleUpdateKitName}
+                                    onCoverDrop={onCoverDrop}
+                                    getCoverRootProps={getCoverRootProps}
+                                    getCoverInputProps={getCoverInputProps}
+                                    isUploadingCover={isUploadingCover}
+                                    isGeneratingNames={isGeneratingNames}
+                                    isGeneratingPrompt={isGeneratingPrompt}
+                                />
+                                <ScrollArea className={cn("h-[250px] rounded-md border p-4 space-y-2", activeProjectId && "border-primary/50")}>
+                                    <AnimatePresence>{activeProject.soundIds.length === 0 ? (<div className='text-center text-muted-foreground pt-16'><p>Arrastra y suelta sonidos aquí.</p></div>) : (activeProject.soundIds.map(soundId => { const soundInfo = appState.soundLibrary.find(s => s.id === soundId); const nameInKit = activeProject.soundNamesInKit[soundId] || soundInfo?.originalName || 'Cargando...'; const isLoadingName = nameInKit === 'Generando nombre...'; return (<motion.div key={soundId} layout initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, x: 20 }} className="flex items-center gap-2 p-2 rounded-md bg-secondary/50"><Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => soundInfo && handlePlaySound(soundInfo.storageUrl)} disabled={!soundInfo}><Play className="h-4 w-4"/></Button><p className="flex-grow text-sm truncate" title={soundInfo?.originalName}>{isLoadingName ? <span className='flex items-center gap-2 text-muted-foreground'><Loader2 className='h-4 w-4 animate-spin'/>Generando...</span> : nameInKit}</p>{soundInfo && <Badge variant="outline" className="text-xs">{soundInfo.soundType}</Badge>}<Button size="icon" variant="ghost" className="h-8 w-8 shrink-0 text-destructive" onClick={() => handleRemoveFromKit(soundId)}><Trash2 className="h-4 w-4"/></Button></motion.div>) }))}</AnimatePresence>
+                                </ScrollArea>
+                            </>
                         ) : (<div className='text-center text-muted-foreground h-[50vh] flex flex-col items-center justify-center'><Music4 className="mx-auto h-16 w-16" /><p className="mt-4">Crea un nuevo kit o selecciona uno para empezar.</p></div>)}
                     </CardContent>
                 </Card>
