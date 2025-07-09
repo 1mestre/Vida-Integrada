@@ -15,23 +15,23 @@ const GenerateArtPromptInputSchema = z.object({
   kitName: z.string().describe('The name of the kit to be visually included on the packaging.'),
   color1: z.string().describe('The primary/accent color in hex format (e.g., #FF5733).'),
   color2: z.string().describe('The secondary/background color in hex format (e.g., #333333).'),
-  inspiration: z.string().describe("The core art style or concept (e.g., 'samurai noir', 'cyberpunk grit')."),
-  floorMaterial: z.string().describe("The base material for the floor (e.g., 'obsidian', 'polished concrete')."),
-  object1: z.string().describe("The first key object for the background (e.g., 'a samurai sword', 'a neon circuit')."),
-  object2: z.string().describe("The second key object for the background (e.g., 'a data chip', 'a warrior mask')."),
-  atmosphere: z.string().describe("The desired mood or feeling (e.g., 'moody mystery', 'intense energy')."),
+  inspiration: z.string().optional().describe("The core art style or concept (e.g., 'samurai noir', 'cyberpunk grit')."),
+  floorMaterial: z.string().optional().describe("The base material for the floor (e.g., 'obsidian', 'polished concrete')."),
+  object1: z.string().optional().describe("The first key object for the background (e.g., 'a samurai sword', 'a neon circuit')."),
+  object2: z.string().optional().describe("The second key object for the background (e.g., 'a data chip', 'a warrior mask')."),
+  atmosphere: z.string().optional().describe("The desired mood or feeling (e.g., 'moody mystery', 'intense energy')."),
+  fontType: z.string().optional().describe("A specific font style to use (e.g., 'a sharp, modern serif')."),
   model: z.string().optional(),
 });
 export type GenerateArtPromptInput = z.infer<typeof GenerateArtPromptInputSchema>;
 
 // Internal schema for the AI's enhancement output
 const EnhancedElementsSchema = z.object({
-    enhancedInspiration: z.string().describe("An enhanced, more descriptive version of the original art style inspiration."),
-    enhancedFloorMaterial: z.string().describe("An enhanced, more descriptive version of the original floor material."),
-    enhancedObject1: z.string().describe("An enhanced, more descriptive version of the first object."),
-    enhancedObject2: z.string().describe("An enhanced, more descriptive version of the second object."),
-    enhancedAtmosphere: z.string().describe("An enhanced, more descriptive version of the original atmosphere."),
-    fontType: z.string().describe("A font style that matches the inspiration (e.g., 'a sharp, modern serif')."),
+    enhancedInspiration: z.string().describe("An enhanced, descriptive version of the original inspiration. Empty if not provided."),
+    enhancedFloorMaterial: z.string().describe("An enhanced, descriptive version of the original floor material. Empty if not provided."),
+    enhancedObject1: z.string().describe("An enhanced, descriptive version of the first object. Empty if not provided."),
+    enhancedObject2: z.string().describe("An enhanced, descriptive version of the second object. Empty if not provided."),
+    enhancedAtmosphere: z.string().describe("An enhanced, descriptive version of the original atmosphere. Empty if not provided."),
     color1Name: z.string().describe("A descriptive name for the primary color (e.g., 'vibrant orange')."),
     color2Name: z.string().describe("A descriptive name for the secondary color (e.g., 'deep charcoal gray')."),
 });
@@ -39,17 +39,18 @@ const EnhancedElementsSchema = z.object({
 // The AI prompt that performs the creative enhancement
 const enhancementPrompt = ai.definePrompt({
     name: 'enhanceArtElementsPrompt',
-    input: { schema: GenerateArtPromptInputSchema.omit({ kitName: true, model: true }) },
-    output: { schema: EnhancedElementsSchema },
-    prompt: `You are a creative director and a visual detail artist. Your task is to take a user's raw concepts for a 3D product shot and enhance them with rich, descriptive details. You will also suggest a font style and translate hex colors into descriptive names.
+    // We only pass the fields that need enhancement. fontType is used directly.
+    input: { schema: GenerateArtPromptInputSchema.omit({ kitName: true, model: true, fontType: true }).partial() },
+    output: { schema: EnhancedElementsSchema.partial().extend({ color1Name: z.string(), color2Name: z.string() }) },
+    prompt: `You are a creative director and a visual detail artist. Your task is to take a user's raw concepts for a 3D product shot and enhance them with rich, descriptive details. You will also translate hex colors into descriptive names.
 
 **CRITICAL RULES:**
-1.  **Enhance, Don't Replace:** If the user says "sword", you describe the sword (e.g., "a gleaming, battle-worn katana sword"). You do not change it to a "gun".
-2.  **Be Descriptive:** Use powerful adjectives and sensory details.
-3.  **Font & Color:** Suggest a font style that matches the inspiration and give descriptive names to the hex colors.
+1.  **Enhance, Don't Replace:** If the user provides a concept (e.g., "sword"), describe it in more detail (e.g., "a gleaming, battle-worn katana sword"). You do not change it to a "gun".
+2.  **Handle Missing Concepts:** If a concept (like inspiration, floorMaterial, etc.) is NOT PROVIDED, you MUST return an empty string for its corresponding "enhanced" field in the JSON output.
+3.  **Color Naming:** You MUST ALWAYS provide descriptive names for the hex colors.
 4.  **Provide ONLY the JSON object as your output.**
 
-**USER'S RAW CONCEPTS:**
+**USER'S RAW CONCEPTS (some may be missing):**
 -   **Art Style Inspiration:** "{{inspiration}}"
 -   **Floor Material:** "{{floorMaterial}}"
 -   **Object 1:** "{{object1}}"
@@ -59,15 +60,13 @@ const enhancementPrompt = ai.definePrompt({
 -   **Secondary Color (Hex):** "{{color2}}"
 
 **EXAMPLE OF ENHANCEMENT:**
--   **User Input:** inspiration: "samurai noir", floorMaterial: "concrete", object1: "sword", object2: "mask", atmosphere: "moody mystery", color1: "#FF5733", color2: "#333333"
+-   **User Input:** inspiration: "samurai noir", floorMaterial: "concrete", object1: "sword", atmosphere: "moody mystery", color1: "#FF5733", color2: "#333333"
 -   **Your JSON Output:**
     {
         "enhancedInspiration": "the stoic, high-contrast art of samurai noir cinema",
         "enhancedFloorMaterial": "cracked, rain-slicked polished concrete",
         "enhancedObject1": "a gleaming, battle-worn katana sword half-hidden in shadow",
-        "enhancedObject2": "a traditional, porcelain oni warrior mask with menacing features",
         "enhancedAtmosphere": "a moody, enigmatic, and suspenseful mystery",
-        "fontType": "a sharp, modern serif with calligraphic influences",
         "color1Name": "vibrant blood orange",
         "color2Name": "deep charcoal gray"
     }
@@ -123,7 +122,8 @@ const generateArtPromptFlow = ai.defineFlow(
     }
 
     // --- STEP 2: Assemble the final prompt using the user's exact template ---
-    const finalPrompt = `Photorealistic 3D product shot of a slightly floating over the ${enhancedElements.color1Name} ${enhancedElements.enhancedFloorMaterial} floor, with an angled ${enhancedElements.color2Name} box 10–15 degrees with patterns and textures inspired by the art of ${enhancedElements.enhancedInspiration}. The box prominently displays the large, stylish, and perfectly legible text "${input.kitName}" in ${enhancedElements.fontType} typography font as a central design box element. In the background, a heavily blurred, subtly visible, distorted in right side: black headphone laid in floor, ${enhancedElements.enhancedObject1} is laid down.  and in left side ${enhancedElements.enhancedObject2} and a black synth keyboard with knobs both elements scattered across the floor, creating a strong bokeh effect and emphasizing the sharply focused box. The overall lighting and color palette should evoke a sense of ${enhancedElements.enhancedAtmosphere} atmosphere and a cinematic, high-quality render of soft, blurred ${enhancedElements.color1Name} smoke on a deep ${enhancedElements.color2Name} background. The smoke is dense but smooth, with a feathered, diffused texture — no sharp details — appearing as a glowing fog or vapor cloud.`;
+    const finalPrompt = `Photorealistic 3D product shot of a slightly floating over the ${enhancedElements.color1Name} ${enhancedElements.enhancedFloorMaterial || ''} floor, with an angled ${enhancedElements.color2Name} box 10–15 degrees with patterns and textures ${enhancedElements.enhancedInspiration ? `inspired by the art of ${enhancedElements.enhancedInspiration}` : ''}. The box prominently displays the large, stylish, and perfectly legible text "${input.kitName}" ${input.fontType ? `in ${input.fontType} typography font` : ''} as a central design box element. In the background, a heavily blurred, subtly visible, distorted in right side: black headphone laid in floor, ${enhancedElements.enhancedObject1 || ''} is laid down. and in left side ${enhancedElements.enhancedObject2 || ''} and a black synth keyboard with knobs both elements scattered across the floor, creating a strong bokeh effect and emphasizing the sharply focused box. The overall lighting and color palette should evoke a sense of ${enhancedElements.enhancedAtmosphere || 'a cinematic'} atmosphere and a cinematic, high-quality render of soft, blurred ${enhancedElements.color1Name} smoke on a deep ${enhancedElements.color2Name} background. The smoke is dense but smooth, with a feathered, diffused texture — no sharp details — appearing as a glowing fog or vapor cloud.`
+    .replace(/\s{2,}/g, ' ').trim();
 
     return { finalPrompt, error: undefined };
   }

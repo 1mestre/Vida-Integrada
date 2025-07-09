@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
@@ -25,7 +26,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { generateKitNames } from '@/ai/flows/generate-kit-names-flow';
 import { categorizeSound } from '@/ai/flows/categorizeSoundFlow';
 import { renameSound } from '@/ai/flows/renameSoundFlow';
-import { generateArtPrompt } from '@/ai/flows/generateCoverArtFlow';
+import { generateArtPrompt, type GenerateArtPromptInput } from '@/ai/flows/generateCoverArtFlow';
 import { uploadSound } from '@/ai/flows/uploadSoundFlow';
 import { uploadCoverArt } from '@/ai/flows/uploadCoverArtFlow';
 
@@ -43,7 +44,7 @@ const fileToDataUri = (file: File): Promise<string> => {
 
 interface AiArtConfiguratorProps {
     activeProject: DrumKitProject;
-    onGenerate: (data: any) => void;
+    onGenerate: (data: GenerateArtPromptInput) => void;
     onGenerateNames: (inspiration: string) => void;
     onKitNameUpdate: (newName: string) => void;
     onCoverDrop: (files: File[]) => void;
@@ -73,6 +74,7 @@ const AiArtConfigurator = React.memo(({
     const [object1, setObject1] = useState('');
     const [object2, setObject2] = useState('');
     const [atmosphere, setAtmosphere] = useState('');
+    const [fontType, setFontType] = useState('');
     const [color1, setColor1] = useState('#FF5733');
     const [color2, setColor2] = useState('#333333');
     const { appState, setAppState } = useAppState();
@@ -85,16 +87,13 @@ const AiArtConfigurator = React.memo(({
         setObject1('');
         setObject2('');
         setAtmosphere('');
+        setFontType('');
     }, [activeProject.id, activeProject.name]);
 
     const handleGeneratePromptClick = () => {
         if (!kitName.trim()) {
           toast({ variant: "destructive", title: "Error", description: "El nombre del kit no puede estar vacío." });
           return;
-        }
-        if (!inspiration || !floorMaterial || !object1 || !object2 || !atmosphere) {
-            toast({ variant: "destructive", title: "Campos incompletos", description: "Por favor, completa todos los campos de concepto de arte para la IA." });
-            return;
         }
         onGenerate({
             kitName: kitName.trim(),
@@ -105,6 +104,7 @@ const AiArtConfigurator = React.memo(({
             object1,
             object2,
             atmosphere,
+            fontType,
             model: appState.selectedAiModel,
         });
     };
@@ -176,9 +176,13 @@ const AiArtConfigurator = React.memo(({
                             <Label htmlFor="art-object2">4. Objeto de Fondo 2</Label>
                             <Input id="art-object2" placeholder="Ej: Warrior mask" value={object2} onChange={(e) => setObject2(e.target.value)} />
                         </div>
-                        <div className="md:col-span-2">
+                         <div className="md:col-span-2">
                             <Label htmlFor="art-atmosphere">5. Atmósfera / Sensación</Label>
                             <Input id="art-atmosphere" placeholder="Ej: Moody mystery" value={atmosphere} onChange={(e) => setAtmosphere(e.target.value)} />
+                        </div>
+                        <div className="md:col-span-2">
+                            <Label htmlFor="art-font">6. Estilo de Fuente (Opcional)</Label>
+                            <Input id="art-font" placeholder="Ej: A sharp, modern serif" value={fontType} onChange={(e) => setFontType(e.target.value)} />
                         </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
@@ -198,9 +202,9 @@ const AiArtConfigurator = React.memo(({
                         </div>
                     </div>
                     <Button onClick={handleGenerateNamesClick} disabled={isGeneratingNames || !inspiration} size="sm" variant="outline" className="w-full text-purple-400 border-purple-400/50 hover:bg-purple-400/10 hover:text-purple-300"><Sparkles className='mr-2'/>Sugerir Nombres del Kit</Button>
-                    <div><Label htmlFor="kit-name">6. Nombre final para carátula</Label><Input id="kit-name" value={kitName} onChange={(e) => setKitName(e.target.value)} onBlur={onKitNameBlur} placeholder="Escribe el nombre del kit" /></div>
+                    <div><Label htmlFor="kit-name">7. Nombre final para carátula</Label><Input id="kit-name" value={kitName} onChange={(e) => setKitName(e.target.value)} onBlur={onKitNameBlur} placeholder="Escribe el nombre del kit" /></div>
                 </div>
-                <div className="flex flex-col gap-2"><Button onClick={handleGeneratePromptClick} disabled={isGeneratingPrompt || !inspiration || !kitName.trim()} className="w-full bg-indigo-600 hover:bg-indigo-700"><Quote className='mr-2 h-4 w-4'/>Generar Prompt de Arte</Button></div>
+                <div className="flex flex-col gap-2"><Button onClick={handleGeneratePromptClick} disabled={isGeneratingPrompt || !kitName.trim()} className="w-full bg-indigo-600 hover:bg-indigo-700"><Quote className='mr-2 h-4 w-4'/>Generar Prompt de Arte</Button></div>
                 <div className="text-center text-xs text-muted-foreground my-2">Una vez generado, usa el prompt en una de estas herramientas:</div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <a href="https://aistudio.google.com/gen-media" target="_blank" rel="noopener noreferrer" className="w-full"><Button variant="outline" className="w-full bg-blue-600 hover:bg-blue-700 text-white"><Sparkles className="mr-2 h-4 w-4" />AI Studio</Button></a>
@@ -589,7 +593,7 @@ const KitStudioTab = () => {
         }
     }, [activeProject, activeProjectId, appState.selectedAiModel, setAppState, toast]);
 
-    const handleGenerateArtPrompt = useCallback(async (data: any) => {
+    const handleGenerateArtPrompt = useCallback(async (data: GenerateArtPromptInput) => {
         if (!activeProject) return;
 
         setIsGeneratingPrompt(true);
