@@ -22,7 +22,7 @@ import JSZip from 'jszip';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useAppState, WorkItem, WorkPackageTemplate, type Contribution, SoundLibraryItem, SoundType, DrumKitProject } from '@/context/AppStateContext';
-import { TrendingUp, Settings, PlusCircle, Wrench, Music, Link, Edit, MessageSquare, Trash2, FileText, Gift, ClipboardCopy, Loader2, Upload, Search, ListFilter, Play, Music4, Sparkles, Quote, Image as ImageIcon } from 'lucide-react';
+import { TrendingUp, Settings, PlusCircle, Wrench, Music, Link, Edit, MessageSquare, Trash2, FileText, Gift, ClipboardCopy, Loader2, Upload, Search, ListFilter, Play, Music4, Sparkles, Quote, Image as ImageIcon, Download } from 'lucide-react';
 import WorkItemModal from '@/components/WorkItemModal';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
@@ -461,6 +461,7 @@ const WorkTab = () => {
     const [currentKitName, setCurrentKitName] = useState('');
     const [imagePrompt, setImagePrompt] = useState('');
     const [lastEnhancedPrompt, setLastEnhancedPrompt] = useState<string | null>(null);
+    const [isPromptModalOpen, setIsPromptModalOpen] = useState(false);
     const activeAudio = useRef<HTMLAudioElement | null>(null);
 
     // --- Effects ---
@@ -1014,7 +1015,8 @@ const WorkTab = () => {
           setLastEnhancedPrompt(null);
         } else if (result.finalPrompt) {
           setLastEnhancedPrompt(result.finalPrompt);
-          toast({ title: "¡Prompt de arte generado!", description: "Puedes verlo y copiarlo para usarlo en otra herramienta." });
+          setIsPromptModalOpen(true);
+          toast({ title: "¡Prompt de arte generado!", description: "Puedes verlo y copiarlo." });
         }
         setIsGeneratingPrompt(false);
     };
@@ -1315,7 +1317,6 @@ const WorkTab = () => {
                                           <a href="https://labs.google/fx/es-419/tools/whisk" target="_blank" rel="noopener noreferrer" className="w-full"><Button variant="outline" className="w-full bg-blue-600 hover:bg-blue-700 text-white"><Sparkles className="mr-2 h-4 w-4" />ImageFX</Button></a>
                                       </div>
                                       {activeProject.seoNames.length > 0 && (<div className="space-y-2"><Label>Nombres Sugeridos:</Label><div className="flex flex-wrap gap-2">{activeProject.seoNames.map((name, i) => (<Badge key={i} variant="outline" className="cursor-pointer" onClick={() => onSuggestedNameClick(name)}>{name}</Badge>))}</div></div>)}
-                                      {lastEnhancedPrompt && (<AlertDialog><AlertDialogTrigger asChild><Button variant="outline" className="w-full mt-2"><Quote className="mr-2 h-4 w-4" />Ver Prompt Final Usado</Button></AlertDialogTrigger><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Prompt Final Generado por IA</AlertDialogTitle><AlertDialogDescription>Este es el prompt detallado que generó la IA. Cópialo y pégalo en AI Studio o ImageFX para crear tu carátula.</AlertDialogDescription></AlertDialogHeader><div className="max-h-64 overflow-y-auto rounded-md border bg-muted p-4"><pre className="text-sm text-foreground whitespace-pre-wrap font-sans">{lastEnhancedPrompt}</pre></div><AlertDialogFooter><AlertDialogCancel>Cerrar</AlertDialogCancel><AlertDialogAction onClick={() => { navigator.clipboard.writeText(lastEnhancedPrompt); toast({ title: "Prompt copiado!" }); }}><ClipboardCopy className="mr-2 h-4 w-4" />Copiar Prompt</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>)}
                                   </div>
                                   <ScrollArea className={cn("h-[250px] rounded-md border p-4 space-y-2", activeProjectId && "border-primary/50")}>
                                       <AnimatePresence>{activeProject.soundIds.length === 0 ? (<div className='text-center text-muted-foreground pt-16'><p>Arrastra y suelta sonidos aquí.</p></div>) : (activeProject.soundIds.map(soundId => { const soundInfo = appState.soundLibrary.find(s => s.id === soundId); const nameInKit = activeProject.soundNamesInKit[soundId] || soundInfo?.originalName || 'Cargando...'; const isLoadingName = nameInKit === 'Generando nombre...'; return (<motion.div key={soundId} layout initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, x: 20 }} className="flex items-center gap-2 p-2 rounded-md bg-secondary/50"><Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => soundInfo && handlePlaySound(soundInfo.storageUrl)} disabled={!soundInfo}><Play className="h-4 w-4"/></Button><p className="flex-grow text-sm truncate" title={soundInfo?.originalName}>{isLoadingName ? <span className='flex items-center gap-2 text-muted-foreground'><Loader2 className='h-4 w-4 animate-spin'/>Generando...</span> : nameInKit}</p>{soundInfo && <Badge variant="outline" className="text-xs">{soundInfo.soundType}</Badge>}<Button size="icon" variant="ghost" className="h-8 w-8 shrink-0 text-destructive" onClick={() => handleRemoveFromKit(soundId)}><Trash2 className="h-4 w-4"/></Button></motion.div>) }))}</AnimatePresence>
@@ -1335,6 +1336,23 @@ const WorkTab = () => {
                 <AlertDialogHeader><AlertDialogTitle>Mensaje para el Cliente</AlertDialogTitle><AlertDialogDescription>Revisa el mensaje generado. Puedes copiarlo con el botón de abajo.</AlertDialogDescription></AlertDialogHeader>
                 <div className="max-h-64 overflow-y-auto rounded-md border bg-muted p-4"><pre className="text-sm text-foreground whitespace-pre-wrap font-sans">{messageToPreview}</pre></div>
                 <AlertDialogFooter><AlertDialogCancel>Cerrar</AlertDialogCancel><AlertDialogAction onClick={() => handleCopyToClipboard(messageToPreview)}><ClipboardCopy className="mr-2 h-4 w-4" />Copiar Mensaje</AlertDialogAction></AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+            <AlertDialog open={isPromptModalOpen} onOpenChange={setIsPromptModalOpen}>
+              <AlertDialogContent>
+                  <AlertDialogHeader>
+                      <AlertDialogTitle>Prompt Final Generado por IA</AlertDialogTitle>
+                      <AlertDialogDescription>Este es el prompt detallado que generó la IA. Cópialo y pégalo en AI Studio o ImageFX para crear tu carátula.</AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <div className="max-h-64 overflow-y-auto rounded-md border bg-muted p-4">
+                      <pre className="text-sm text-foreground whitespace-pre-wrap font-sans">{lastEnhancedPrompt}</pre>
+                  </div>
+                  <AlertDialogFooter>
+                      <AlertDialogCancel>Cerrar</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => { navigator.clipboard.writeText(lastEnhancedPrompt || ""); toast({ title: "Prompt copiado!" }); }}>
+                          <ClipboardCopy className="mr-2 h-4 w-4" />Copiar Prompt
+                      </AlertDialogAction>
+                  </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
         </Tabs>
