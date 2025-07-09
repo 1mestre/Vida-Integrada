@@ -78,7 +78,7 @@ const generateCoverArtFlow = ai.defineFlow(
         **CRITICAL INSTRUCTIONS:**
         1.  **NO TEXT WORDS:** Do NOT use words like "typography", "text", "letters", "words", "font", or "type" in your output.
         2.  **VISUALS ONLY:** Describe only visual elements: colors, textures, lighting, mood, composition, and objects.
-        3.  **DESCRIBE A SCENE:** Frame your description as a scene for a 3D render of a product box.
+        3.  **DESCRIBE A SCENE:** Frame your description as a scene for a 3D render.
         4.  **THEMATIC ELEMENTS:** The scene surrounding the box should include subtle, thematic elements that relate to the creative context. For example, if the context is 'soft and bouncy', you could include soft, plush objects nearby.
         5.  **SINGLE PARAGRAPH:** Output a single, coherent paragraph.
         
@@ -105,25 +105,27 @@ const generateCoverArtFlow = ai.defineFlow(
     }
 
     // --- Define the final image generation prompt ---
-    const finalImagePrompt = `You are a 3D packaging artist. Generate a cinematic 3D render of a product box.
+    const finalImagePrompt = `You are a 3D packaging artist creating a single product shot. Follow these rules precisely.
 
-— VISUAL STYLE —
-The scene must be abstract, highly stylized, and cinematic. Use only visual elements like lighting, textures, reflections, shadows, colors, and mood.
+**Rule 1: The Box Design**
+- The box's surface MUST be decorated with **abstract patterns and textures only**.
+- These abstract graphics should be inspired by the colors and mood of the **Creative Context** below.
+- The box MUST display the text: "${kitName}". This text should be large, stylish, and easy to read.
+- **ABSOLUTE PROHIBITION:** Do NOT place any real-world objects on the box design. This includes, but is not limited to: speakers, headphones, synthesizers, microphones, people, animals, or landscapes. The box surface is for abstract graphics and the required text ONLY.
 
-— SPECIAL TEXT INSTRUCTIONS —
-The design must include **exactly one word or phrase**, rendered as part of the product case in a clean, futuristic, or grunge typographic style: "${kitName}".
-This text must be large, legible, and occupy a significant portion of the packaging front.
-This text must appear on the product box, label, or front cover, as if it were real packaging.
-Do NOT include any other words, numbers, or characters anywhere in the image.
+**Rule 2: The Background Scene**
+- The scene surrounding the box MUST contain a subtle, out-of-focus object related to music. Examples: a small synthesizer, headphones on the table, a vintage radio.
+- This object MUST be in the background or environment, **NEVER on the box itself**.
 
-— BOX & ENVIRONMENT DETAILS —
-**Audio Motif:** The background of the scene MUST include a subtle, out-of-focus element related to audio or music (e.g., a synthesizer, headphones, a microphone, speakers, or a radio).
-**CRITICAL CLARIFICATION:** This audio element must be in the **environment/background ONLY**. Do NOT place it on or inside the product box itself. The box's design should be clean and only contain the required text and abstract graphics inspired by the creative context.
+**Rule 3: Creative Context**
+- Use the following description to inspire the overall mood, lighting, and the abstract patterns on the box:
+>>> ${creativeContext}
 
-— CREATIVE CONTEXT (USE FOR INSPIRATION, DON’T OUTPUT THIS TEXT) —
-${creativeContext}
-
-Make sure the text "${kitName}" is clearly visible but naturally blended into the packaging design.`;
+**Final Review:** Before generating, confirm:
+1. Box has text "${kitName}"? Yes.
+2. Box has abstract graphics? Yes.
+3. Box has pictures of speakers/instruments on it? **NO.**
+4. Music item is in the background? Yes.`;
 
 
     // --- STEP 1 & 2: GENERATE IMAGE & UPLOAD ---
@@ -173,3 +175,4 @@ Make sure the text "${kitName}" is clearly visible but naturally blended into th
     }
   }
 );
+
