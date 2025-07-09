@@ -38,25 +38,26 @@ const generateArtPromptFlow = ai.defineFlow(
     let creativeContext = '';
     
     // --- STEP 1: ENHANCE PROMPT (CREATIVE DIRECTOR AI) ---
-    // This step takes the user's simple idea and expands it into a full scene description.
+    // This step takes the user's simple idea and expands it into a description of visuals and mood.
     try {
-      const enhancementPromptText = `You are a visual enhancement AI. Your task is to take a user's simple concept and transform it into a rich, detailed, single-paragraph visual scene description for an image generation AI.
+      const enhancementPromptText = `You are a visual creative director AI. Your task is to take a user's simple concept and transform it into a rich, detailed, single-paragraph visual description. This description will inspire abstract patterns, textures, and the overall mood of a product design.
 
 **Core Concept from user:** "${prompt}"
 
 **Your Mission:**
 1.  **Analyze the Core Concept:** Deeply understand the mood, style, and key elements of the user's idea.
-2.  **Build a Detailed Scene:** Describe a complete scene for a 3D render. Include specific details about:
-    *   **Lighting:** Is it bright, moody, neon, natural?
-    *   **Colors:** What is the dominant color palette?
-    *   **Textures:** What materials are present (e.g., chrome, matte, wood, stone)?
-    *   **Environment:** What subtle, out-of-focus objects or natural elements surround the main subject? These elements MUST be directly inspired by the Core Concept. For example, if the concept is "ocean vibes", describe sand, water, and palm trees. If it's "space odyssey", describe nebulae and stars.
-3.  **Output Style:**
+2.  **Describe Abstract Visuals & Mood:** Create a description focusing on:
+    *   **Lighting:** Is it bright, moody, neon, natural, dramatic?
+    *   **Color Palette:** What are the dominant and accent colors?
+    *   **Textures & Patterns:** What abstract materials, patterns, or feelings are evoked (e.g., smooth chrome, rough stone, flowing energy, sharp geometric lines)?
+3.  **Critical Rules:**
     *   Produce a single, coherent paragraph.
-    *   Focus ONLY on visual descriptions. Do NOT mention text, fonts, or typography.
+    *   Focus ONLY on abstract visual descriptions of light, color, and texture.
+    *   DO NOT describe a scene or any specific, real-world objects.
+    *   DO NOT mention text, fonts, or typography.
     *   Your entire output must be based on and expand upon the user's Core Concept.
 
-Now, create the enhanced visual description based on the user's Core Concept provided above.`;
+Now, generate the enhanced visual description based on the user's Core Concept provided above.`;
         
         const enhancementResult = await ai.generate({
             prompt: enhancementPromptText,
@@ -101,20 +102,8 @@ ${creativeContext}
 
 
     // --- STEP 3: ASSEMBLE THE FINAL, ROBUST PROMPT (3D ARTIST AI) ---
-    // This step combines all elements into a single, highly-structured prompt for the image AI.
-    const finalImagePrompt = `Create a photorealistic 3D product shot of a modern product box. Follow these instructions precisely.
-
-**Primary Subject: The Box**
-*   **Angle & Focus:** The box is angled slightly (10-15 degrees) to show its front and one side. It must be in sharp, perfect focus.
-*   **Text:** The text "${kitName}" must be displayed prominently on the box. It should be large, stylish, and perfectly legible, serving as a central, dominant design element.
-*   **Surface Design:** The box surface MUST be decorated with abstract patterns and textures. These visuals are directly inspired by the scene description below. Absolutely NO pictures or illustrations of real-world objects on the box itself—only abstract art.
-
-**Background & Scene**
-*   **Scene Description:** The environment surrounding the box is as follows: ${creativeContext}.
-*   **Bokeh Effect:** This background environment MUST be heavily blurred with a very shallow depth of field, creating a strong bokeh effect that makes the main product box pop.
-
-**Overall Mood & Lighting**
-*   **Atmosphere:** The lighting, colors, and overall atmosphere must evoke a sense of ${visualSensation}.`;
+    // This step combines all elements into the user-specified template.
+    const finalImagePrompt = `imagine prompt: Photorealistic 3D product shot of a slightly angled box (10-15 degrees) with abstract patterns and textures inspired (${creativeContext}). The box prominently displays the large, stylish, and perfectly legible text "${kitName}" as a central design element. The background features a heavily blurred, subtly visible, distorted black over-ear headphones and a synth rests on a surface black electronic keyboard with white keys and various knobs and sliders, creating a strong bokeh effect and emphasizing the sharply focused box. The overall lighting and color palette should evoke a sense of (${visualSensation}).`;
 
     return { finalPrompt: finalImagePrompt, error: undefined };
   }
