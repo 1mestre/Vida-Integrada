@@ -461,6 +461,8 @@ const WorkTab = () => {
     const [filterType, setFilterType] = useState<SoundType | 'all'>('all');
     const [currentKitName, setCurrentKitName] = useState('');
     const [imagePrompt, setImagePrompt] = useState('');
+    const [color1, setColor1] = useState('#FF5733');
+    const [color2, setColor2] = useState('#333333');
     const [lastEnhancedPrompt, setLastEnhancedPrompt] = useState<string | null>(null);
     const [isPromptModalOpen, setIsPromptModalOpen] = useState(false);
     const activeAudio = useRef<HTMLAudioElement | null>(null);
@@ -1036,7 +1038,13 @@ const WorkTab = () => {
         }
         setIsGeneratingPrompt(true);
         setAppState(prevState => ({ ...prevState, drumKitProjects: prevState.drumKitProjects.map(p => p.id === activeProjectId ? { ...p, imagePrompt: imagePrompt, name: currentKitName.trim() } : p) }));
-        const result = await generateArtPrompt({ prompt: imagePrompt, kitName: currentKitName.trim(), model: appState.selectedAiModel });
+        const result = await generateArtPrompt({ 
+            prompt: imagePrompt, 
+            kitName: currentKitName.trim(), 
+            color1: color1,
+            color2: color2,
+            model: appState.selectedAiModel 
+        });
         if (result.error) {
           toast({ variant: "destructive", title: "Error de IA", description: result.error });
           setLastEnhancedPrompt(null);
@@ -1354,7 +1362,38 @@ const WorkTab = () => {
                                       </div>
                                       <div className="relative flex items-center justify-center my-2"><Separator className="flex-grow" /><span className="absolute px-2 bg-background/30 text-xs text-muted-foreground">Ó</span></div>
                                       <div className='space-y-4 flex-grow'>
-                                          <div><Label htmlFor="kit-prompt">1. Describe el concepto con IA</Label><Input id="kit-prompt" placeholder="Ej: Dark trap, estilo Travis Scott..." value={imagePrompt} onChange={(e) => setImagePrompt(e.target.value)}/></div>
+                                          <div>
+                                              <Label htmlFor="kit-prompt">1. Describe el concepto con IA</Label>
+                                              <Input id="kit-prompt" placeholder="Ej: Dark trap, estilo Travis Scott..." value={imagePrompt} onChange={(e) => setImagePrompt(e.target.value)}/>
+                                          </div>
+                                          <div className="grid grid-cols-2 gap-4">
+                                              <div>
+                                                  <Label htmlFor="color1">Color Primario</Label>
+                                                  <div className="flex items-center gap-2 rounded-md border border-input bg-background p-1">
+                                                      <input 
+                                                          id="color1" 
+                                                          type="color" 
+                                                          value={color1} 
+                                                          onChange={(e) => setColor1(e.target.value)}
+                                                          className="h-8 w-8 cursor-pointer appearance-none bg-transparent border-none rounded-sm"
+                                                      />
+                                                      <span className="font-mono text-sm">{color1.toUpperCase()}</span>
+                                                  </div>
+                                              </div>
+                                              <div>
+                                                  <Label htmlFor="color2">Color Secundario</Label>
+                                                  <div className="flex items-center gap-2 rounded-md border border-input bg-background p-1">
+                                                      <input 
+                                                          id="color2" 
+                                                          type="color" 
+                                                          value={color2} 
+                                                          onChange={(e) => setColor2(e.target.value)}
+                                                          className="h-8 w-8 cursor-pointer appearance-none bg-transparent border-none rounded-sm"
+                                                      />
+                                                      <span className="font-mono text-sm">{color2.toUpperCase()}</span>
+                                                  </div>
+                                              </div>
+                                          </div>
                                           <Button onClick={handleGenerateNames} disabled={isGeneratingNames || !imagePrompt} size="sm" variant="outline" className="w-full text-purple-400 border-purple-400/50 hover:bg-purple-400/10 hover:text-purple-300"><Sparkles className='mr-2'/>Sugerir Nombres</Button>
                                           <div><Label htmlFor="kit-name">2. Nombre final para carátula</Label><Input id="kit-name" value={currentKitName} onChange={(e) => setCurrentKitName(e.target.value)} onBlur={onKitNameBlur} placeholder="Escribe el nombre del kit" /></div>
                                       </div>
@@ -1397,7 +1436,7 @@ const WorkTab = () => {
                   </div>
                   <AlertDialogFooter>
                       <AlertDialogCancel>Cerrar</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => { navigator.clipboard.writeText(lastEnhancedPrompt || ""); toast({ title: "Prompt copiado!" }); }}>
+                      <AlertDialogAction onClick={() => { if(lastEnhancedPrompt) { navigator.clipboard.writeText(lastEnhancedPrompt); toast({ title: "Prompt copiado!" }); } }}>
                           <ClipboardCopy className="mr-2 h-4 w-4" />Copiar Prompt
                       </AlertDialogAction>
                   </AlertDialogFooter>
