@@ -426,6 +426,7 @@ const fileToDataUri = (file: File): Promise<string> => {
 };
 const soundCategories: SoundType[] = ['Kick', 'Snare', 'Clap', 'Hi-Hat', 'Hi-Hat Open', 'Perc', 'Rim', '808', 'Bass', 'FX & Texture', 'Vocal', 'Oneshot Melodic', 'EXTRAS'];
 
+const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
 const WorkTab = () => {
     const { appState, setAppState } = useAppState();
@@ -785,23 +786,37 @@ const WorkTab = () => {
         }
         setProcessingStatus(prev => [...prev, `Procesando ${audioFilesToProcess.length} sonidos...`]);
         const newLibraryItems: SoundLibraryItem[] = [];
-        for (const f of audioFilesToProcess) {
-          try {
-            setProcessingStatus(prev => [...prev, `Subiendo ${f.name}...`]);
-            const soundDataUri = await fileToDataUri(f.file);
-            const storageUrl = await uploadSound({ soundDataUri, filename: f.name });
-            setProcessingStatus(prev => [...prev, `Categorizando ${f.name}...`]);
-            const { soundType, key } = await categorizeSound({ filename: f.name, model: appState.selectedAiModel });
-            newLibraryItems.push({ id: uuidv4(), originalName: f.name, storageUrl, soundType, key });
-            setProcessingStatus(prev => [...prev, `✅ Procesado: ${f.name}`]);
-          } catch (error) {
-            setProcessingStatus(prev => [...prev, `❌ Error en ${f.name}`]);
-            console.error(`Error procesando ${f.name}:`, error);
-            toast({ variant: "destructive", title: "Error de Procesamiento", description: `No se pudo procesar el archivo ${f.name}.` });
-          }
+        for (const [index, f] of audioFilesToProcess.entries()) {
+            try {
+                setProcessingStatus(prev => [...prev, `(${index + 1}/${audioFilesToProcess.length}) Subiendo ${f.name}...`]);
+                const soundDataUri = await fileToDataUri(f.file);
+                const storageUrl = await uploadSound({ soundDataUri, filename: f.name });
+
+                if (index > 0) {
+                    setProcessingStatus(prev => [...prev, 'Esperando para evitar límite de API...']);
+                    await delay(4000); // 4-second delay
+                }
+
+                setProcessingStatus(prev => [...prev, `(${index + 1}/${audioFilesToProcess.length}) Categorizando ${f.name}...`]);
+                const { soundType, key } = await categorizeSound({ filename: f.name, model: appState.selectedAiModel });
+                newLibraryItems.push({ id: uuidv4(), originalName: f.name, storageUrl, soundType, key });
+                setProcessingStatus(prev => [...prev, `✅ Procesado: ${f.name}`]);
+            } catch (error: any) {
+                setProcessingStatus(prev => [...prev, `❌ Error en ${f.name}`]);
+                console.error(`Error procesando ${f.name}:`, error);
+
+                if (error?.message?.includes('429') || error?.toString().includes('Too Many Requests')) {
+                    toast({ variant: "destructive", title: "Límite de API alcanzado", description: "Se ha superado el límite de solicitudes. Intenta con menos archivos, espera un minuto, o cambia el modelo de IA en los ajustes." });
+                    break;
+                } else {
+                    toast({ variant: "destructive", title: "Error de Procesamiento", description: `No se pudo procesar el archivo ${f.name}.` });
+                }
+            }
         }
         setAppState(prevState => ({ ...prevState, soundLibrary: [...prevState.soundLibrary, ...newLibraryItems] }));
-        toast({ title: "¡Éxito!", description: `Se añadieron ${newLibraryItems.length} nuevos sonidos a tu librería.` });
+        if(newLibraryItems.length > 0) {
+            toast({ title: "¡Éxito!", description: `Se añadieron ${newLibraryItems.length} nuevos sonidos a tu librería.` });
+        }
         setIsProcessing(false);
         setProcessingStatus([]);
     }, [setAppState, toast, appState.selectedAiModel]);
