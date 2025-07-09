@@ -78,7 +78,7 @@ const GenerateArtPromptOutputSchema = z.object({
     finalPrompt: z.string().describe('The final, detailed prompt ready to be used in an image generation AI.'),
     error: z.string().optional().describe('An error message if prompt generation failed.'),
 });
-type GenerateArtPromptOutput = z.infer<typeof GenerateArtPromptOutputSchema>;
+export type GenerateArtPromptOutput = z.infer<typeof GenerateArtPromptOutputSchema>;
 
 
 export async function generateArtPrompt(input: GenerateArtPromptInput): Promise<GenerateArtPromptOutput> {
