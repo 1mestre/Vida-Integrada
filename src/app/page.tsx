@@ -1,13 +1,12 @@
 
 "use client";
 
-import React, { useState, useEffect, useMemo, lazy } from 'react';
+import React, { useState, useEffect, lazy } from 'react';
 import { getAuth, onAuthStateChanged, type User } from 'firebase/auth';
-import { Calendar, University, Rocket, Briefcase, PackageSearch } from 'lucide-react';
+import { Calendar, University, Rocket, Briefcase } from 'lucide-react';
 
 import { app } from '@/lib/firebase';
 import { AppStateProvider } from '@/context/AppStateContext';
-import { Button } from '@/components/ui/button';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Login } from '@/components/Login';
 import { useSound } from '@/context/SoundContext';
@@ -16,14 +15,12 @@ const CalendarTab = lazy(() => import('@/components/tabs/CalendarTab'));
 const UniversityTab = lazy(() => import('@/components/tabs/UniversityTab'));
 const ProductivityTab = lazy(() => import('@/components/tabs/ProductivityTab'));
 const WorkTab = lazy(() => import('@/components/tabs/WorkTab'));
-const KitStudioTab = lazy(() => import('@/components/tabs/KitStudioTab'));
 
-type Tab = 'calendar' | 'university' | 'productivity' | 'work' | 'kit-studio';
+type Tab = 'calendar' | 'university' | 'productivity' | 'work';
 
 const TABS: { id: Tab; label: string; icon: React.ElementType }[] = [
   { id: 'productivity', label: 'Productividad', icon: Rocket },
   { id: 'work', label: 'Work', icon: Briefcase },
-  { id: 'kit-studio', label: 'Kit Studio', icon: PackageSearch },
   { id: 'calendar', label: 'Calendario', icon: Calendar },
   { id: 'university', label: 'Universidad', icon: University },
 ];
@@ -58,8 +55,6 @@ export default function Home() {
         return <ProductivityTab />;
       case 'work':
         return <WorkTab />;
-      case 'kit-studio':
-        return <KitStudioTab />;
       default:
         return null;
     }
