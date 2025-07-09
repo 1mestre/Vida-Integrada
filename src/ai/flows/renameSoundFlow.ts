@@ -42,15 +42,24 @@ const prompt = ai.definePrompt({
   input: {schema: RenamePromptInputSchema},
   // The AI's output is just the creative name, not the final formatted string.
   output: {schema: z.object({ newName: z.string() })}, 
-  prompt: `You are a creative assistant for a music producer named DANODALS.
-Your task is to generate a new, creative, and marketable name for a single sound file that will be included in a drum kit.
+  prompt: `You are a master branding expert for DANODALS, a high-end music producer known for unique and impactful sound design. Your task is to coin a powerful, distinct, and marketable name for a single sound file.
 
-The new name should be inspired by the original name but be more unique, shorter, and cooler. It should fit the vibe of the drum kit.
+**MISSION:**
+1.  **Analyze & Deconstruct:** Deeply analyze the **Kit Vibe** and the **Original Sound Name**. Identify key themes, emotions, and objects.
+2.  **Creative Expansion:** Do not just shorten the name. **Expand on the concepts.** Use metaphors, powerful verbs, evocative adjectives, and conceptual associations related to the vibe. The goal is a name that tells a small story.
+3.  **Vibe Cohesion:** The new name MUST feel like it belongs to the kit. It should sound like a premium, professionally named sample.
 
-The drum kit has the following description: '{{kitDescription}}'
-The original sound name is: '{{originalName}}'
+**CONTEXT:**
+-   **Kit Vibe / Description:** '{{kitDescription}}'
+-   **Original Sound Name:** '{{originalName}}'
 
-Give me just the new creative name, without any extra text, quotes, explanations, or the sound category. For example, if the original is "FREE_Metro_Boomin_Type_Snare_3_(Super_Trap).wav", a good new name could be "Metro Glitch" or "Super Snare".`,
+**EXAMPLES OF TRANSFORMATION:**
+-   **Original:** "808_HARD_TRAP_BASS.wav", **Kit Vibe:** "Ancient samurai warrior" -> **New Name:** "RONIN'S ROAR"
+-   **Original:** "Snare_lofi_vinyl.wav", **Kit Vibe:** "Late night rainy city" -> **New Name:** "NEON PUDDLE"
+-   **Original:** "Kick_punchy_deep.wav", **Kit Vibe:** "Cosmic space journey" -> **New Name:** "ASTEROID IMPACT"
+
+**CRITICAL RULE:**
+Provide ONLY the new creative name. No quotes, no explanations, no sound category. Just the name itself.`,
 });
 
 
@@ -65,7 +74,7 @@ const renameSoundFlow = ai.defineFlow(
     const { output } = await prompt({
       originalName: input.originalName,
       kitDescription: input.kitDescription,
-    }, { model: input.model ? `googleai/${input.model}` : undefined });
+    }, { model: input.model ? `googleai/${input.model}` : 'googleai/gemini-2.0-flash' });
 
     if (!output?.newName) {
       throw new Error("AI failed to generate a creative name.");
