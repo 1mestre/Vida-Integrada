@@ -23,6 +23,7 @@ import { categorizeSound } from '@/ai/flows/categorizeSoundFlow';
 import { renameSound } from '@/ai/flows/renameSoundFlow';
 import { generateCoverArt } from '@/ai/flows/generateCoverArtFlow';
 import { uploadSound } from '@/ai/flows/uploadSoundFlow';
+import { uploadCoverArt } from '@/ai/flows/uploadCoverArtFlow';
 import { Label } from '@/components/ui/label';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Separator } from '../ui/separator';
@@ -43,6 +44,7 @@ const KitStudioTab = () => {
   const { appState, setAppState } = useAppState();
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isUploadingCover, setIsUploadingCover] = useState(false);
   const [isGeneratingNames, setIsGeneratingNames] = useState(false);
   const [isGeneratingArt, setIsGeneratingArt] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -286,6 +288,49 @@ const KitStudioTab = () => {
         'application/zip': ['.zip']
       }
   });
+
+  const onCoverDrop = useCallback(async (acceptedFiles: File[]) => {
+    if (!activeProject || acceptedFiles.length === 0) return;
+    const file = acceptedFiles[0];
+    
+    setIsUploadingCover(true);
+    toast({ title: "Subiendo carátula personalizada..." });
+
+    try {
+      const imageDataUri = await fileToDataUri(file);
+      const finalUrl = await uploadCoverArt({ imageDataUri });
+
+      setAppState(prevState => ({
+        ...prevState,
+        drumKitProjects: prevState.drumKitProjects.map(p => 
+          p.id === activeProjectId ? { ...p, coverArtUrl: finalUrl } : p
+        )
+      }));
+
+      toast({ title: "¡Éxito!", description: "Tu carátula personalizada ha sido subida." });
+
+    } catch (error) {
+      console.error("Error uploading custom cover art:", error);
+      toast({
+        variant: "destructive",
+        title: "Error de Subida",
+        description: `No se pudo subir la carátula. ${error instanceof Error ? error.message : ''}`,
+      });
+    } finally {
+      setIsUploadingCover(false);
+    }
+  }, [activeProject, activeProjectId, setAppState, toast]);
+
+  const { getRootProps: getCoverRootProps, getInputProps: getCoverInputProps } = useDropzone({
+      onDrop: onCoverDrop,
+      accept: { 
+        'image/jpeg': ['.jpeg', '.jpg'], 
+        'image/png': ['.png'],
+        'image/webp': ['.webp'],
+      },
+      multiple: false
+  });
+
 
   const handleCreateNewKit = () => {
     const todayStr = new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'numeric' });
@@ -668,6 +713,28 @@ const KitStudioTab = () => {
               {activeProject ? (
                 <div className="space-y-4">
                   <div className='p-4 border rounded-lg space-y-4 bg-background/30'>
+                    <div {...getCoverRootProps()} className={cn("border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:bg-muted/20 transition-colors", isUploadingCover && "border-primary bg-primary/10")}>
+                      <input {...getCoverInputProps()} />
+                      <div className="flex flex-col items-center justify-center gap-2">
+                        {isUploadingCover ? (
+                          <>
+                            <Loader2 className="h-8 w-8 text-primary animate-spin" />
+                            <p className="text-sm text-primary">Subiendo carátula...</p>
+                          </>
+                        ) : (
+                          <>
+                            <ImageIcon className="mx-auto h-8 w-8 text-muted-foreground" />
+                            <p className="text-sm text-muted-foreground">Arrastra una imagen aquí o haz clic para subir una carátula personalizada</p>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="relative flex items-center justify-center my-2">
+                      <Separator className="flex-grow" />
+                      <span className="absolute px-2 bg-background/30 text-xs text-muted-foreground">Ó</span>
+                    </div>
+                  
                     <div className='flex gap-4 items-start'>
                         <div className='w-32 h-32 rounded-md bg-muted flex-shrink-0 relative flex items-center justify-center group'>
                           {isGeneratingArt ? <Loader2 className="animate-spin h-8 w-8"/> : 
@@ -684,14 +751,14 @@ const KitStudioTab = () => {
                         </div>
                         <div className='space-y-4 flex-grow'>
                             <div>
-                                <Label htmlFor="kit-prompt">1. Describe el concepto</Label>
+                                <Label htmlFor="kit-prompt">1. Describe el concepto con IA</Label>
                                 <Input id="kit-prompt" placeholder="Ej: Dark trap, estilo Travis Scott..." value={imagePrompt} onChange={(e) => setImagePrompt(e.target.value)}/>
                             </div>
                              <Button onClick={handleGenerateNames} disabled={isGeneratingNames || !imagePrompt} size="sm" variant="outline" className="w-full text-purple-400 border-purple-400/50 hover:bg-purple-400/10 hover:text-purple-300">
                                 <Sparkles className='mr-2'/>Sugerir Nombres
                             </Button>
                             <div>
-                                <Label htmlFor="kit-name">2. Escribe el nombre final</Label>
+                                <Label htmlFor="kit-name">2. Nombre final para carátula</Label>
                                 <Input 
                                   id="kit-name"
                                   value={currentKitName}
@@ -704,7 +771,7 @@ const KitStudioTab = () => {
                     </div>
                      <div className="flex flex-col gap-2">
                         <Button onClick={handleGenerateArt} disabled={isGeneratingArt || !imagePrompt || !currentKitName.trim()} className="w-full bg-indigo-600 hover:bg-indigo-700">
-                            <ImageIcon className='mr-2 h-4 w-4'/>Generar Carátula
+                            <ImageIcon className='mr-2 h-4 w-4'/>Generar Carátula con IA
                         </Button>
                      </div>
                      {activeProject.seoNames.length > 0 && (

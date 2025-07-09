@@ -4,3 +4,4 @@ import './flows/categorizeSoundFlow';
 import './flows/renameSoundFlow';
 import './flows/generateCoverArtFlow';
 import './flows/uploadSoundFlow';
+import './flows/uploadCoverArtFlow';
