@@ -13,6 +13,7 @@ import {z} from 'zod';
 const GenerateArtPromptInputSchema = z.object({
   prompt: z.string().describe('A description of the desired cover art style, mood, and content.'),
   kitName: z.string().describe('The name of the kit to be visually included on the packaging.'),
+  model: z.string().optional(),
 });
 export type GenerateArtPromptInput = z.infer<typeof GenerateArtPromptInputSchema>;
 
@@ -33,7 +34,7 @@ const generateArtPromptFlow = ai.defineFlow(
     inputSchema: GenerateArtPromptInputSchema,
     outputSchema: GenerateArtPromptOutputSchema,
   },
-  async ({prompt, kitName}) => {
+  async ({prompt, kitName, model}) => {
     let creativeContext = '';
     
     // --- STEP 1: ENHANCE PROMPT ---
@@ -62,7 +63,7 @@ Now, create the enhanced visual description based on the user's Core Concept pro
         
         const enhancementResult = await ai.generate({
             prompt: enhancementPromptText,
-            model: 'googleai/gemini-2.0-flash',
+            model: model ? `googleai/${model}` : 'googleai/gemini-2.0-flash',
         });
         
         creativeContext = enhancementResult.text;

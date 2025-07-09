@@ -22,6 +22,7 @@ const RenameSoundInputSchema = z.object({
   originalName: z.string().describe('The original filename of the sound.'),
   kitDescription: z.string().describe('The overall theme or description of the drum kit.'),
   soundType: z.string().describe('The category of the sound, e.g., "Snare", "Kick".'),
+  model: z.string().optional(),
 });
 type RenameSoundInput = z.infer<typeof RenameSoundInputSchema>;
 
@@ -38,7 +39,6 @@ export async function renameSound(input: RenameSoundInput): Promise<RenameSoundO
 // This prompt is lean. It only asks the AI for the creative part of the name.
 const prompt = ai.definePrompt({
   name: 'renameSoundPrompt',
-  model: 'googleai/gemini-2.0-flash',
   input: {schema: RenamePromptInputSchema},
   // The AI's output is just the creative name, not the final formatted string.
   output: {schema: z.object({ newName: z.string() })}, 
@@ -65,7 +65,7 @@ const renameSoundFlow = ai.defineFlow(
     const { output } = await prompt({
       originalName: input.originalName,
       kitDescription: input.kitDescription,
-    });
+    }, { model: input.model ? `googleai/${input.model}` : undefined });
 
     if (!output?.newName) {
       throw new Error("AI failed to generate a creative name.");

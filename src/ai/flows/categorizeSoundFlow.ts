@@ -17,6 +17,7 @@ type SoundType = (typeof soundCategories)[number];
 
 const CategorizeSoundInputSchema = z.object({
   filename: z.string().describe('The original filename of the audio file.'),
+  model: z.string().optional(),
 });
 type CategorizeSoundInput = z.infer<typeof CategorizeSoundInputSchema>;
 
@@ -32,7 +33,7 @@ export async function categorizeSound(input: CategorizeSoundInput): Promise<Cate
 
 const prompt = ai.definePrompt({
   name: 'categorizeSoundPrompt',
-  input: {schema: CategorizeSoundInputSchema},
+  input: {schema: z.object({ filename: z.string() })},
   output: {schema: CategorizeSoundOutputSchema},
   prompt: `You are a strict file categorization engine for a music production brand. Your task is to analyze ONLY the filename of an audio file and return a JSON object with its \`soundType\` and \`key\`.
 
@@ -64,7 +65,7 @@ const categorizeSoundFlow = ai.defineFlow(
     outputSchema: CategorizeSoundOutputSchema,
   },
   async (input) => {
-    const {output} = await prompt(input);
+    const {output} = await prompt(input, { model: input.model ? `googleai/${input.model}` : undefined });
     return output!;
   }
 );

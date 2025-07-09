@@ -13,6 +13,7 @@ import {z} from 'genkit';
 
 const GenerateKitNamesInputSchema = z.object({
   prompt: z.string().describe('A description of the drum kit genre, style, or vibe.'),
+  model: z.string().optional(),
 });
 type GenerateKitNamesInput = z.infer<typeof GenerateKitNamesInputSchema>;
 
@@ -27,7 +28,7 @@ export async function generateKitNames(input: GenerateKitNamesInput): Promise<Ge
 
 const prompt = ai.definePrompt({
   name: 'generateKitNamesPrompt',
-  input: {schema: GenerateKitNamesInputSchema},
+  input: {schema: z.object({prompt: z.string()}) },
   output: {schema: GenerateKitNamesOutputSchema},
   prompt: `You are a branding expert specializing in creative names for music products. Generate 4 creative, modern, and marketable names based on the following theme or concept. The names should be concise and evocative.
 
@@ -47,7 +48,7 @@ const generateKitNamesFlow = ai.defineFlow(
         // Return empty array if prompt is empty, to avoid errors.
         return { names: [] };
     }
-    const {output} = await prompt(input);
+    const {output} = await prompt(input, { model: input.model ? `googleai/${input.model}` : undefined });
     return output!;
   }
 );

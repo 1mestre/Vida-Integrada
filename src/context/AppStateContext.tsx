@@ -130,6 +130,7 @@ interface AppState {
   workPackageTemplates: WorkPackageTemplate[];
   soundLibrary: SoundLibraryItem[];
   drumKitProjects: DrumKitProject[];
+  selectedAiModel: 'gemini-2.0-flash' | 'gemini-2.5-flash-preview';
 }
 
 const initialAppState: AppState = {
@@ -193,6 +194,7 @@ const initialAppState: AppState = {
   ],
   soundLibrary: [],
   drumKitProjects: [],
+  selectedAiModel: 'gemini-2.0-flash',
 };
 
 interface AppStateContextType {
@@ -338,6 +340,7 @@ export const AppStateProvider = ({ children }: { children: ReactNode }) => {
             workPackageTemplates: sanitizedTemplates.length > 0 ? sanitizedTemplates : initialAppState.workPackageTemplates,
             soundLibrary: sanitizedSoundLibrary,
             drumKitProjects: sanitizedDrumKitProjects,
+            selectedAiModel: data.selectedAiModel || initialAppState.selectedAiModel,
           };
           
           setAppState(sanitizedState);

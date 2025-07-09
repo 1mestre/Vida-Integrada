@@ -791,7 +791,7 @@ const WorkTab = () => {
             const soundDataUri = await fileToDataUri(f.file);
             const storageUrl = await uploadSound({ soundDataUri, filename: f.name });
             setProcessingStatus(prev => [...prev, `Categorizando ${f.name}...`]);
-            const { soundType, key } = await categorizeSound({ filename: f.name });
+            const { soundType, key } = await categorizeSound({ filename: f.name, model: appState.selectedAiModel });
             newLibraryItems.push({ id: uuidv4(), originalName: f.name, storageUrl, soundType, key });
             setProcessingStatus(prev => [...prev, `✅ Procesado: ${f.name}`]);
           } catch (error) {
@@ -804,7 +804,7 @@ const WorkTab = () => {
         toast({ title: "¡Éxito!", description: `Se añadieron ${newLibraryItems.length} nuevos sonidos a tu librería.` });
         setIsProcessing(false);
         setProcessingStatus([]);
-    }, [setAppState, toast]);
+    }, [setAppState, toast, appState.selectedAiModel]);
     const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop, accept: { 'audio/wav': ['.wav'], 'audio/mpeg': ['.mp3'], 'application/zip': ['.zip'] } });
     const onCoverDrop = useCallback(async (acceptedFiles: File[]) => {
         if (!activeProject || acceptedFiles.length === 0) return;
@@ -873,7 +873,7 @@ const WorkTab = () => {
         }));
         try {
           const descriptionForAI = imagePrompt || activeProject.imagePrompt || 'general purpose';
-          const { newName } = await renameSound({ originalName: sound.originalName, kitDescription: descriptionForAI, soundType: sound.soundType });
+          const { newName } = await renameSound({ originalName: sound.originalName, kitDescription: descriptionForAI, soundType: sound.soundType, model: appState.selectedAiModel });
           setAppState(prevState => ({
               ...prevState,
               drumKitProjects: prevState.drumKitProjects.map(p => {
@@ -985,7 +985,7 @@ const WorkTab = () => {
         setIsGeneratingNames(true);
         setAppState(prevState => ({ ...prevState, drumKitProjects: prevState.drumKitProjects.map(p => p.id === activeProjectId ? { ...p, imagePrompt: imagePrompt } : p) }));
         try {
-            const result = await generateKitNames({ prompt: imagePrompt });
+            const result = await generateKitNames({ prompt: imagePrompt, model: appState.selectedAiModel });
             setAppState(prevState => ({ ...prevState, drumKitProjects: prevState.drumKitProjects.map(p => p.id === activeProjectId ? { ...p, seoNames: result.names } : p) }));
             toast({ title: "Nombres generados", description: "La IA ha sugerido algunos nombres para tu kit." });
         } catch (error) {
@@ -1009,7 +1009,7 @@ const WorkTab = () => {
         }
         setIsGeneratingPrompt(true);
         setAppState(prevState => ({ ...prevState, drumKitProjects: prevState.drumKitProjects.map(p => p.id === activeProjectId ? { ...p, imagePrompt: imagePrompt, name: currentKitName.trim() } : p) }));
-        const result = await generateArtPrompt({ prompt: imagePrompt, kitName: currentKitName.trim() });
+        const result = await generateArtPrompt({ prompt: imagePrompt, kitName: currentKitName.trim(), model: appState.selectedAiModel });
         if (result.error) {
           toast({ variant: "destructive", title: "Error de IA", description: result.error });
           setLastEnhancedPrompt(null);
@@ -1299,6 +1299,27 @@ const WorkTab = () => {
                             <Separator />
                             {activeProject ? (
                                 <div className="space-y-4">
+                                  <div className="space-y-2">
+                                      <h4 className="text-sm font-medium text-muted-foreground">Configuración de IA</h4>
+                                      <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm bg-background/30">
+                                          <Label htmlFor="ai-model-select">Modelo de IA a Utilizar</Label>
+                                          <Select
+                                              value={appState.selectedAiModel}
+                                              onValueChange={(model: 'gemini-2.0-flash' | 'gemini-2.5-flash-preview') => {
+                                                  setAppState({ selectedAiModel: model });
+                                                  toast({ title: 'Modelo de IA actualizado', description: `Usando ${model}.` });
+                                              }}
+                                          >
+                                              <SelectTrigger id="ai-model-select" className="w-[240px]">
+                                                  <SelectValue />
+                                              </SelectTrigger>
+                                              <SelectContent>
+                                                  <SelectItem value="gemini-2.0-flash">Gemini 2.0 Flash</SelectItem>
+                                                  <SelectItem value="gemini-2.5-flash-preview">Gemini 2.5 Flash Preview</SelectItem>
+                                              </SelectContent>
+                                          </Select>
+                                      </div>
+                                  </div>
                                   <div className='p-4 border rounded-lg space-y-4 bg-background/30'>
                                       <div {...getCoverRootProps()} className={cn("border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:bg-muted/20 transition-colors", isUploadingCover && "border-primary bg-primary/10")}>
                                           <input {...getCoverInputProps()} />
