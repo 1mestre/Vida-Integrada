@@ -62,7 +62,7 @@ Now, create the enhanced visual description based on the user's Core Concept pro
         
         const enhancementResult = await ai.generate({
             prompt: enhancementPromptText,
-            model: 'googleai/gemini-2.5-flash',
+            model: 'googleai/gemini-2.0-flash',
         });
         
         creativeContext = enhancementResult.text;
