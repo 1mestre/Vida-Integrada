@@ -163,7 +163,7 @@ const generateCoverArtFlow = ai.defineFlow(
     } catch (e: any) {
         let errorMessage = `Error inesperado en la generación de imagen: ${e.message}`;
         if (e.message && (e.message.includes('429') || e.message.toLowerCase().includes('quota'))) {
-            errorMessage = 'Límite de cuota de API alcanzado. Por favor, intenta de nuevo más tarde o añade nuevas API keys de un proyecto de Google Cloud diferente.';
+            errorMessage = 'Límite de cuota diario de la API alcanzado. La cuota se reinicia cada 24 horas (medianoche, Hora del Pacífico). Para una solución inmediata, añade una API key de un proyecto de Google Cloud diferente.';
         }
         // On image generation failure, return the final prompt and the error.
         return { finalUrl: null, enhancedPrompt: finalImagePrompt, error: errorMessage };
