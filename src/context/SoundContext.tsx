@@ -45,6 +45,9 @@ export const SoundProvider: React.FC<SoundProviderProps> = ({ children }) => {
             const path = soundMap[soundName];
             try {
               const response = await fetch(path);
+              if (!response.ok) {
+                throw new Error(`Failed to fetch sound ${soundName}: ${response.statusText}`);
+              }
               const arrayBuffer = await response.arrayBuffer();
               const audioBuffer = await context.decodeAudioData(arrayBuffer);
               soundBuffersRef.current.set(soundName, audioBuffer);
