@@ -36,11 +36,6 @@ export const BackgroundGradientAnimation = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const pointerRef = useRef<HTMLDivElement>(null);
  
-  const [curX, setCurX] = useState(0);
-  const [curY, setCurY] = useState(0);
-  const [tgX, setTgX] = useState(0);
-  const [tgY, setTgY] = useState(0);
-
   useEffect(() => {
     document.body.style.setProperty(
       "--gradient-background-start",
@@ -61,36 +56,36 @@ export const BackgroundGradientAnimation = ({
   }, [gradientBackgroundStart, gradientBackgroundEnd, firstColor, secondColor, thirdColor, fourthColor, fifthColor, pointerColor, size, blendingValue]);
  
   useEffect(() => {
-    let animationFrameId: number;
+    if (!interactive) return;
+
+    let curX = 0;
+    let curY = 0;
+    let tgX = 0;
+    let tgY = 0;
     
     const move = () => {
-      setCurX((prev) => prev + (tgX - prev) / 20);
-      setTgX(prev => prev)
-      setCurY((prev) => prev + (tgY - prev) / 20);
-      setTgY(prev => prev)
-      animationFrameId = requestAnimationFrame(move);
+      curX += (tgX - curX) / 20;
+      curY += (tgY - curY) / 20;
+      if (pointerRef.current) {
+        pointerRef.current.style.transform = `translate(${Math.round(curX)}px, ${Math.round(curY)}px)`;
+      }
+      requestAnimationFrame(move);
     };
 
-    animationFrameId = requestAnimationFrame(move);
+    const handleMouseMove = (event: MouseEvent) => {
+        tgX = event.clientX;
+        tgY = event.clientY;
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    const animationFrameId = requestAnimationFrame(move);
 
     return () => {
-      cancelAnimationFrame(animationFrameId);
+        window.removeEventListener('mousemove', handleMouseMove);
+        cancelAnimationFrame(animationFrameId);
     };
-  }, [tgX, tgY]);
+  }, [interactive]);
 
-  useEffect(() => {
-    if (pointerRef.current) {
-        pointerRef.current.style.transform = `translate(${Math.round(curX)}px, ${Math.round(curY)}px)`;
-    }
-  }, [curX, curY])
- 
-  const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
-    if (containerRef.current) {
-      const rect = containerRef.current.getBoundingClientRect();
-      setTgX(event.clientX - rect.left);
-      setTgY(event.clientY - rect.top);
-    }
-  };
  
   const [isSafari, setIsSafari] = useState(false);
   useEffect(() => {
@@ -100,7 +95,6 @@ export const BackgroundGradientAnimation = ({
   return (
     <div
       ref={containerRef}
-      onMouseMove={interactive ? handleMouseMove : undefined}
       className={cn(
         "h-full min-h-screen w-full relative bg-[linear-gradient(40deg,var(--gradient-background-start),var(--gradient-background-end))]",
         containerClassName
