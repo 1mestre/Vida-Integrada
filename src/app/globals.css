@@ -5,11 +5,11 @@
 
 @layer base {
   :root {
-    --background: 0 0% 13%;
+    --background: 0 0% 7%;
     --foreground: 0 0% 98%;
-    --card: 0 0% 15%;
+    --card: 0 0% 9%;
     --card-foreground: 0 0% 98%;
-    --popover: 0 0% 15%;
+    --popover: 0 0% 9%;
     --popover-foreground: 0 0% 98%;
     --primary: 211 100% 50%; /* iOS Blue */
     --primary-foreground: 0 0% 100%;
@@ -21,8 +21,8 @@
     --accent-foreground: 0 0% 100%;
     --destructive: 0 72% 51%; /* iOS Red */
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 22%;
-    --input: 0 0% 22%;
+    --border: 0 0% 17%;
+    --input: 0 0% 17%;
     --ring: 211 100% 50%;
     --radius: 0.75rem;
 
@@ -37,11 +37,11 @@
   }
 
   .dark {
-    --background: 0 0% 13%;
+    --background: 0 0% 7%;
     --foreground: 0 0% 98%;
-    --card: 0 0% 15%;
+    --card: 0 0% 9%;
     --card-foreground: 0 0% 98%;
-    --popover: 0 0% 15%;
+    --popover: 0 0% 9%;
     --popover-foreground: 0 0% 98%;
     --primary: 211 100% 50%;
     --primary-foreground: 0 0% 100%;
@@ -53,8 +53,8 @@
     --accent-foreground: 0 0% 100%;
     --destructive: 0 100% 60%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 22%;
-    --input: 0 0% 22%;
+    --border: 0 0% 17%;
+    --input: 0 0% 17%;
     --ring: 211 100% 50%;
 
     /* Custom iOS Colors */
