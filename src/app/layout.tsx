@@ -25,22 +25,23 @@ export default function RootLayout({
       </head>
       <body className={cn("antialiased")}>
         <SoundProvider>
-          <BackgroundGradientAnimation 
-            gradientBackgroundStart="rgb(0, 0, 0)"
-            gradientBackgroundEnd="rgb(10, 0, 25)"
-            firstColor="0, 122, 255"      // iOS Blue
-            secondColor="255, 149, 0"     // iOS Orange
-            thirdColor="52, 199, 89"      // iOS Green
-            fourthColor="255, 45, 85"     // iOS Red
-            fifthColor="88, 86, 214"      // iOS Purple
-            pointerColor="0, 122, 255"    // iOS Blue for the interactive pointer
-          >
-            {/* The main content is now passed as a child to the animation component */}
-            <div className="relative z-0 min-h-screen">
+            {/* The animation is now a separate, fixed background layer */}
+            <BackgroundGradientAnimation 
+                gradientBackgroundStart="rgb(9, 9, 11)"    // Approx. hsl(240, 10%, 4%)
+                gradientBackgroundEnd="rgb(15, 15, 17)"      // Approx. hsl(240, 6%, 6%)
+                firstColor="0, 122, 255"      // iOS Blue
+                secondColor="255, 149, 0"     // iOS Orange
+                thirdColor="52, 199, 89"      // iOS Green
+                fourthColor="255, 45, 85"     // iOS Red
+                fifthColor="88, 86, 214"      // iOS Purple
+                pointerColor="0, 122, 255"    // iOS Blue for the interactive pointer
+                containerClassName="fixed inset-0 z-0"
+            />
+            {/* The main content is rendered on top of the animation */}
+            <div className="relative z-10 min-h-screen">
                 {children}
                 <Toaster />
             </div>
-          </BackgroundGradientAnimation>
         </SoundProvider>
       </body>
     </html>
