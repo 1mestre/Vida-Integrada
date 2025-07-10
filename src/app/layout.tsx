@@ -25,11 +25,7 @@ export default function RootLayout({
       </head>
       <body className={cn("antialiased")}>
         <SoundProvider>
-          {/* The animation component is placed here to act as a background. 
-              It's fixed and behind other content using a negative z-index. 
-              The containerClassName prop is used to apply these styles. */}
           <BackgroundGradientAnimation 
-            containerClassName="!fixed top-0 left-0 w-full h-full -z-10" 
             gradientBackgroundStart="rgb(0, 0, 0)"
             gradientBackgroundEnd="rgb(10, 0, 25)"
             firstColor="0, 122, 255"      // iOS Blue
@@ -38,11 +34,13 @@ export default function RootLayout({
             fourthColor="255, 45, 85"     // iOS Red
             fifthColor="88, 86, 214"      // iOS Purple
             pointerColor="0, 122, 255"    // iOS Blue for the interactive pointer
-          />
-          <div className="relative z-0 min-h-screen">
-            {children}
-            <Toaster />
-          </div>
+          >
+            {/* The main content is now passed as a child to the animation component */}
+            <div className="relative z-0 min-h-screen">
+                {children}
+                <Toaster />
+            </div>
+          </BackgroundGradientAnimation>
         </SoundProvider>
       </body>
     </html>
